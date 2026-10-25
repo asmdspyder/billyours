@@ -1,5 +1,5 @@
 import { requireBusinessAccount, checkSubscriptionStatus } from "@/lib/auth";
-import { AppSidebar } from "@/components/nav/app-sidebar";
+import { AppNavbar } from "@/components/nav/app-navbar";
 import { AdminBanner } from "@/components/admin/admin-banner";
 import { TrialBanner } from "@/components/nav/trial-banner";
 
@@ -26,17 +26,15 @@ export default async function AppLayout({
         isExpired={subStatus.isExpired}
       />
 
-      <div className="flex-1 flex flex-row min-h-0 overflow-hidden">
-        <AppSidebar
-          businessName={session.account.businessName}
-          ownerName={session.user.name}
-        />
+      <AppNavbar
+        businessName={session.account.businessName}
+        ownerName={session.user.name}
+      />
 
-        {/* Main content area — pb-16 for mobile/tablet bottom nav */}
-        <main className="flex-1 pb-16 lg:pb-0 overflow-y-auto min-h-0">
-          {children}
-        </main>
-      </div>
+      {/* Main content area — full width on tablet/laptop/desktop, pb-14 on mobile */}
+      <main className="flex-1 pb-14 md:pb-0 overflow-y-auto min-h-0 bg-slate-50">
+        {children}
+      </main>
     </div>
   );
 }

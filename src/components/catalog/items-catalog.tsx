@@ -223,6 +223,16 @@ export function ItemsCatalog({ initialItems }: ItemsCatalogProps) {
     return Array.from(new Set(items.map((it) => it.category).filter(Boolean))) as string[];
   }, [items]);
 
+  const categoryCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    items.forEach((it) => {
+      if (it.category) {
+        map[it.category] = (map[it.category] || 0) + 1;
+      }
+    });
+    return map;
+  }, [items]);
+
   const filtered = useMemo(() => {
     return items.filter((it) => {
       const matchSearch =
@@ -325,43 +335,78 @@ export function ItemsCatalog({ initialItems }: ItemsCatalogProps) {
         </button>
       </div>
 
-      {/* Search + Category filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      {/* Search and Item Count Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search by name or category..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-2xs"
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
+        <div className="text-xs font-semibold text-slate-500">
+          Showing <span className="text-slate-900 font-bold">{filtered.length}</span> of {items.length} items
+        </div>
+      </div>
 
-        {categories.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+      {/* Dedicated Categories Bar with sleek horizontal scroll */}
+      {categories.length > 0 && (
+        <div className="bg-white p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+          <div className="flex items-center gap-2 overflow-x-auto thin-scroll pb-1 pt-0.5 scroll-smooth">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`px-3.5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
-                selectedCategory === null ? "bg-slate-900 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                selectedCategory === null
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900"
               }`}
             >
-              All ({items.length})
-            </button>
-            {categories.map((c) => (
-              <button
-                key={c}
-                onClick={() => setSelectedCategory(c === selectedCategory ? null : c)}
-                className={`px-3.5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
-                  selectedCategory === c ? "bg-slate-900 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+              <span>All</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
+                  selectedCategory === null ? "bg-blue-700/60 text-white" : "bg-slate-200 text-slate-600"
                 }`}
               >
-                {c}
-              </button>
-            ))}
+                {items.length}
+              </span>
+            </button>
+            {categories.map((c) => {
+              const isSelected = selectedCategory === c;
+              return (
+                <button
+                  key={c}
+                  onClick={() => setSelectedCategory(isSelected ? null : c)}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    isSelected
+                      ? "bg-blue-600 text-white font-bold shadow-sm"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900"
+                  }`}
+                >
+                  <span>{c}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
+                      isSelected ? "bg-blue-700/60 text-white" : "bg-slate-200 text-slate-600"
+                    }`}
+                  >
+                    {categoryCounts[c] || 0}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Items Table */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">

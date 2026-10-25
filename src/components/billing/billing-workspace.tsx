@@ -97,6 +97,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
   // Completion & Submission state
   const [isPending, startTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null);
   const [completedBill, setCompletedBill] = useState<{
     billId: string;
     billNumber: string;
@@ -105,6 +106,17 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
   } | null>(null);
 
   const cartCount = cart.reduce((s, l) => s + l.quantity, 0);
+
+  // Category counts
+  const categoryCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    initialItems.forEach((it) => {
+      if (it.category) {
+        map[it.category] = (map[it.category] || 0) + 1;
+      }
+    });
+    return map;
+  }, [initialItems]);
 
   // Filter items
   const filteredItems = useMemo(() => {
@@ -132,19 +144,23 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
     });
   }, [cart, discountType, discountValue, taxEnabled, taxRate]);
 
-  // Cart actions
+  // Cart actions with visual highlight
   const addToCart = (item: Item) => {
+    let affectedTempId = "";
     setCart((prev) => {
       const existing = prev.find((line) => line.itemId === item.id);
       if (existing) {
+        affectedTempId = existing.tempId;
         return prev.map((line) =>
           line.itemId === item.id ? { ...line, quantity: line.quantity + 1 } : line
         );
       }
+      const newId = "tmp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7);
+      affectedTempId = newId;
       return [
         ...prev,
         {
-          tempId: "tmp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+          tempId: newId,
           itemId: item.id,
           name: item.name,
           unitPrice: item.unitPrice,
@@ -153,6 +169,10 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
         },
       ];
     });
+    setRecentlyAddedId(affectedTempId);
+    setTimeout(() => {
+      setRecentlyAddedId((curr) => (curr === affectedTempId ? null : curr));
+    }, 1200);
   };
 
   const updateQuantity = (tempId: string, delta: number) => {
@@ -167,6 +187,12 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
         })
         .filter((line) => line.quantity > 0)
     );
+    if (delta > 0) {
+      setRecentlyAddedId(tempId);
+      setTimeout(() => {
+        setRecentlyAddedId((curr) => (curr === tempId ? null : curr));
+      }, 800);
+    }
   };
 
   const removeFromCart = (tempId: string) => {
@@ -305,34 +331,47 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
           </button>
         </div>
 
-        {/* Category pills */}
+        {/* Category horizontal scrolling bar */}
         {categories.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+          <div className="flex items-center gap-1.5 overflow-x-auto thin-scroll pb-1 pt-0.5 scroll-smooth">
             <button
               type="button"
               onClick={() => setSelectedCategory(null)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                 selectedCategory === null
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
               }`}
             >
-              All
+              <span>All</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-bold ${
+                selectedCategory === null ? "bg-blue-700/60 text-white" : "bg-slate-200 text-slate-600"
+              }`}>
+                {initialItems.length}
+              </span>
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setSelectedCategory(cat === selectedCategory ? null : cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                  selectedCategory === cat
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const isSelected = selectedCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(isSelected ? null : cat)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    isSelected
+                      ? "bg-blue-600 text-white font-bold shadow-xs"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  <span>{cat}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-bold ${
+                    isSelected ? "bg-blue-700/60 text-white" : "bg-slate-200 text-slate-600"
+                  }`}>
+                    {categoryCounts[cat] || 0}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -390,94 +429,123 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
 
   // ─── Bill / Cart Panel ──────────────────────────────────────────────────────
   const BillPanel = () => (
-    <div className="flex flex-col h-full overflow-y-auto thin-scroll">
-      <div className="p-4 space-y-4">
+    <div className="flex flex-col h-full overflow-y-auto thin-scroll bg-slate-50/70">
+      <div className="p-4 space-y-3.5">
         {/* Cart Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-blue-600" />
-            <span className="font-bold text-slate-900">Current Bill</span>
-            {cart.length > 0 && (
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">
-                {cartCount} item{cartCount !== 1 ? "s" : ""}
-              </span>
-            )}
+        <div className="flex items-center justify-between pb-1">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
+              <Receipt className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-slate-900 text-base leading-none">Current Bill</span>
+                {cart.length > 0 && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                    {cartCount} item{cartCount !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                {cart.length > 0 ? "Review added items & complete checkout" : "Click items on the left to add to bill"}
+              </p>
+            </div>
           </div>
           {cart.length > 0 && (
             <button
               type="button"
               onClick={clearCart}
-              className="text-xs text-slate-400 hover:text-red-500 font-medium transition-colors"
+              className="px-2.5 py-1 text-xs text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg font-semibold transition-colors"
             >
-              Clear
+              Clear all
             </button>
           )}
         </div>
 
         {/* Cart Line Items */}
         {cart.length === 0 ? (
-          <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-            <ShoppingBag className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-            <p className="text-slate-600 font-medium text-sm">Bill is empty</p>
-            <p className="text-slate-400 text-xs mt-1">
-              {/* Mobile hint */}
-              <span className="lg:hidden">Tap Items tab to add products</span>
-              <span className="hidden lg:inline">Select items from the left panel</span>
+          <div className="py-12 px-4 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200/90 shadow-2xs">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-3">
+              <ShoppingBag className="w-6 h-6" />
+            </div>
+            <p className="text-slate-800 font-bold text-sm">No items added yet</p>
+            <p className="text-slate-400 text-xs mt-1 max-w-[220px] mx-auto">
+              <span className="md:hidden">Tap the <strong>Items</strong> tab above to add food or beverages</span>
+              <span className="hidden md:inline">Click any food or beverage item from the catalog on the left to add</span>
             </p>
           </div>
         ) : (
-          <div className="space-y-1.5">
-            {cart.map((line) => (
-              <div
-                key={line.tempId}
-                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-900 text-sm truncate">{line.name}</p>
-                  <p className="text-slate-400 text-xs">₹{line.unitPrice.toFixed(2)} each</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => updateQuantity(line.tempId, -1)}
-                    className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:scale-95 transition-all"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
-                  <span className="w-6 text-center font-bold text-slate-900 text-sm">{line.quantity}</span>
-                  <button
-                    type="button"
-                    onClick={() => updateQuantity(line.tempId, 1)}
-                    className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:scale-95 transition-all"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                </div>
-                <div className="w-16 text-right font-bold text-slate-900 text-sm shrink-0">
-                  ₹{(line.unitPrice * line.quantity).toFixed(2)}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeFromCart(line.tempId)}
-                  className="text-slate-300 hover:text-red-500 transition-colors ml-0.5 p-0.5"
+          <div className="space-y-2">
+            {cart.map((line) => {
+              const isRecent = recentlyAddedId === line.tempId;
+              return (
+                <div
+                  key={line.tempId}
+                  className={`flex items-center gap-2.5 p-3 rounded-xl bg-white border transition-all duration-300 shadow-xs ${
+                    isRecent
+                      ? "border-blue-500 ring-2 ring-blue-400/50 bg-blue-50/40 scale-[1.01]"
+                      : "border-slate-200/90 hover:border-slate-300"
+                  }`}
                 >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+                  {/* Left blue accent indicator */}
+                  <div className="w-1 self-stretch rounded-full bg-blue-600 shrink-0" />
+
+                  <div className="flex-1 min-w-0 pl-0.5">
+                    <p className="font-bold text-slate-900 text-sm truncate leading-snug">{line.name}</p>
+                    <p className="text-slate-400 text-xs mt-0.5">₹{line.unitPrice.toFixed(2)} each</p>
+                  </div>
+
+                  {/* Quantity controls */}
+                  <div className="flex items-center gap-1 bg-slate-50 border border-slate-200/80 p-0.5 rounded-lg shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(line.tempId, -1)}
+                      className="w-6 h-6 rounded-md bg-white border border-slate-200/60 flex items-center justify-center text-slate-600 hover:text-red-600 hover:bg-red-50 active:scale-95 transition-all"
+                      title="Decrease"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <span className="w-6 text-center font-black text-slate-900 text-xs">{line.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(line.tempId, 1)}
+                      className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 active:scale-95 transition-all shadow-2xs"
+                      title="Increase"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {/* Line Total */}
+                  <div className="w-16 text-right font-black text-blue-600 text-sm shrink-0">
+                    ₹{(line.unitPrice * line.quantity).toFixed(2)}
+                  </div>
+
+                  {/* Remove button */}
+                  <button
+                    type="button"
+                    onClick={() => removeFromCart(line.tempId)}
+                    className="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-0.5"
+                    title="Remove item"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {/* Customer Details */}
-        <div className="space-y-2 pt-1">
+        {/* Customer Details Card */}
+        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-slate-400" />
-              Customer <span className="font-normal text-slate-400">(optional)</span>
+            <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-blue-600" />
+              Customer Details <span className="font-normal text-slate-400">(optional)</span>
             </p>
             {existingCustomerFound && (
-              <span className="text-[11px] text-green-600 flex items-center gap-0.5 font-semibold">
-                <CheckCircle2 className="w-3 h-3" /> Found
+              <span className="text-[11px] text-green-600 flex items-center gap-0.5 font-bold">
+                <CheckCircle2 className="w-3 h-3" /> Saved customer
               </span>
             )}
           </div>
@@ -489,7 +557,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
                 placeholder="Mobile number"
                 value={customerPhone}
                 onChange={(e) => handlePhoneChange(e.target.value)}
-                className="w-full pl-8 pr-2 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                className="w-full pl-8 pr-2 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium"
               />
             </div>
             <input
@@ -497,126 +565,129 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
               placeholder="Customer name"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium"
             />
           </div>
         </div>
 
-        {/* Discount */}
-        <div className="space-y-2 pt-1 border-t border-slate-100">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-slate-400" /> Discount
-            </p>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => { setDiscountType(null); setDiscountValue("0"); }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${discountType === null ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-              >None</button>
-              <button
-                type="button"
-                onClick={() => { setDiscountType("FIXED"); if (discountValue === "0") setDiscountValue("10"); }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${discountType === "FIXED" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-              >₹ Flat</button>
-              <button
-                type="button"
-                onClick={() => { setDiscountType("PERCENTAGE"); if (discountValue === "0") setDiscountValue("5"); }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${discountType === "PERCENTAGE" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-              >% Off</button>
-            </div>
-          </div>
-          {discountType && (
-            <div className="flex items-center justify-end gap-2">
-              <span className="text-xs text-slate-500">{discountType === "FIXED" ? "Amount (₹)" : "Percent (%)"}</span>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                value={discountValue}
-                onChange={(e) => setDiscountValue(e.target.value)}
-                className="w-20 px-2.5 py-1.5 text-right text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Tax */}
-        <div className="space-y-2 pt-1 border-t border-slate-100">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
-              <Percent className="w-3.5 h-3.5 text-slate-400" /> GST / Tax
-            </p>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" checked={taxEnabled} onChange={(e) => setTaxEnabled(e.target.checked)} className="sr-only peer" />
-              <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-          {taxEnabled && (
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1">
-                  {["5", "12", "18"].map((rate) => (
-                    <button
-                      key={rate}
-                      type="button"
-                      onClick={() => setTaxRate(rate)}
-                      className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-                        taxRate === rate ? "bg-blue-600 text-white" : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >{rate}%</button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <input
-                    type="text"
-                    placeholder="Label"
-                    value={taxLabel}
-                    onChange={(e) => setTaxLabel(e.target.value)}
-                    className="w-14 px-2 py-1 text-xs text-center bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    min="0" max="100" step="0.1"
-                    value={taxRate}
-                    onChange={(e) => setTaxRate(e.target.value)}
-                    className="w-14 px-2 py-1 text-right text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <span className="text-slate-500 text-xs">%</span>
-                </div>
+        {/* Discount & Tax Card */}
+        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-3">
+          {/* Discount */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-blue-600" /> Discount
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => { setDiscountType(null); setDiscountValue("0"); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${discountType === null ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                >None</button>
+                <button
+                  type="button"
+                  onClick={() => { setDiscountType("FIXED"); if (discountValue === "0") setDiscountValue("10"); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${discountType === "FIXED" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                >₹ Flat</button>
+                <button
+                  type="button"
+                  onClick={() => { setDiscountType("PERCENTAGE"); if (discountValue === "0") setDiscountValue("5"); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${discountType === "PERCENTAGE" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                >% Off</button>
               </div>
             </div>
-          )}
+            {discountType && (
+              <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                <span className="text-xs text-slate-500">{discountType === "FIXED" ? "Flat Amount (₹):" : "Percentage (%):"}</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  className="w-20 px-2.5 py-1 text-right text-xs font-bold bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Tax toggle */}
+          <div className="pt-2 border-t border-slate-100 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Percent className="w-3.5 h-3.5 text-blue-600" /> Apply GST / Tax
+              </p>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={taxEnabled} onChange={(e) => setTaxEnabled(e.target.checked)} className="sr-only peer" />
+                <div className="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+            {taxEnabled && (
+              <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1">
+                    {["5", "12", "18"].map((rate) => (
+                      <button
+                        key={rate}
+                        type="button"
+                        onClick={() => setTaxRate(rate)}
+                        className={`px-2 py-0.5 rounded-md text-xs font-bold transition-colors ${
+                          taxRate === rate ? "bg-blue-600 text-white" : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >{rate}%</button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      placeholder="Label"
+                      value={taxLabel}
+                      onChange={(e) => setTaxLabel(e.target.value)}
+                      className="w-14 px-2 py-1 text-xs text-center font-bold bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <input
+                      type="number"
+                      min="0" max="100" step="0.1"
+                      value={taxRate}
+                      onChange={(e) => setTaxRate(e.target.value)}
+                      className="w-14 px-2 py-1 text-right text-xs font-bold bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <span className="text-slate-500 text-xs font-bold">%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Payment */}
-        <div className="space-y-2 pt-1 border-t border-slate-100">
+        {/* Payment Card */}
+        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-2.5">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-slate-600">Payment</p>
+            <p className="text-xs font-bold text-slate-700">Payment Status</p>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setPaymentStatus("PAID")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${paymentStatus === "PAID" ? "bg-green-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${paymentStatus === "PAID" ? "bg-green-600 text-white shadow-2xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
               >Paid</button>
               <button
                 type="button"
                 onClick={() => setPaymentStatus("UNPAID")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${paymentStatus === "UNPAID" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${paymentStatus === "UNPAID" ? "bg-amber-500 text-white shadow-2xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
               >Unpaid</button>
             </div>
           </div>
 
           {paymentStatus === "PAID" && (
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-4 gap-1.5 pt-1">
               {(["CASH", "UPI", "CARD", "OTHER"] as const).map((method) => (
                 <button
                   key={method}
                   type="button"
                   onClick={() => setPaymentMethod(method)}
-                  className={`py-2 flex flex-col items-center gap-0.5 rounded-xl text-[10px] font-bold border transition-colors ${
+                  className={`py-2 flex flex-col items-center gap-1 rounded-xl text-[11px] font-bold border transition-colors ${
                     paymentMethod === method
-                      ? "bg-blue-50 border-blue-500 text-blue-700"
+                      ? "bg-blue-50 border-blue-500 text-blue-700 shadow-2xs"
                       : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                   }`}
                 >
@@ -628,33 +699,36 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
           )}
         </div>
 
-        {/* Totals */}
-        <div className="pt-3 border-t border-slate-200 space-y-1.5">
-          <div className="flex justify-between text-sm text-slate-500">
+        {/* Totals Summary Card */}
+        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs space-y-2">
+          <div className="flex justify-between text-xs text-slate-500 font-medium">
             <span>Subtotal</span>
             <span>₹{totals.subtotal}</span>
           </div>
           {Number(totals.discountAmount) > 0 && (
-            <div className="flex justify-between text-sm text-green-600 font-medium">
+            <div className="flex justify-between text-xs text-green-600 font-bold">
               <span>Discount</span>
               <span>− ₹{totals.discountAmount}</span>
             </div>
           )}
           {taxEnabled && Number(totals.taxAmount) > 0 && (
-            <div className="flex justify-between text-sm text-slate-600 font-medium">
+            <div className="flex justify-between text-xs text-slate-600 font-bold">
               <span>{taxLabel} ({totals.taxRate}%)</span>
               <span>+ ₹{totals.taxAmount}</span>
             </div>
           )}
-          <div className="flex justify-between items-baseline pt-2 border-t border-slate-200">
-            <span className="font-bold text-slate-900 text-sm">Grand Total</span>
+          <div className="flex justify-between items-baseline pt-2.5 border-t border-slate-200">
+            <div>
+              <span className="font-black text-slate-900 text-sm">Grand Total</span>
+              <p className="text-[10px] text-slate-400 font-medium">Inclusive of discounts & taxes</p>
+            </div>
             <span className="font-black text-2xl text-blue-600">₹{totals.grandTotal}</span>
           </div>
         </div>
 
-        {/* Error */}
+        {/* Error Notification */}
         {submitError && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-center justify-between">
+          <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center justify-between">
             <span>{submitError}</span>
             <button onClick={() => setSubmitError(null)}><X className="w-4 h-4" /></button>
           </div>
@@ -665,7 +739,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
           type="button"
           disabled={isPending || cart.length === 0}
           onClick={handleCompleteBill}
-          className={`w-full py-3.5 px-4 rounded-xl font-bold text-white text-base shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] ${
+          className={`w-full py-3.5 px-4 rounded-xl font-black text-white text-base shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] ${
             isPending || cart.length === 0
               ? "bg-slate-300 cursor-not-allowed"
               : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/25"
@@ -674,12 +748,12 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
           {isPending ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Processing...
+              <span>Completing Bill...</span>
             </>
           ) : (
             <>
-              <Receipt className="w-4 h-4" />
-              Complete Bill · ₹{totals.grandTotal}
+              <Receipt className="w-5 h-5" />
+              <span>Complete Bill · ₹{totals.grandTotal}</span>
             </>
           )}
         </button>
@@ -696,8 +770,8 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
           <ItemsPanel />
         </div>
 
-        {/* Right: Bill (5 cols) */}
-        <div className="md:col-span-5 bg-white flex flex-col overflow-hidden h-full">
+        {/* Right: Bill (5 cols) - distinct receipt background */}
+        <div className="md:col-span-5 bg-slate-50/70 border-l border-slate-200/80 flex flex-col overflow-hidden h-full">
           <BillPanel />
         </div>
       </div>
@@ -738,7 +812,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto bg-white min-h-0">
+        <div className={`flex-1 overflow-y-auto min-h-0 ${mobileTab === "bill" ? "bg-slate-50/70" : "bg-white"}`}>
           {mobileTab === "items" ? <ItemsPanel /> : <BillPanel />}
         </div>
 
