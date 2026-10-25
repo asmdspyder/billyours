@@ -298,7 +298,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
   };
 
   // ─── Item Catalog Panel ─────────────────────────────────────────────────────
-  const ItemsPanel = () => (
+  const renderItemsPanel = () => (
     <div className="flex flex-col h-full">
       {/* Search + Custom */}
       <div className="p-3 border-b border-slate-100 space-y-2.5 bg-white">
@@ -428,15 +428,15 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
   );
 
   // ─── Bill / Cart Panel (Zero-Scroll Architecture) ───────────────────────────
-  const BillPanel = () => (
+  const renderBillPanel = () => (
     <div className="flex flex-col h-full overflow-hidden bg-slate-50/60 select-none">
-      {/* 1. Ultra-Compact Header (shrink-0) */}
+      {/* 1. Header (shrink-0) */}
       <div className="shrink-0 h-11 px-3.5 bg-white border-b border-slate-200/90 flex items-center justify-between shadow-2xs">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-2xs">
             <Receipt className="w-3.5 h-3.5" />
           </div>
-          <span className="font-black text-slate-900 text-sm">Current Bill</span>
+          <span className="font-bold text-slate-900 text-sm">Current Bill</span>
           {cart.length > 0 && (
             <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700">
               {cartCount} {cartCount === 1 ? "item" : "items"}
@@ -454,53 +454,77 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
         )}
       </div>
 
-      {/* 2. Middle Scrollable Work Area (flex-1 min-h-0 overflow-y-auto thin-scroll p-2.5 sm:p-3 space-y-2) */}
-      <div className="flex-1 min-h-0 overflow-y-auto thin-scroll p-2.5 sm:p-3 space-y-2">
-        {/* Item List Header */}
-        {cart.length > 0 && (
-          <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            <span>Items Added ({cartCount})</span>
-            <span>Subtotal: ₹{totals.subtotal}</span>
+      {/* 2. Customer Details Card (shrink-0, PINNED AT TOP - NEVER SCROLL TO REACH IT!) */}
+      <div className="shrink-0 bg-white px-3 py-2 border-b border-slate-200/80 shadow-2xs space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+            <User className="w-3 h-3 text-blue-600" />
+            Customer Details <span className="font-normal text-slate-400 text-[10px]">(optional)</span>
+          </span>
+          {existingCustomerFound && (
+            <span className="text-[10px] text-green-600 flex items-center gap-0.5 font-bold">
+              <CheckCircle2 className="w-3 h-3" /> Saved customer
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-1.5">
+          <div className="relative">
+            <Phone className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="tel"
+              placeholder="Mobile number"
+              value={customerPhone}
+              autoComplete="off"
+              onChange={(e) => handlePhoneChange(e.target.value)}
+              className="w-full pl-7 pr-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white font-medium"
+            />
           </div>
-        )}
+          <input
+            type="text"
+            placeholder="Customer name"
+            value={customerName}
+            autoComplete="off"
+            onChange={(e) => setCustomerName(e.target.value)}
+            className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white font-medium"
+          />
+        </div>
+      </div>
 
-        {/* Empty state or Item Cards */}
+      {/* 3. Items Added List (flex-1 min-h-0 overflow-y-auto thin-scroll - ONLY THIS SCROLLS!) */}
+      <div className="flex-1 min-h-0 overflow-y-auto thin-scroll p-2 space-y-1">
         {cart.length === 0 ? (
-          <div className="py-7 px-4 text-center bg-white rounded-xl border-2 border-dashed border-slate-200/90 shadow-2xs">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 mx-auto mb-2">
+          <div className="h-full flex flex-col items-center justify-center p-4 text-center">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 mb-2">
               <ShoppingBag className="w-5 h-5" />
             </div>
-            <p className="text-slate-800 font-bold text-xs sm:text-sm">No items added to bill</p>
-            <p className="text-slate-400 text-xs mt-0.5 max-w-[200px] mx-auto">
-              <span className="md:hidden">Tap the <strong>Items</strong> tab above to add items</span>
-              <span className="hidden md:inline">Click any item on the left to add it to the bill</span>
-            </p>
+            <p className="text-slate-700 font-bold text-xs">No items in bill</p>
+            <p className="text-slate-400 text-[11px] mt-0.5">Click items on the left to add</p>
           </div>
         ) : (
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {cart.map((line) => {
               const isRecent = recentlyAddedId === line.tempId;
               return (
                 <div
                   key={line.tempId}
-                  className={`flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border transition-all duration-200 shadow-2xs ${
+                  className={`flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-200 shadow-2xs ${
                     isRecent
-                      ? "bg-blue-100/90 border-blue-400 ring-2 ring-blue-400/50"
-                      : "bg-blue-50/85 hover:bg-blue-100/70 border-blue-200/90"
+                      ? "bg-blue-100/90 border-blue-400 ring-1 ring-blue-400/50"
+                      : "bg-blue-50/80 hover:bg-blue-100/60 border-blue-200/80"
                   }`}
                 >
                   {/* Item info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 text-xs sm:text-sm truncate leading-snug">{line.name}</p>
-                    <p className="text-slate-500 text-[11px] font-medium">₹{line.unitPrice.toFixed(2)} each</p>
+                  <div className="flex-1 min-w-0 pr-1">
+                    <p className="font-bold text-slate-900 text-xs truncate leading-snug">{line.name}</p>
+                    <p className="text-slate-500 text-[10px] font-medium">₹{line.unitPrice.toFixed(2)}</p>
                   </div>
 
                   {/* Quantity controls */}
-                  <div className="flex items-center gap-1 bg-white border border-blue-200/80 p-0.5 rounded-lg shrink-0 shadow-2xs">
+                  <div className="flex items-center gap-1 bg-white border border-blue-200/80 px-1 py-0.5 rounded-md shrink-0 shadow-2xs">
                     <button
                       type="button"
                       onClick={() => updateQuantity(line.tempId, -1)}
-                      className="w-5 h-5 rounded bg-slate-50 hover:bg-red-50 text-slate-600 hover:text-red-600 flex items-center justify-center transition-all active:scale-90"
+                      className="w-4.5 h-4.5 rounded bg-slate-50 hover:bg-red-50 text-slate-600 hover:text-red-600 flex items-center justify-center transition-all active:scale-90"
                       title="Decrease"
                     >
                       <Minus className="w-2.5 h-2.5" />
@@ -509,7 +533,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
                     <button
                       type="button"
                       onClick={() => updateQuantity(line.tempId, 1)}
-                      className="w-5 h-5 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all active:scale-90 shadow-2xs"
+                      className="w-4.5 h-4.5 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all active:scale-90 shadow-2xs"
                       title="Increase"
                     >
                       <Plus className="w-2.5 h-2.5" />
@@ -517,7 +541,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
                   </div>
 
                   {/* Line Total */}
-                  <div className="w-14 text-right font-black text-blue-700 text-xs sm:text-sm shrink-0">
+                  <div className="w-14 text-right font-black text-blue-700 text-xs shrink-0">
                     ₹{(line.unitPrice * line.quantity).toFixed(2)}
                   </div>
 
@@ -525,7 +549,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
                   <button
                     type="button"
                     onClick={() => removeFromCart(line.tempId)}
-                    className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors shrink-0"
+                    className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors shrink-0"
                     title="Remove item"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -535,147 +559,113 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
             })}
           </div>
         )}
+      </div>
 
-        {/* Customer Details Compact Card */}
-        <div className="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-2xs space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-              <User className="w-3 h-3 text-blue-600" />
-              Customer Details <span className="font-normal text-slate-400">(optional)</span>
-            </span>
-            {existingCustomerFound && (
-              <span className="text-[10px] text-green-600 flex items-center gap-0.5 font-bold">
-                <CheckCircle2 className="w-3 h-3" /> Saved customer
-              </span>
+      {/* 4. Discount & Tax Bar (shrink-0, PINNED AT BOTTOM) */}
+      <div className="shrink-0 bg-white px-3 py-1.5 border-t border-slate-200/80 shadow-2xs space-y-1.5">
+        {/* Discount Row */}
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1 shrink-0">
+            <Tag className="w-3 h-3 text-blue-600" /> Discount
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => { setDiscountType(null); setDiscountValue("0"); }}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${discountType === null ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+            >None</button>
+            <button
+              type="button"
+              onClick={() => { setDiscountType("FIXED"); if (discountValue === "0") setDiscountValue("10"); }}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${discountType === "FIXED" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+            >₹ Flat</button>
+            <button
+              type="button"
+              onClick={() => { setDiscountType("PERCENTAGE"); if (discountValue === "0") setDiscountValue("5"); }}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${discountType === "PERCENTAGE" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+            >% Off</button>
+            {discountType && (
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={discountValue}
+                onChange={(e) => setDiscountValue(e.target.value)}
+                className="w-14 px-1.5 py-0.5 text-right text-xs font-bold bg-slate-50 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              />
             )}
           </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="relative">
-              <Phone className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              <input
-                type="tel"
-                placeholder="Mobile number"
-                value={customerPhone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                className="w-full pl-7 pr-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white font-medium"
-              />
-            </div>
-            <input
-              type="text"
-              placeholder="Customer name"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white font-medium"
-            />
-          </div>
         </div>
 
-        {/* Discount & Tax Card (Compact) */}
-        <div className="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-2xs space-y-2">
-          {/* Discount Row */}
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1 shrink-0">
-              <Tag className="w-3 h-3 text-blue-600" /> Discount
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => { setDiscountType(null); setDiscountValue("0"); }}
-                className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${discountType === null ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-              >None</button>
-              <button
-                type="button"
-                onClick={() => { setDiscountType("FIXED"); if (discountValue === "0") setDiscountValue("10"); }}
-                className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${discountType === "FIXED" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-              >₹ Flat</button>
-              <button
-                type="button"
-                onClick={() => { setDiscountType("PERCENTAGE"); if (discountValue === "0") setDiscountValue("5"); }}
-                className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${discountType === "PERCENTAGE" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-              >% Off</button>
-              {discountType && (
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={discountValue}
-                  onChange={(e) => setDiscountValue(e.target.value)}
-                  className="w-14 px-1.5 py-0.5 text-right text-xs font-bold bg-slate-50 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-              )}
-            </div>
+        {/* Tax Row */}
+        <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+          <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1 shrink-0">
+            <Percent className="w-3 h-3 text-blue-600" /> GST / Tax
+          </span>
+          <div className="flex items-center gap-2">
+            {taxEnabled && (
+              <div className="flex items-center gap-1">
+                {["5", "12", "18"].map((rate) => (
+                  <button
+                    key={rate}
+                    type="button"
+                    onClick={() => setTaxRate(rate)}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                      taxRate === rate ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >{rate}%</button>
+                ))}
+              </div>
+            )}
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" checked={taxEnabled} onChange={(e) => setTaxEnabled(e.target.checked)} className="sr-only peer" />
+              <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
           </div>
-
-          {/* Tax Row */}
-          <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
-            <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1 shrink-0">
-              <Percent className="w-3 h-3 text-blue-600" /> GST / Tax
-            </span>
-            <div className="flex items-center gap-2">
-              {taxEnabled && (
-                <div className="flex items-center gap-1">
-                  {["5", "12", "18"].map((rate) => (
-                    <button
-                      key={rate}
-                      type="button"
-                      onClick={() => setTaxRate(rate)}
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
-                        taxRate === rate ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      }`}
-                    >{rate}%</button>
-                  ))}
-                </div>
-              )}
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={taxEnabled} onChange={(e) => setTaxEnabled(e.target.checked)} className="sr-only peer" />
-                <div className="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Card (Compact) */}
-        <div className="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-2xs space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-700">Payment Status</span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setPaymentStatus("PAID")}
-                className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-colors ${paymentStatus === "PAID" ? "bg-green-600 text-white shadow-2xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-              >Paid</button>
-              <button
-                type="button"
-                onClick={() => setPaymentStatus("UNPAID")}
-                className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-colors ${paymentStatus === "UNPAID" ? "bg-amber-500 text-white shadow-2xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-              >Unpaid</button>
-            </div>
-          </div>
-
-          {paymentStatus === "PAID" && (
-            <div className="grid grid-cols-4 gap-1 pt-0.5">
-              {(["CASH", "UPI", "CARD", "OTHER"] as const).map((method) => (
-                <button
-                  key={method}
-                  type="button"
-                  onClick={() => setPaymentMethod(method)}
-                  className={`py-1.5 flex flex-col items-center gap-0.5 rounded-lg text-[10px] font-bold border transition-colors ${
-                    paymentMethod === method
-                      ? "bg-blue-50 border-blue-500 text-blue-700 shadow-2xs"
-                      : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  {paymentIcons[method]}
-                  {method}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* 3. Pinned Bottom Checkout Footer (shrink-0) - ALWAYS VISIBLE, NEVER PUSHED DOWN */}
-      <div className="shrink-0 bg-white border-t-2 border-slate-200 p-3 shadow-md space-y-2">
+      {/* 5. Payment Card (shrink-0, PINNED AT BOTTOM) */}
+      <div className="shrink-0 bg-white px-3 py-1.5 border-t border-slate-200/80 shadow-2xs space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold text-slate-700">Payment Status</span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setPaymentStatus("PAID")}
+              className={`px-2.5 py-0.5 rounded text-[10px] font-bold transition-colors ${paymentStatus === "PAID" ? "bg-green-600 text-white shadow-2xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+            >Paid</button>
+            <button
+              type="button"
+              onClick={() => setPaymentStatus("UNPAID")}
+              className={`px-2.5 py-0.5 rounded text-[10px] font-bold transition-colors ${paymentStatus === "UNPAID" ? "bg-amber-500 text-white shadow-2xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+            >Unpaid</button>
+          </div>
+        </div>
+
+        {paymentStatus === "PAID" && (
+          <div className="grid grid-cols-4 gap-1 pt-0.5">
+            {(["CASH", "UPI", "CARD", "OTHER"] as const).map((method) => (
+              <button
+                key={method}
+                type="button"
+                onClick={() => setPaymentMethod(method)}
+                className={`py-1 flex flex-col items-center gap-0.5 rounded-lg text-[10px] font-bold border transition-colors ${
+                  paymentMethod === method
+                    ? "bg-blue-50 border-blue-500 text-blue-700 shadow-2xs"
+                    : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {paymentIcons[method]}
+                {method}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 6. Pinned Bottom Checkout Footer (shrink-0) - ALWAYS VISIBLE, NEVER PUSHED DOWN */}
+      <div className="shrink-0 bg-white border-t-2 border-slate-200 p-2.5 sm:p-3 shadow-md space-y-2">
         {/* Breakdown bar */}
         <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold px-0.5">
           <span>Subtotal: ₹{totals.subtotal}</span>
@@ -697,8 +687,8 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
           </div>
         )}
 
-        {/* Grand Total & Checkout Button in one unified action row */}
-        <div className="flex items-center justify-between gap-3 pt-1">
+        {/* Grand Total & Checkout Button */}
+        <div className="flex items-center justify-between gap-3 pt-0.5">
           <div>
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block leading-none">Total Payable</span>
             <span className="text-2xl font-black text-blue-600 leading-none">₹{totals.grandTotal}</span>
@@ -708,7 +698,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
             type="button"
             disabled={isPending || cart.length === 0}
             onClick={handleCompleteBill}
-            className={`flex-1 py-3 px-4 rounded-xl font-black text-white text-sm shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
+            className={`flex-1 py-2.5 px-4 rounded-xl font-black text-white text-sm shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
               isPending || cart.length === 0
                 ? "bg-slate-300 cursor-not-allowed shadow-none"
                 : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/25 ring-2 ring-blue-500/20"
@@ -737,12 +727,12 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
       <div className="hidden md:grid md:grid-cols-12 gap-0 h-full overflow-hidden">
         {/* Left: Items (7 cols) */}
         <div className="md:col-span-7 border-r border-slate-200 flex flex-col overflow-hidden bg-white h-full">
-          <ItemsPanel />
+          {renderItemsPanel()}
         </div>
 
         {/* Right: Bill (5 cols) - distinct receipt background */}
         <div className="md:col-span-5 bg-slate-50/70 border-l border-slate-200/80 flex flex-col overflow-hidden h-full">
-          <BillPanel />
+          {renderBillPanel()}
         </div>
       </div>
 
@@ -783,7 +773,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
 
         {/* Tab Content */}
         <div className={`flex-1 overflow-hidden min-h-0 ${mobileTab === "bill" ? "bg-slate-50/70" : "bg-white"}`}>
-          {mobileTab === "items" ? <ItemsPanel /> : <BillPanel />}
+          {mobileTab === "items" ? renderItemsPanel() : renderBillPanel()}
         </div>
 
         {/* Mobile: When on items tab, show floating "Go to Bill" if cart has items */}

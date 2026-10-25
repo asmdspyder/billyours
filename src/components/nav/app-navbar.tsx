@@ -46,87 +46,80 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
 
   return (
     <>
-      {/* ─── Top Navbar (Laptop, Tablet & Desktop) in High-Contrast Modern Blue ─ */}
-      <header className="hidden md:flex items-center justify-between h-13 px-4 lg:px-6 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white border-b border-blue-800/80 sticky top-0 z-40 select-none shrink-0 shadow-md">
-        {/* Left: Stylish Brand Logo & Shop Identity */}
+      {/* ─── Top Navbar (Laptop, Tablet & Desktop) in Sleek Modern Dark Slate ─ */}
+      <header className="hidden md:flex items-center justify-between h-13 px-4 lg:px-6 bg-slate-900 text-slate-100 border-b border-slate-800 sticky top-0 z-40 select-none shrink-0 shadow-xs">
+        {/* Left: Modern Brand Mark & Shop Identity */}
         <div className="flex items-center gap-3 shrink-0">
-          <Link href="/app/billing" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-blue-600 shadow-md shadow-blue-900/20 transition-transform group-hover:scale-105">
-              <Receipt className="w-4.5 h-4.5" />
+          <Link href="/app/billing" className="flex items-center gap-2 group">
+            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs transition-transform group-hover:scale-105">
+              <Receipt className="w-4 h-4" />
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="font-black text-white text-lg tracking-tight leading-none">
-                BillYours
-              </span>
-            </div>
+            <span className="font-extrabold text-white text-base tracking-tight">
+              Bill<span className="text-blue-400">Yours</span>
+            </span>
           </Link>
 
-          <div className="h-4 w-px bg-white/20 mx-1 hidden lg:block" />
+          <div className="h-4 w-px bg-slate-800 hidden sm:block" />
 
-          {/* Shop Pill */}
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-800/60 border border-blue-400/30 text-xs font-semibold text-blue-100 max-w-[220px]">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <Store className="w-3.5 h-3.5 text-blue-200 shrink-0" />
+          {/* Shop Indicator */}
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 max-w-[200px]">
+            <Store className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span className="truncate">{businessName}</span>
           </div>
         </div>
 
-        {/* Center: Action + Navigation */}
-        <div className="flex items-center gap-2">
+        {/* Center: Clean Horizontal Navigation */}
+        <nav className="flex items-center gap-1">
           {/* New Bill Button */}
           <Link
             href="/app/billing"
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               isBilling
-                ? "bg-white text-blue-700 shadow-md ring-2 ring-white/50"
-                : "bg-blue-800/80 text-white hover:bg-white hover:text-blue-700 border border-white/20"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-slate-300 hover:text-white hover:bg-slate-800"
             }`}
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>New Bill</span>
           </Link>
 
-          {/* Navigation links capsule */}
-          <nav className="flex items-center bg-blue-800/50 p-1 rounded-xl border border-white/15">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href || (link.href !== "/app/billing" && pathname.startsWith(link.href));
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            const isActive = pathname === link.href || (link.href !== "/app/billing" && pathname.startsWith(link.href));
 
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    isActive
-                      ? "bg-white text-blue-700 shadow-sm"
-                      : "text-blue-100 hover:text-white hover:bg-white/10"
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-blue-700" : "text-blue-200"}`} />
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                  isActive
+                    ? "bg-slate-800 text-white font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isActive ? "text-blue-400" : "text-slate-400"}`} />
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
         {/* Right: Owner Profile & Logout */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-2 bg-blue-800/60 border border-white/15 px-2.5 py-1 rounded-xl">
-            <div className="w-6 h-6 rounded-lg bg-white text-blue-700 text-xs font-black flex items-center justify-center shrink-0 shadow-xs">
+          <div className="flex items-center gap-2 bg-slate-800/60 border border-slate-700/60 px-2.5 py-1 rounded-lg">
+            <div className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
               {ownerInitial}
             </div>
-            <div className="min-w-0 hidden xl:block text-left">
-              <p className="text-xs font-bold text-white leading-none truncate max-w-[120px]">{ownerName}</p>
-              <p className="text-[10px] text-blue-200 leading-none mt-0.5">Owner</p>
-            </div>
+            <span className="text-xs font-medium text-slate-300 truncate max-w-[120px] hidden xl:inline">
+              {ownerName}
+            </span>
           </div>
 
           <form action={logoutAction}>
             <button
               type="submit"
               title="Sign out"
-              className="px-2.5 py-1 text-blue-100 hover:text-white hover:bg-white/15 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-bold"
+              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden lg:inline text-[11px]">Sign Out</span>
@@ -136,17 +129,19 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
       </header>
 
       {/* ─── Mobile Top Header (<md) ────────────────────────────────────────── */}
-      <header className="md:hidden flex items-center justify-between h-12 px-3 bg-blue-600 text-white border-b border-blue-700 sticky top-0 z-40 select-none shrink-0 shadow-sm">
+      <header className="md:hidden flex items-center justify-between h-12 px-3 bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-40 select-none shrink-0 shadow-xs">
         <Link href="/app/billing" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-blue-600 shadow-xs">
-            <Receipt className="w-4 h-4" />
+          <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center text-white shadow-xs">
+            <Receipt className="w-3.5 h-3.5" />
           </div>
-          <span className="font-black text-white text-base tracking-tight">BillYours</span>
+          <span className="font-extrabold text-white text-base tracking-tight">
+            Bill<span className="text-blue-400">Yours</span>
+          </span>
         </Link>
 
         <div className="flex items-center gap-2 min-w-0">
-          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-700/80 border border-blue-400/30 text-blue-100 text-[11px] font-semibold truncate max-w-[150px]">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-300 text-[11px] font-medium truncate max-w-[150px]">
+            <Store className="w-3 h-3 text-slate-400 shrink-0" />
             <span className="truncate">{businessName}</span>
           </div>
 
@@ -154,7 +149,7 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
             <button
               type="submit"
               title="Sign out"
-              className="p-1 text-blue-200 hover:text-white rounded-md transition-colors"
+              className="p-1 text-slate-400 hover:text-white rounded-md transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
