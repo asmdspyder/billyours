@@ -3,7 +3,7 @@ import { sql } from "@/db";
 import Link from "next/link";
 import {
   TrendingUp,
-  Receipt,
+  ReceiptText,
   CheckCircle2,
   Clock,
   ArrowUpRight,
@@ -11,6 +11,7 @@ import {
   IndianRupee,
   Users,
 } from "lucide-react";
+import { SalesTrendChart } from "@/components/dashboard/sales-trend-chart";
 
 export const metadata = {
   title: "Sales Dashboard — BillYours",
@@ -115,7 +116,7 @@ export default async function DashboardPage() {
           href="/app/billing"
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors self-start sm:self-auto"
         >
-          <Receipt className="w-4 h-4" />
+          <ReceiptText className="w-4 h-4" />
           <span>New Bill</span>
         </Link>
       </div>
@@ -180,32 +181,14 @@ export default async function DashboardPage() {
       {/* Middle Grid: Lightweight Chart & Payment Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 7-Day Trend Chart (2 Cols) */}
-        <div className="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold text-sm text-slate-900">Daily Sales Trend (Last 7 Days)</h2>
-            <span className="text-xs text-slate-400">Excludes cancelled bills</span>
-          </div>
-
-          {/* SVG / CSS Bar Chart */}
-          <div className="h-44 flex items-end justify-between gap-2 pt-6 pb-2 px-2 border-b border-slate-100">
-            {dailyBreakdown.map((day: any) => {
-              const amount = Number(day.day_total);
-              const heightPercent = Math.max(8, Math.round((amount / maxDailySales) * 100));
-
-              return (
-                <div key={day.day_date} className="flex-1 flex flex-col items-center gap-1 group">
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-slate-700 bg-slate-100 px-1 py-0.5 rounded whitespace-nowrap -mb-1">
-                    ₹{amount.toFixed(0)}
-                  </div>
-                  <div
-                    style={{ height: `${heightPercent}%` }}
-                    className="w-full max-w-[36px] bg-blue-600 rounded-t-md group-hover:bg-blue-700 transition-all shadow-xs"
-                  />
-                  <span className="text-[11px] font-medium text-slate-500">{day.day_label}</span>
-                </div>
-              );
-            })}
-          </div>
+        <div className="lg:col-span-2">
+          <SalesTrendChart
+            data={dailyBreakdown.map((d: any) => ({
+              dayDate: String(d.day_date),
+              dayLabel: String(d.day_label),
+              dayTotal: Number(d.day_total) || 0,
+            }))}
+          />
         </div>
 
         {/* Today's Payment Status Split (1 Col) */}
