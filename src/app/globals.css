@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f8fafc;
+  --foreground: #172033;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Print Styles */
+@media print {
+  /* Hide non-printable elements */
+  .no-print,
+  nav,
+  aside,
+  header,
+  footer,
+  button,
+  .admin-banner {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-area {
+    display: block !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Thermal 80mm layout defaults */
+  .thermal-receipt {
+    width: 76mm !important;
+    max-width: 76mm !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    margin: 0 auto !important;
+    padding: 2mm !important;
+    color: black !important;
+  }
+
+  /* Thermal 58mm layout */
+  .thermal-receipt-58 {
+    width: 54mm !important;
+    max-width: 54mm !important;
+    font-size: 9.5px !important;
+    line-height: 1.2 !important;
+    margin: 0 auto !important;
+    padding: 1mm !important;
+    color: black !important;
+  }
+
+  /* A4 Invoice print styling */
+  .a4-invoice {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 15mm !important;
+    margin: 0 auto !important;
+    font-size: 13px !important;
+    color: black !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  @page {
+    margin: 4mm;
+  }
+}
