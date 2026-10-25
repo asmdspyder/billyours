@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getBillByShareToken } from "@/lib/share-link";
-import { Receipt, Printer, Store, CheckCircle2 } from "lucide-react";
+import { ReceiptText, CheckCircle2 } from "lucide-react";
+import { PrintReceiptButton } from "@/components/bills/print-receipt-button";
 import type { Metadata } from "next";
 
 interface PublicBillPageProps {
@@ -19,14 +20,32 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function PublicBillPage(props: PublicBillPageProps) {
   const params = await props.params;
-  const token = params.token;
+  const token = params?.token;
 
-  const result = await getBillByShareToken(token);
-  if (!result) {
+  if (!token) {
     notFound();
   }
 
-  const { bill, items } = result;
+  const result = await getBillByShareToken(token);
+  if (!result || !result.bill) {
+    notFound();
+  }
+
+  const { bill, items = [] } = result;
+
+  const billDate = bill.completed_at
+    ? new Date(bill.completed_at).toLocaleString("en-IN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "Asia/Kolkata",
+      })
+    : "N/A";
+
+  const subtotal = Number(bill.subtotal || 0);
+  const discountAmount = Number(bill.discount_amount || 0);
+  const taxAmount = Number(bill.tax_amount || 0);
+  const taxRate = Number(bill.tax_rate || 0);
+  const grandTotal = Number(bill.grand_total || 0);
 
   return (
     <div className="min-h-screen bg-slate-100 py-6 px-4 flex flex-col items-center justify-center">
@@ -35,9 +54,9 @@ export default async function PublicBillPage(props: PublicBillPageProps) {
         {/* Banner */}
         <div className="bg-blue-600 text-white p-5 text-center space-y-1">
           <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1">
-            <Receipt className="w-5 h-5 text-white" />
+            <ReceiptText className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-xl font-black">{bill.business_name}</h1>
+          <h1 className="text-xl font-black">{bill.business_name || "BillYours"}</h1>
           {bill.business_address && (
             <p className="text-xs text-blue-100">{bill.business_address}</p>
           )}
@@ -54,13 +73,7 @@ export default async function PublicBillPage(props: PublicBillPageProps) {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-slate-500">Date:</span>
-            <span className="text-slate-700">
-              {new Date(bill.completed_at).toLocaleString("en-IN", {
-                dateStyle: "medium",
-                timeStyle: "short",
-                timeZone: "Asia/Kolkata",
-              })}
-            </span>
+            <span className="text-slate-700">{billDate}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-slate-500">Customer:</span>
@@ -72,7 +85,7 @@ export default async function PublicBillPage(props: PublicBillPageProps) {
             <span className="text-slate-500">Payment Status:</span>
             <span className="inline-flex items-center gap-1 font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full text-[11px]">
               <CheckCircle2 className="w-3 h-3" />
-              {bill.payment_status} ({bill.payment_method})
+              {bill.payment_status || "PAID"} ({bill.payment_method || "CASH"})
             </span>
           </div>
         </div>
@@ -86,11 +99,11 @@ export default async function PublicBillPage(props: PublicBillPageProps) {
                 <div className="flex-1 truncate mr-2">
                   <p className="font-semibold text-slate-900 truncate">{item.item_name_snapshot}</p>
                   <p className="text-[11px] text-slate-500">
-                    {Number(item.quantity)} × ₹{Number(item.unit_price).toFixed(2)}
+                    {Number(item.quantity || 1)} × ₹{Number(item.unit_price || 0).toFixed(2)}
                   </p>
                 </div>
                 <div className="font-bold text-slate-900">
-                  ₹{Number(item.line_subtotal).toFixed(2)}
+                  ₹{Number(item.line_subtotal || 0).toFixed(2)}
                 </div>
               </div>
             ))}
@@ -101,37 +114,29 @@ export default async function PublicBillPage(props: PublicBillPageProps) {
         <div className="p-5 bg-slate-50 space-y-1.5 text-xs">
           <div className="flex justify-between text-slate-600">
             <span>Subtotal:</span>
-            <span>₹{Number(bill.subtotal).toFixed(2)}</span>
+            <span>₹{subtotal.toFixed(2)}</span>
           </div>
-          {Number(bill.discount_amount) > 0 && (
+          {discountAmount > 0 && (
             <div className="flex justify-between text-green-700 font-medium">
               <span>Discount:</span>
-              <span>- ₹{Number(bill.discount_amount).toFixed(2)}</span>
+              <span>- ₹{discountAmount.toFixed(2)}</span>
             </div>
           )}
-          {bill.tax_enabled && Number(bill.tax_amount) > 0 && (
+          {bill.tax_enabled && taxAmount > 0 && (
             <div className="flex justify-between text-slate-700">
-              <span>{bill.tax_label || "GST"} ({Number(bill.tax_rate).toFixed(2)}%):</span>
-              <span>+ ₹{Number(bill.tax_amount).toFixed(2)}</span>
+              <span>{bill.tax_label || "GST"} ({taxRate.toFixed(2)}%):</span>
+              <span>+ ₹{taxAmount.toFixed(2)}</span>
             </div>
           )}
           <div className="flex justify-between items-baseline pt-2 border-t border-slate-200 text-slate-900 font-extrabold text-base">
             <span>Grand Total:</span>
-            <span className="text-xl text-blue-600">₹{Number(bill.grand_total).toFixed(2)}</span>
+            <span className="text-xl text-blue-600">₹{grandTotal.toFixed(2)}</span>
           </div>
         </div>
 
-        {/* Print / Save receipt button */}
+        {/* Print / Save receipt button (Client Component) */}
         <div className="p-4 bg-white border-t border-slate-100 flex items-center justify-center gap-2 no-print">
-          <button
-            onClick={() => {
-              if (typeof window !== "undefined") window.print();
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Print or Save Receipt</span>
-          </button>
+          <PrintReceiptButton />
         </div>
 
         {/* Footer */}
