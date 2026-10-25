@@ -27,7 +27,7 @@ export default async function ItemsPage() {
   `;
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
+    <div className="overflow-y-auto h-full">
       <ItemsCatalog
         initialItems={allItems.map((it) => ({
           id: it.id,

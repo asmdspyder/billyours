@@ -4,19 +4,34 @@
 
 :root {
   --background: #f8fafc;
-  --foreground: #172033;
+  --foreground: #0f172a;
+  --brand: #2563eb;
+  --brand-light: #eff6ff;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* Hide scrollbar but allow scrolling */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Thin scrollbar */
+.thin-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
+.thin-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
 
 /* Print Styles */
 @media print {
-  /* Hide non-printable elements */
   .no-print,
   nav,
   aside,

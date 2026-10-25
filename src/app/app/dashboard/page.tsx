@@ -102,18 +102,18 @@ export default async function DashboardPage() {
   );
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6 overflow-y-auto h-full">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Sales Dashboard</h1>
-          <p className="text-xs md:text-sm text-slate-500">
-            Real-time financial summary for {session.account.businessName}.
+          <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            {session.account.businessName}
           </p>
         </div>
         <Link
           href="/app/billing"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors self-start sm:self-auto"
         >
           <Receipt className="w-4 h-4" />
           <span>New Bill</span>
@@ -123,56 +123,56 @@ export default async function DashboardPage() {
       {/* Primary 4 Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {/* Today's Sales */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-medium mb-2">
             <span>Today&apos;s Sales</span>
             <TrendingUp className="w-4 h-4 text-blue-600" />
           </div>
           <p className="text-xl md:text-2xl font-black text-slate-900">
             ₹{todaySalesNum.toFixed(2)}
           </p>
-          <p className="text-[11px] text-slate-400">
-            {todayCount} bill{todayCount === 1 ? "" : "s"} completed today
+          <p className="text-xs text-slate-400 mt-1">
+            {todayCount} bill{todayCount === 1 ? "" : "s"} today
           </p>
         </div>
 
         {/* Average Bill Value */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
-            <span>Average Bill (Today)</span>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-medium mb-2">
+            <span>Avg Bill</span>
             <ShoppingBag className="w-4 h-4 text-slate-400" />
           </div>
           <p className="text-xl md:text-2xl font-black text-slate-900">
             ₹{avgBillToday}
           </p>
-          <p className="text-[11px] text-slate-400">Per customer transaction</p>
+          <p className="text-xs text-slate-400 mt-1">Per transaction today</p>
         </div>
 
         {/* Last 7 Days Sales */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-medium mb-2">
             <span>Last 7 Days</span>
             <Clock className="w-4 h-4 text-slate-400" />
           </div>
           <p className="text-xl md:text-2xl font-black text-slate-900">
             ₹{Number(weekMetrics[0]?.week_sales || 0).toFixed(2)}
           </p>
-          <p className="text-[11px] text-slate-400">
-            {Number(weekMetrics[0]?.week_bills_count || 0)} total bills
+          <p className="text-xs text-slate-400 mt-1">
+            {Number(weekMetrics[0]?.week_bills_count || 0)} bills
           </p>
         </div>
 
         {/* This Month Sales */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-medium mb-2">
             <span>This Month</span>
             <CheckCircle2 className="w-4 h-4 text-green-600" />
           </div>
           <p className="text-xl md:text-2xl font-black text-slate-900">
             ₹{Number(monthMetrics[0]?.month_sales || 0).toFixed(2)}
           </p>
-          <p className="text-[11px] text-slate-400">
-            {Number(monthMetrics[0]?.month_bills_count || 0)} bills this month
+          <p className="text-xs text-slate-400 mt-1">
+            {Number(monthMetrics[0]?.month_bills_count || 0)} bills
           </p>
         </div>
       </div>
