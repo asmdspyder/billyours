@@ -28,6 +28,7 @@ import {
 import { calculateBillTotals } from "@/lib/billing-calculations";
 import { completeBillAction, lookupCustomerPhoneAction } from "@/actions/billing-actions";
 import { buildWhatsAppShareUrl } from "@/lib/whatsapp";
+import { getBillShareUrl } from "@/lib/base-url";
 
 interface Item {
   id: string;
@@ -893,7 +894,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
                       businessName: business.businessName,
                       billNumber: completedBill.billNumber,
                       grandTotal: completedBill.grandTotal,
-                      billLink: typeof window !== "undefined" ? `${window.location.origin}/b/${completedBill.shareToken}` : undefined,
+                      billLink: getBillShareUrl(completedBill.shareToken),
                     }) || "#"
                   }
                   target="_blank"

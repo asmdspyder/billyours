@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { getBaseUrl } from "@/lib/base-url";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getBaseUrl()),
   title: "BillYours — Simple Billing for Every Business",
   description:
     "Fast, lightweight billing application for small businesses in India. Create bills, print receipts, share on WhatsApp, and track sales without complicated software.",

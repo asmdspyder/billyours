@@ -14,10 +14,11 @@ import {
   Phone,
   FileText,
   AlertTriangle,
-  Receipt,
+  ReceiptText,
   X,
 } from "lucide-react";
 import { buildWhatsAppShareUrl } from "@/lib/whatsapp";
+import { getBillShareUrl } from "@/lib/base-url";
 import { cancelBillAction } from "@/actions/billing-actions";
 
 interface BillItem {
@@ -100,7 +101,7 @@ export function BillDetailView({
     }
   }, [initialAutoPrint]);
 
-  const publicShareUrl = typeof window !== "undefined" ? `${window.location.origin}/b/${shareToken}` : `/b/${shareToken}`;
+  const publicShareUrl = getBillShareUrl(shareToken);
 
   const copyShareLink = async () => {
     try {
