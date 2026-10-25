@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  Receipt,
+  ReceiptText,
   Zap,
   Printer,
   Share2,
@@ -30,7 +30,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
-              <Receipt className="w-4.5 h-4.5 text-white" />
+              <ReceiptText className="w-4.5 h-4.5 text-white" />
             </div>
             <span className="font-black text-slate-900 text-lg tracking-tight">BillYours</span>
           </Link>
@@ -146,7 +146,7 @@ export default function LandingPage() {
                 {/* Right: bill */}
                 <div className="col-span-2 p-4 space-y-3 bg-white">
                   <div className="flex items-center gap-1.5">
-                    <Receipt className="w-3.5 h-3.5 text-blue-600" />
+                    <ReceiptText className="w-3.5 h-3.5 text-blue-600" />
                     <span className="text-xs font-bold text-slate-900">Current Bill</span>
                     <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold">2 items</span>
                   </div>
@@ -265,7 +265,7 @@ export default function LandingPage() {
               desc: "Your data is isolated per business. Bill links are cryptographically signed and private.",
             },
             {
-              icon: Receipt,
+              icon: ReceiptText,
               color: "bg-orange-100 text-orange-600",
               title: "Sequential Bill Numbers",
               desc: "Automatic, gapless bill numbering with your custom prefix (e.g. CBC-2026-000001).",
@@ -491,7 +491,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center">
-              <Receipt className="w-3.5 h-3.5 text-white" />
+              <ReceiptText className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="font-bold text-white text-sm">BillYours</span>
           </div>

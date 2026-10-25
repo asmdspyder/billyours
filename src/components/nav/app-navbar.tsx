@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Receipt,
+  ReceiptText,
   PlusCircle,
   Package,
   History,
@@ -47,39 +47,39 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
   return (
     <>
       {/* ─── Top Navbar (Laptop, Tablet & Desktop) in Sleek Modern Dark Slate ─ */}
-      <header className="hidden md:flex items-center justify-between h-13 px-4 lg:px-6 bg-slate-900 text-slate-100 border-b border-slate-800 sticky top-0 z-40 select-none shrink-0 shadow-xs">
+      <header className="hidden md:flex items-center justify-between h-16 px-5 lg:px-7 bg-slate-900 text-slate-100 border-b border-slate-800 sticky top-0 z-40 select-none shrink-0 shadow-sm">
         {/* Left: Modern Brand Mark & Shop Identity */}
-        <div className="flex items-center gap-3 shrink-0">
-          <Link href="/app/billing" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs transition-transform group-hover:scale-105">
-              <Receipt className="w-4 h-4" />
+        <div className="flex items-center gap-3.5 shrink-0">
+          <Link href="/app/billing" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
+              <ReceiptText className="w-5 h-5" />
             </div>
-            <span className="font-extrabold text-white text-base tracking-tight">
+            <span className="font-black text-white text-lg lg:text-xl tracking-tight">
               Bill<span className="text-blue-400">Yours</span>
             </span>
           </Link>
 
-          <div className="h-4 w-px bg-slate-800 hidden sm:block" />
+          <div className="h-5 w-px bg-slate-800 hidden sm:block" />
 
           {/* Shop Indicator */}
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 max-w-[200px]">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 max-w-[220px]">
             <Store className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span className="truncate">{businessName}</span>
           </div>
         </div>
 
         {/* Center: Clean Horizontal Navigation */}
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-1.5">
           {/* New Bill Button */}
           <Link
             href="/app/billing"
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors ${
               isBilling
-                ? "bg-blue-600 text-white shadow-xs"
+                ? "bg-blue-600 text-white shadow-sm"
                 : "text-slate-300 hover:text-white hover:bg-slate-800"
             }`}
           >
-            <PlusCircle className="w-3.5 h-3.5" />
+            <PlusCircle className="w-4 h-4" />
             <span>New Bill</span>
           </Link>
 
@@ -91,13 +91,13 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
                   isActive
                     ? "bg-slate-800 text-white font-bold"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? "text-blue-400" : "text-slate-400"}`} />
+                <Icon className={`w-4 h-4 ${isActive ? "text-blue-400" : "text-slate-400"}`} />
                 <span>{link.label}</span>
               </Link>
             );
@@ -105,12 +105,12 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
         </nav>
 
         {/* Right: Owner Profile & Logout */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-2 bg-slate-800/60 border border-slate-700/60 px-2.5 py-1 rounded-lg">
-            <div className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2.5 bg-slate-800/60 border border-slate-700/60 px-3 py-1.5 rounded-lg">
+            <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0">
               {ownerInitial}
             </div>
-            <span className="text-xs font-medium text-slate-300 truncate max-w-[120px] hidden xl:inline">
+            <span className="text-xs font-medium text-slate-300 truncate max-w-[130px] hidden xl:inline">
               {ownerName}
             </span>
           </div>
@@ -119,29 +119,29 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
             <button
               type="submit"
               title="Sign out"
-              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
+              className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-medium"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline text-[11px]">Sign Out</span>
+              <LogOut className="w-4 h-4" />
+              <span className="hidden lg:inline text-xs">Sign Out</span>
             </button>
           </form>
         </div>
       </header>
 
       {/* ─── Mobile Top Header (<md) ────────────────────────────────────────── */}
-      <header className="md:hidden flex items-center justify-between h-12 px-3 bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-40 select-none shrink-0 shadow-xs">
+      <header className="md:hidden flex items-center justify-between h-14 px-3.5 bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-40 select-none shrink-0 shadow-xs">
         <Link href="/app/billing" className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center text-white shadow-xs">
-            <Receipt className="w-3.5 h-3.5" />
+          <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
+            <ReceiptText className="w-4 h-4" />
           </div>
-          <span className="font-extrabold text-white text-base tracking-tight">
+          <span className="font-black text-white text-base tracking-tight">
             Bill<span className="text-blue-400">Yours</span>
           </span>
         </Link>
 
         <div className="flex items-center gap-2 min-w-0">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-300 text-[11px] font-medium truncate max-w-[150px]">
-            <Store className="w-3 h-3 text-slate-400 shrink-0" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-slate-300 text-xs font-medium truncate max-w-[160px]">
+            <Store className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span className="truncate">{businessName}</span>
           </div>
 
@@ -149,9 +149,9 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
             <button
               type="submit"
               title="Sign out"
-              className="p-1 text-slate-400 hover:text-white rounded-md transition-colors"
+              className="p-1.5 text-slate-400 hover:text-white rounded-md transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-4 h-4" />
             </button>
           </form>
         </div>

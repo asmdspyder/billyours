@@ -7,7 +7,7 @@ import {
   Plus,
   Minus,
   Trash2,
-  Receipt,
+  ReceiptText,
   User,
   Phone,
   Percent,
@@ -434,7 +434,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
       <div className="shrink-0 h-11 px-3.5 bg-white border-b border-slate-200/90 flex items-center justify-between shadow-2xs">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-2xs">
-            <Receipt className="w-3.5 h-3.5" />
+            <ReceiptText className="w-3.5 h-3.5" />
           </div>
           <span className="font-bold text-slate-900 text-sm">Current Bill</span>
           {cart.length > 0 && (
@@ -711,7 +711,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
               </>
             ) : (
               <>
-                <Receipt className="w-4 h-4" />
+                <ReceiptText className="w-4 h-4" />
                 <span>Complete Bill</span>
               </>
             )}
@@ -761,7 +761,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
                 : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
-            <Receipt className="w-4 h-4" />
+            <ReceiptText className="w-4 h-4" />
             Bill
             {cartCount > 0 && (
               <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center">
@@ -784,7 +784,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
               onClick={() => setMobileTab("bill")}
               className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 active:scale-[0.99] transition-all"
             >
-              <Receipt className="w-4 h-4" />
+              <ReceiptText className="w-4 h-4" />
               View Bill ({cartCount} item{cartCount !== 1 ? "s" : ""}) · ₹{totals.grandTotal}
             </button>
           </div>
