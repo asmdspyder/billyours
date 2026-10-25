@@ -12,7 +12,6 @@ import {
   Settings,
   LogOut,
   Store,
-  Sparkles,
 } from "lucide-react";
 import { logoutAction } from "@/actions/auth-actions";
 
@@ -47,49 +46,48 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
 
   return (
     <>
-      {/* ─── Top Navbar (Laptop, Tablet & Desktop) ─────────────────────────── */}
-      <header className="hidden md:flex items-center justify-between h-14 px-4 lg:px-6 bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-40 select-none shrink-0 shadow-2xs">
-        {/* Left: Brand & Shop Identity */}
+      {/* ─── Top Navbar (Laptop, Tablet & Desktop) in High-Contrast Modern Blue ─ */}
+      <header className="hidden md:flex items-center justify-between h-13 px-4 lg:px-6 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white border-b border-blue-800/80 sticky top-0 z-40 select-none shrink-0 shadow-md">
+        {/* Left: Stylish Brand Logo & Shop Identity */}
         <div className="flex items-center gap-3 shrink-0">
           <Link href="/app/billing" className="flex items-center gap-2.5 group">
-            <div className="w-8.5 h-8.5 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/25 transition-transform group-hover:scale-105">
+            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-blue-600 shadow-md shadow-blue-900/20 transition-transform group-hover:scale-105">
               <Receipt className="w-4.5 h-4.5" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-black text-slate-900 text-base tracking-tight leading-none flex items-center gap-1">
+            <div className="flex items-baseline gap-1">
+              <span className="font-black text-white text-lg tracking-tight leading-none">
                 BillYours
               </span>
-              <span className="text-[10px] font-semibold text-blue-600 tracking-wider uppercase">POS SaaS</span>
             </div>
           </Link>
 
-          <div className="h-5 w-px bg-slate-200/80 mx-1 hidden lg:block" />
+          <div className="h-4 w-px bg-white/20 mx-1 hidden lg:block" />
 
           {/* Shop Pill */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-semibold text-slate-700 max-w-[240px]">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <Store className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-800/60 border border-blue-400/30 text-xs font-semibold text-blue-100 max-w-[220px]">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <Store className="w-3.5 h-3.5 text-blue-200 shrink-0" />
             <span className="truncate">{businessName}</span>
           </div>
         </div>
 
-        {/* Center: Primary Action + Capsule Segmented Navigation */}
-        <div className="flex items-center gap-2.5">
-          {/* Quick Action: New Bill Button */}
+        {/* Center: Action + Navigation */}
+        <div className="flex items-center gap-2">
+          {/* New Bill Button */}
           <Link
             href="/app/billing"
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm ${
               isBilling
-                ? "bg-blue-600 text-white shadow-blue-500/20 ring-2 ring-blue-500/30"
-                : "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80"
+                ? "bg-white text-blue-700 shadow-md ring-2 ring-white/50"
+                : "bg-blue-800/80 text-white hover:bg-white hover:text-blue-700 border border-white/20"
             }`}
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>New Bill</span>
           </Link>
 
-          {/* Segmented Navigation Capsule */}
-          <nav className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 shadow-2xs">
+          {/* Navigation links capsule */}
+          <nav className="flex items-center bg-blue-800/50 p-1 rounded-xl border border-white/15">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href || (link.href !== "/app/billing" && pathname.startsWith(link.href));
@@ -98,13 +96,13 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     isActive
-                      ? "bg-white text-slate-900 font-bold shadow-xs border border-slate-200/60"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                      ? "bg-white text-blue-700 shadow-sm"
+                      : "text-blue-100 hover:text-white hover:bg-white/10"
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-blue-700" : "text-blue-200"}`} />
                   <span>{link.label}</span>
                 </Link>
               );
@@ -113,14 +111,14 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
         </div>
 
         {/* Right: Owner Profile & Logout */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/70 px-2.5 py-1 rounded-xl">
-            <div className="w-6 h-6 rounded-lg bg-blue-600 text-white text-xs font-black flex items-center justify-center shrink-0 shadow-2xs">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 bg-blue-800/60 border border-white/15 px-2.5 py-1 rounded-xl">
+            <div className="w-6 h-6 rounded-lg bg-white text-blue-700 text-xs font-black flex items-center justify-center shrink-0 shadow-xs">
               {ownerInitial}
             </div>
             <div className="min-w-0 hidden xl:block text-left">
-              <p className="text-xs font-bold text-slate-800 leading-none truncate max-w-[120px]">{ownerName}</p>
-              <p className="text-[10px] text-slate-400 leading-none mt-0.5">Owner</p>
+              <p className="text-xs font-bold text-white leading-none truncate max-w-[120px]">{ownerName}</p>
+              <p className="text-[10px] text-blue-200 leading-none mt-0.5">Owner</p>
             </div>
           </div>
 
@@ -128,9 +126,9 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
             <button
               type="submit"
               title="Sign out"
-              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-1 text-xs font-semibold"
+              className="px-2.5 py-1 text-blue-100 hover:text-white hover:bg-white/15 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-bold"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
               <span className="hidden lg:inline text-[11px]">Sign Out</span>
             </button>
           </form>
@@ -138,17 +136,17 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
       </header>
 
       {/* ─── Mobile Top Header (<md) ────────────────────────────────────────── */}
-      <header className="md:hidden flex items-center justify-between h-12 px-3 bg-white border-b border-slate-200/90 sticky top-0 z-40 select-none shrink-0 shadow-2xs">
+      <header className="md:hidden flex items-center justify-between h-12 px-3 bg-blue-600 text-white border-b border-blue-700 sticky top-0 z-40 select-none shrink-0 shadow-sm">
         <Link href="/app/billing" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xs">
+          <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-blue-600 shadow-xs">
             <Receipt className="w-4 h-4" />
           </div>
-          <span className="font-black text-slate-900 text-base tracking-tight">BillYours</span>
+          <span className="font-black text-white text-base tracking-tight">BillYours</span>
         </Link>
 
         <div className="flex items-center gap-2 min-w-0">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold truncate max-w-[160px]">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-700/80 border border-blue-400/30 text-blue-100 text-[11px] font-semibold truncate max-w-[150px]">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
             <span className="truncate">{businessName}</span>
           </div>
 
@@ -156,7 +154,7 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
             <button
               type="submit"
               title="Sign out"
-              className="p-1 text-slate-400 hover:text-red-600 rounded-md transition-colors"
+              className="p-1 text-blue-200 hover:text-white rounded-md transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -181,7 +179,7 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
                   className="flex flex-col items-center justify-center flex-1 relative"
                 >
                   <div className="flex flex-col items-center justify-center -mt-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md active:scale-95 transition-transform">
+                    <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md active:scale-95 transition-transform">
                       <Icon className="w-5 h-5" />
                     </div>
                     <span className="text-[10px] font-bold text-blue-600 mt-0.5">{link.label}</span>
