@@ -42,7 +42,7 @@ export default async function CustomersPage(props: CustomersPageProps) {
   `;
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
+    <div className="overflow-y-auto h-full p-4 md:p-6 max-w-6xl mx-auto space-y-4 pb-8">
       <CustomersList
         customers={customers.map((c) => ({
           id: c.id,

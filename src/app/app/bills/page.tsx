@@ -49,7 +49,7 @@ export default async function BillsPage(props: BillsPageProps) {
     FROM bills
     WHERE account_id = ${accountId}
       AND (${search === ""} OR bill_number ILIKE ${searchPattern} OR customer_name_snapshot ILIKE ${searchPattern} OR customer_phone_snapshot ILIKE ${searchPattern})
-      AND (${payment === "ALL"} OR payment_status = ${payment})
+      AND (${payment === "ALL"} OR payment_method = ${payment})
       AND (${status === "ALL"} OR status = ${status})
     ORDER BY completed_at DESC
     LIMIT ${pageSize}
@@ -61,7 +61,7 @@ export default async function BillsPage(props: BillsPageProps) {
     FROM bills
     WHERE account_id = ${accountId}
       AND (${search === ""} OR bill_number ILIKE ${searchPattern} OR customer_name_snapshot ILIKE ${searchPattern} OR customer_phone_snapshot ILIKE ${searchPattern})
-      AND (${payment === "ALL"} OR payment_status = ${payment})
+      AND (${payment === "ALL"} OR payment_method = ${payment})
       AND (${status === "ALL"} OR status = ${status});
   `;
 
@@ -69,7 +69,7 @@ export default async function BillsPage(props: BillsPageProps) {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
+    <div className="overflow-y-auto h-full p-4 md:p-6 max-w-6xl mx-auto space-y-4 pb-8">
       <BillsList
         bills={bills.map((b) => ({
           id: b.id,

@@ -99,9 +99,9 @@ export async function completeBillAction(input: CompleteBillInput): Promise<Comp
     const { billNumber } = await allocateNextBillNumber(accountId, account.invoicePrefix || "BY");
 
     const billId = "bil_" + crypto.randomBytes(8).toString("hex");
-    const paymentStatus = input.paymentStatus === "UNPAID" ? "UNPAID" : "PAID";
+    const paymentStatus = "PAID";
     const paymentMethod = input.paymentMethod || "CASH";
-    const amountPaid = paymentStatus === "PAID" ? calc.grandTotal : "0.00";
+    const amountPaid = calc.grandTotal;
     const taxLabel = input.taxLabel?.trim() || account.defaultTaxLabel || "GST";
 
     // Insert bill record

@@ -15,6 +15,7 @@ import {
   FileText,
   AlertTriangle,
   ReceiptText,
+  PlusCircle,
   X,
 } from "lucide-react";
 import { buildWhatsAppShareUrl } from "@/lib/whatsapp";
@@ -132,16 +133,25 @@ export function BillDetailView({
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+    <div className="overflow-y-auto h-full p-4 md:p-6 max-w-4xl mx-auto space-y-6 pb-12">
       {/* Top Action Bar (hidden on print) */}
       <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <Link
-          href="/app/bills"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Bills</span>
-        </Link>
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/app/billing"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors"
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>+ New Bill</span>
+          </Link>
+          <Link
+            href="/app/bills"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-1.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>All Bills</span>
+          </Link>
+        </div>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
@@ -306,8 +316,8 @@ export function BillDetailView({
               <span>₹{bill.grandTotal}</span>
             </div>
             <div className="flex justify-between text-[10px] text-slate-500 pt-0.5">
-              <span>Payment:</span>
-              <span>{bill.paymentStatus} via {bill.paymentMethod}</span>
+              <span>Payment Mode:</span>
+              <span className="font-semibold text-slate-800">{bill.paymentMethod}</span>
             </div>
           </div>
 

@@ -256,7 +256,7 @@ export default function LandingPage() {
               icon: TrendingUp,
               color: "bg-emerald-100 text-emerald-600",
               title: "Sales Dashboard",
-              desc: "See today's revenue, bill count, average order value, and paid vs. unpaid at a glance.",
+              desc: "See today's revenue, bill count, average order value, and collections by payment mode at a glance.",
             },
             {
               icon: ShieldCheck,

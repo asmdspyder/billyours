@@ -31,8 +31,8 @@ export default async function AppLayout({
         ownerName={session.user.name}
       />
 
-      {/* Main content area — full width on tablet/laptop/desktop, pb-14 on mobile */}
-      <main className="flex-1 pb-14 md:pb-0 overflow-y-auto min-h-0 bg-slate-50">
+      {/* Main content area — full width on tablet/laptop/desktop, pb-14 on mobile above fixed nav */}
+      <main className="flex-1 pb-14 md:pb-0 min-h-0 bg-slate-50 flex flex-col overflow-hidden">
         {children}
       </main>
     </div>

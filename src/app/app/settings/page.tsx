@@ -10,7 +10,7 @@ export default async function SettingsPage() {
   const subStatus = checkSubscriptionStatus(session.account);
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+    <div className="overflow-y-auto h-full p-4 md:p-6 max-w-4xl mx-auto space-y-6 pb-10">
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Business Settings</h1>
         <p className="text-xs md:text-sm text-slate-500">
