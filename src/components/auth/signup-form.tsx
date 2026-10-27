@@ -28,11 +28,13 @@ export function SignupForm() {
     <div className="w-full max-w-sm space-y-6">
       {/* Brand */}
       <div className="text-center">
-        <Link href="/" className="inline-flex items-center gap-2.5 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/25">
+        <Link href="/" className="inline-flex items-center gap-2.5 mb-5 group">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25 transition-transform group-hover:scale-105">
             <Receipt className="w-5 h-5 text-white" />
           </div>
-          <span className="font-black text-2xl tracking-tight text-slate-900">BillYours</span>
+          <span className="font-black text-2xl tracking-tight text-slate-900">
+            Bill<span className="text-blue-600">Yours</span>
+          </span>
         </Link>
         <h1 className="text-2xl font-black text-slate-900">Create your account</h1>
         <p className="text-slate-500 text-sm mt-1">Set up your shop and start billing in 2 minutes</p>

@@ -28,11 +28,13 @@ export default function LandingPage() {
       {/* ─── Nav ──────────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
-              <ReceiptText className="w-4.5 h-4.5 text-white" />
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
+              <ReceiptText className="w-5 h-5" />
             </div>
-            <span className="font-black text-slate-900 text-lg tracking-tight">BillYours</span>
+            <span className="font-black text-slate-900 text-xl tracking-tight">
+              Bill<span className="text-blue-600">Yours</span>
+            </span>
           </Link>
 
           <nav className="hidden sm:flex items-center gap-6 text-sm font-medium text-slate-600">
@@ -489,12 +491,14 @@ export default function LandingPage() {
       {/* ─── Footer ───────────────────────────────────────────────────────────── */}
       <footer className="bg-slate-950 text-slate-500 py-8 px-5">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center">
-              <ReceiptText className="w-3.5 h-3.5 text-white" />
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
+              <ReceiptText className="w-4.5 h-4.5" />
             </div>
-            <span className="font-bold text-white text-sm">BillYours</span>
-          </div>
+            <span className="font-black text-white text-lg tracking-tight">
+              Bill<span className="text-blue-400">Yours</span>
+            </span>
+          </Link>
 
           <div className="flex flex-wrap justify-center gap-5 text-xs">
             <Link href="/login" className="hover:text-white transition-colors">Sign In</Link>
