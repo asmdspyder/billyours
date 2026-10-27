@@ -121,19 +121,64 @@ export async function completeBillAction(input: CompleteBillInput): Promise<Comp
       );
     `;
 
-    // Insert bill items
-    for (let i = 0; i < input.items.length; i++) {
-      const item = input.items[i];
-      const processed = calc.items[i];
-      const billItemId = "bli_" + crypto.randomBytes(8).toString("hex");
+    // Batch insert all bill items in ONE SINGLE roundtrip (eliminates sequential N-roundtrip network lag)
+    if (input.items.length > 0) {
+      // Validate that catalog item IDs actually exist for this tenant.
+      // If an item was deleted, reseeded, or comes from an old draft, we gracefully set item_id to null
+      // so the historical bill snapshot is saved without violating foreign key constraints.
+      const candidateItemIds = input.items
+        .map((it) => it.itemId)
+        .filter((id): id is string => typeof id === "string" && id.trim().length > 0);
+
+      let validItemIds = new Set<string>();
+      if (candidateItemIds.length > 0) {
+        const existingItems = await sql`
+          SELECT id FROM items
+          WHERE account_id = ${accountId} AND id = ANY(${candidateItemIds}::varchar[])
+        `;
+        validItemIds = new Set(existingItems.map((r: any) => r.id));
+      }
+
+      const itemIds: string[] = [];
+      const accountIds: string[] = [];
+      const billIds: string[] = [];
+      const catalogItemIds: (string | null)[] = [];
+      const itemNames: string[] = [];
+      const unitPrices: string[] = [];
+      const quantities: number[] = [];
+      const lineSubtotals: string[] = [];
+
+      for (let i = 0; i < input.items.length; i++) {
+        const item = input.items[i];
+        const processed = calc.items[i];
+        itemIds.push("bli_" + crypto.randomBytes(8).toString("hex"));
+        accountIds.push(accountId);
+        billIds.push(billId);
+        // Only link catalog item if it truly exists in this tenant's items catalog
+        const safeItemId = item.itemId && validItemIds.has(item.itemId) ? item.itemId : null;
+        catalogItemIds.push(safeItemId);
+        itemNames.push(item.name.trim());
+        unitPrices.push(processed.unitPrice);
+        quantities.push(Number(processed.quantity));
+        lineSubtotals.push(processed.lineSubtotal);
+      }
 
       await sql`
         INSERT INTO bill_items (
           id, account_id, bill_id, item_id, item_name_snapshot, unit_price, quantity, line_subtotal, created_at
-        ) VALUES (
-          ${billItemId}, ${accountId}, ${billId}, ${item.itemId || null}, ${item.name.trim()},
-          ${processed.unitPrice}, ${processed.quantity}, ${processed.lineSubtotal}, NOW()
-        );
+        )
+        SELECT 
+          u.id, u.account_id, u.bill_id, u.item_id, u.item_name_snapshot, u.unit_price, u.quantity, u.line_subtotal, NOW()
+        FROM unnest(
+          ${itemIds}::varchar[],
+          ${accountIds}::varchar[],
+          ${billIds}::varchar[],
+          ${catalogItemIds}::varchar[],
+          ${itemNames}::varchar[],
+          ${unitPrices}::numeric[],
+          ${quantities}::numeric[],
+          ${lineSubtotals}::numeric[]
+        ) AS u(id, account_id, bill_id, item_id, item_name_snapshot, unit_price, quantity, line_subtotal);
       `;
     }
 
@@ -142,7 +187,6 @@ export async function completeBillAction(input: CompleteBillInput): Promise<Comp
 
     revalidatePath("/app/bills");
     revalidatePath("/app/dashboard");
-    revalidatePath("/app/customers");
 
     return {
       success: true,

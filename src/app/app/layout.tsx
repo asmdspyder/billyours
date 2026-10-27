@@ -12,7 +12,7 @@ export default async function AppLayout({
   const subStatus = checkSubscriptionStatus(session.account);
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
+    <div className="h-screen h-[100dvh] flex flex-col bg-slate-50 overflow-hidden">
       {session.isImpersonating && session.adminUser && (
         <AdminBanner
           businessName={session.account.businessName}

@@ -6,7 +6,7 @@ import { createSharedBillLink } from "@/lib/share-link";
 
 interface BillPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ print?: string; format?: string }>;
+  searchParams: Promise<{ print?: string; format?: string; token?: string }>;
 }
 
 export const metadata = {
@@ -75,21 +75,12 @@ export default async function BillDetailPage(props: BillPageProps) {
     ORDER BY created_at ASC;
   `;
 
-  // Find or generate a shared bill token
-  let tokenHashRows = await sql`
-    SELECT id, token_hash FROM shared_bill_links
-    WHERE bill_id = ${billId} AND revoked_at IS NULL
-    ORDER BY created_at DESC
-    LIMIT 1;
-  `;
-
-  let shareToken = "";
-  if (tokenHashRows.length > 0) {
-    // If we only have hash, create a fresh valid token if needed or use existing token flow
-    // To ensure a direct share link is always ready, we create a fresh token if needed
+  // Use shareToken if provided in query or create if needed
+  let shareToken = searchParams.token?.trim() || "";
+  if (!shareToken) {
+    const tokenGen = await createSharedBillLink(billId);
+    shareToken = tokenGen.token;
   }
-  const tokenGen = await createSharedBillLink(billId);
-  shareToken = tokenGen.token;
 
   return (
     <BillDetailView

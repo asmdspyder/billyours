@@ -141,59 +141,52 @@ export function BillsList({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Bill Number</th>
-                  <th className="px-4 py-3">Date & Time</th>
-                  <th className="px-4 py-3">Customer</th>
-                  <th className="px-4 py-3 text-right">Grand Total</th>
-                  <th className="px-4 py-3 text-center">Payment Mode</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {bills.map((b) => (
-                  <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/app/bills/${b.id}`}
-                        className="font-mono font-bold text-blue-600 hover:underline"
-                      >
-                        {b.billNumber}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
-                      {b.completedAt}
-                    </td>
-                    <td className="px-4 py-3 text-slate-900 font-medium">
-                      <div>{b.customerName}</div>
-                      {b.customerPhone && (
-                        <div className="text-[11px] text-slate-400 font-mono">{b.customerPhone}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right font-bold text-slate-900">
+          <>
+            {/* Mobile Card List: Fits 100% width with zero horizontal scrolling */}
+            <div className="sm:hidden divide-y divide-slate-100">
+              {bills.map((b) => (
+                <div
+                  key={b.id}
+                  className="p-4 hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <Link
+                      href={`/app/bills/${b.id}`}
+                      className="font-mono font-bold text-blue-600 text-xs hover:underline"
+                    >
+                      {b.billNumber}
+                    </Link>
+                    <span className="text-sm font-extrabold text-slate-900">
                       ₹{b.grandTotal}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-600 mb-2.5">
+                    <div>
+                      <span className="font-medium text-slate-900">{b.customerName}</span>
+                      {b.customerPhone && (
+                        <span className="text-[11px] text-slate-400 font-mono ml-1.5">
+                          ({b.customerPhone})
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
                         {b.paymentMethod}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                           b.status === "COMPLETED"
-                            ? "bg-slate-100 text-slate-700"
+                            ? "bg-green-50 text-green-700"
                             : "bg-red-50 text-red-600 border border-red-200"
                         }`}
                       >
                         {b.status}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-50">
+                    <span>{b.completedAt}</span>
+                    <div className="flex items-center gap-2">
                       <Link
                         href={`/app/bills/${b.id}`}
                         className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
@@ -203,17 +196,92 @@ export function BillsList({
                       </Link>
                       <Link
                         href={`/app/bills/${b.id}?print=1`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-900 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
                       >
                         <Printer className="w-3.5 h-3.5" />
                         <span>Print</span>
                       </Link>
-                    </td>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop & Tablet Table (sm+) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3">Bill Number</th>
+                    <th className="px-4 py-3">Date & Time</th>
+                    <th className="px-4 py-3">Customer</th>
+                    <th className="px-4 py-3 text-right">Grand Total</th>
+                    <th className="px-4 py-3 text-center">Payment Mode</th>
+                    <th className="px-4 py-3 text-center">Status</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {bills.map((b) => (
+                    <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/app/bills/${b.id}`}
+                          className="font-mono font-bold text-blue-600 hover:underline"
+                        >
+                          {b.billNumber}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                        {b.completedAt}
+                      </td>
+                      <td className="px-4 py-3 text-slate-900 font-medium">
+                        <div>{b.customerName}</div>
+                        {b.customerPhone && (
+                          <div className="text-[11px] text-slate-400 font-mono">{b.customerPhone}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-slate-900">
+                        ₹{b.grandTotal}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
+                          {b.paymentMethod}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                            b.status === "COMPLETED"
+                              ? "bg-slate-100 text-slate-700"
+                              : "bg-red-50 text-red-600 border border-red-200"
+                          }`}
+                        >
+                          {b.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                        <Link
+                          href={`/app/bills/${b.id}`}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View</span>
+                        </Link>
+                        <Link
+                          href={`/app/bills/${b.id}?print=1`}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-900 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Print</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
         {/* Pagination Controls */}

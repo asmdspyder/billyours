@@ -47,8 +47,11 @@ export function SignupForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="block text-sm font-semibold text-slate-700">Business / Shop Name *</label>
+          <label htmlFor="signup-business-name" className="block text-sm font-semibold text-slate-700">
+            Business / Shop Name *
+          </label>
           <input
+            id="signup-business-name"
             type="text"
             name="businessName"
             required
@@ -58,8 +61,11 @@ export function SignupForm() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-semibold text-slate-700">Owner&apos;s Full Name *</label>
+          <label htmlFor="signup-owner-name" className="block text-sm font-semibold text-slate-700">
+            Owner&apos;s Full Name *
+          </label>
           <input
+            id="signup-owner-name"
             type="text"
             name="ownerName"
             required
@@ -69,30 +75,39 @@ export function SignupForm() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-semibold text-slate-700">Business Email *</label>
+          <label htmlFor="signup-email" className="block text-sm font-semibold text-slate-700">
+            Business Email *
+          </label>
           <input
+            id="signup-email"
             type="email"
             name="email"
             required
+            autoComplete="email"
             placeholder="you@business.com"
             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
           />
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-semibold text-slate-700">Password *</label>
+          <label htmlFor="signup-password" className="block text-sm font-semibold text-slate-700">
+            Password *
+          </label>
           <div className="relative">
             <input
+              id="signup-password"
               type={showPassword ? "text" : "password"}
               name="password"
               required
               minLength={6}
+              autoComplete="new-password"
               placeholder="Min. 6 characters"
               className="w-full px-4 py-3 pr-11 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -101,8 +116,11 @@ export function SignupForm() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-semibold text-slate-700">Business Type</label>
+          <label htmlFor="signup-business-type" className="block text-sm font-semibold text-slate-700">
+            Business Type
+          </label>
           <select
+            id="signup-business-type"
             name="businessType"
             defaultValue="retail"
             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
@@ -116,10 +134,11 @@ export function SignupForm() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-semibold text-slate-700">
+          <label htmlFor="signup-phone" className="block text-sm font-semibold text-slate-700">
             Phone Number <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <input
+            id="signup-phone"
             type="tel"
             name="phone"
             placeholder="+91 98765 43210"

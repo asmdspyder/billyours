@@ -428,55 +428,101 @@ export function ItemsCatalog({ initialItems }: ItemsCatalogProps) {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide">Item</th>
-                  <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide">Category</th>
-                  <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Unit</th>
-                  <th className="px-5 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wide">Price</th>
-                  <th className="px-5 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wide">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-5 py-3.5 font-semibold text-slate-900">{item.name}</td>
-                    <td className="px-5 py-3.5">
-                      {item.category ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg">
+          <>
+            {/* Mobile Card List: Fits 100% width with zero horizontal scrolling */}
+            <div className="sm:hidden divide-y divide-slate-100">
+              {filtered.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-900 text-sm truncate">{item.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {item.category && (
+                        <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-semibold rounded-md">
                           {item.category}
                         </span>
-                      ) : (
-                        <span className="text-slate-300 text-xs">—</span>
                       )}
-                    </td>
-                    <td className="px-5 py-3.5 text-slate-500 text-xs hidden sm:table-cell">{item.unitLabel}</td>
-                    <td className="px-5 py-3.5 text-right font-bold text-slate-900">₹{item.unitPrice.toFixed(2)}</td>
-                    <td className="px-5 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => { setErrorMsg(null); setEditingItem(item); }}
-                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleArchive(item.id, item.name)}
-                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Archive"
-                        >
-                          <Archive className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+                      <span className="text-slate-400 text-xs">per {item.unitLabel}</span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-black text-slate-900 text-base">₹{item.unitPrice.toFixed(2)}</p>
+                    <div className="flex items-center justify-end gap-1 mt-1">
+                      <button
+                        onClick={() => { setErrorMsg(null); setEditingItem(item); }}
+                        className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                        title="Edit"
+                        aria-label="Edit item"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleArchive(item.id, item.name)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        title="Archive"
+                        aria-label="Archive item"
+                      >
+                        <Archive className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop & Tablet Table (sm+) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide">Item</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide">Category</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Unit</th>
+                    <th className="px-5 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wide">Price</th>
+                    <th className="px-5 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wide">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filtered.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-5 py-3.5 font-semibold text-slate-900">{item.name}</td>
+                      <td className="px-5 py-3.5">
+                        {item.category ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg">
+                            {item.category}
+                          </span>
+                        ) : (
+                          <span className="text-slate-300 text-xs">—</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5 text-slate-500 text-xs hidden sm:table-cell">{item.unitLabel}</td>
+                      <td className="px-5 py-3.5 text-right font-bold text-slate-900">₹{item.unitPrice.toFixed(2)}</td>
+                      <td className="px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => { setErrorMsg(null); setEditingItem(item); }}
+                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleArchive(item.id, item.name)}
+                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Archive"
+                          >
+                            <Archive className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

@@ -59,27 +59,27 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
             </span>
           </Link>
 
-          <div className="h-5 w-px bg-slate-800 hidden sm:block" />
+          <div className="h-5 w-px bg-slate-800 hidden lg:block" />
 
           {/* Shop Indicator */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 max-w-[220px]">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 max-w-[220px]">
             <Store className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span className="truncate">{businessName}</span>
           </div>
         </div>
 
         {/* Center: Clean Horizontal Navigation */}
-        <nav className="flex items-center gap-1.5">
+        <nav className="flex items-center gap-1 lg:gap-1.5">
           {/* New Bill Button */}
           <Link
             href="/app/billing"
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors ${
+            className={`inline-flex items-center gap-1.5 lg:gap-2 px-2.5 lg:px-4 py-1.5 lg:py-2 rounded-lg text-xs lg:text-sm font-bold transition-colors ${
               isBilling
                 ? "bg-blue-600 text-white shadow-sm"
                 : "text-slate-300 hover:text-white hover:bg-slate-800"
             }`}
           >
-            <PlusCircle className="w-4 h-4" />
+            <PlusCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
             <span>New Bill</span>
           </Link>
 
@@ -91,13 +91,13 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 lg:gap-2 px-2.5 lg:px-3.5 py-1.5 lg:py-2 rounded-lg text-xs lg:text-sm font-semibold transition-colors ${
                   isActive
                     ? "bg-slate-800 text-white font-bold"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? "text-blue-400" : "text-slate-400"}`} />
+                <Icon className={`w-3.5 h-3.5 lg:w-4 lg:h-4 ${isActive ? "text-blue-400" : "text-slate-400"}`} />
                 <span>{link.label}</span>
               </Link>
             );

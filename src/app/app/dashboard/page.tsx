@@ -257,51 +257,91 @@ export default async function DashboardPage() {
             No completed bills yet.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
-                <tr>
-                  <th className="px-4 py-2.5">Bill Number</th>
-                  <th className="px-4 py-2.5">Customer</th>
-                  <th className="px-4 py-2.5 text-right">Amount</th>
-                  <th className="px-4 py-2.5 text-center">Payment Mode</th>
-                  <th className="px-4 py-2.5 text-right">Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {recentBills.map((b: any) => (
-                  <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-4 py-2.5">
-                      <Link
-                        href={`/app/bills/${b.id}`}
-                        className="font-mono font-bold text-blue-600 hover:underline text-xs"
-                      >
-                        {b.bill_number}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2.5 text-slate-900 text-xs font-medium">
-                      {b.customer_name_snapshot || "Walk-in Customer"}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-bold text-slate-900 text-xs">
+          <>
+            {/* Mobile Card List: Fits 100% width with zero horizontal scrolling */}
+            <div className="sm:hidden divide-y divide-slate-100">
+              {recentBills.map((b: any) => (
+                <Link
+                  key={b.id}
+                  href={`/app/bills/${b.id}`}
+                  className="block p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="font-mono font-bold text-blue-600 text-xs">
+                      {b.bill_number}
+                    </span>
+                    <span className="font-black text-sm text-slate-900">
                       ₹{Number(b.grand_total).toFixed(2)}
-                    </td>
-                    <td className="px-4 py-2.5 text-center">
-                      <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span className="truncate max-w-[180px] font-medium text-slate-700">
+                      {b.customer_name_snapshot || "Walk-in Customer"}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
                         {b.payment_method}
                       </span>
-                    </td>
-                    <td className="px-4 py-2.5 text-right text-slate-400 text-xs whitespace-nowrap">
-                      {new Date(b.completed_at).toLocaleTimeString("en-IN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: "Asia/Kolkata",
-                      })}
-                    </td>
+                      <span className="text-[11px] text-slate-400">
+                        {new Date(b.completed_at).toLocaleTimeString("en-IN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: "Asia/Kolkata",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Desktop & Tablet Table (sm+) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
+                  <tr>
+                    <th className="px-4 py-2.5">Bill Number</th>
+                    <th className="px-4 py-2.5">Customer</th>
+                    <th className="px-4 py-2.5 text-right">Amount</th>
+                    <th className="px-4 py-2.5 text-center">Payment Mode</th>
+                    <th className="px-4 py-2.5 text-right">Time</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {recentBills.map((b: any) => (
+                    <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-4 py-2.5">
+                        <Link
+                          href={`/app/bills/${b.id}`}
+                          className="font-mono font-bold text-blue-600 hover:underline text-xs"
+                        >
+                          {b.bill_number}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-2.5 text-slate-900 text-xs font-medium">
+                        {b.customer_name_snapshot || "Walk-in Customer"}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-slate-900 text-xs">
+                        ₹{Number(b.grand_total).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2.5 text-center">
+                        <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                          {b.payment_method}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-slate-400 text-xs whitespace-nowrap">
+                        {new Date(b.completed_at).toLocaleTimeString("en-IN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: "Asia/Kolkata",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

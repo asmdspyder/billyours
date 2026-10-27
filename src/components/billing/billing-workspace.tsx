@@ -19,6 +19,7 @@ import {
   Tag,
   X,
   MoreHorizontal,
+  ArrowRight,
 } from "lucide-react";
 import { calculateBillTotals } from "@/lib/billing-calculations";
 import { completeBillAction, lookupCustomerPhoneAction } from "@/actions/billing-actions";
@@ -104,7 +105,14 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
       const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed.cart)) setCart(parsed.cart);
+        if (Array.isArray(parsed.cart)) {
+          const validIds = new Set(initialItems.map((it) => it.id));
+          const sanitized = parsed.cart.map((line: CartLine) => ({
+            ...line,
+            itemId: line.itemId && validIds.has(line.itemId) ? line.itemId : null,
+          }));
+          setCart(sanitized);
+        }
         if (typeof parsed.customerPhone === "string") setCustomerPhone(parsed.customerPhone);
         if (typeof parsed.customerName === "string") setCustomerName(parsed.customerName);
         if (typeof parsed.existingCustomerFound === "boolean") {
@@ -359,8 +367,8 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
         setCart([]);
         setCustomerPhone("");
         setCustomerName("");
-        // Immediately navigate to the print bill page
-        router.push(`/app/bills/${res.billId}`);
+        // Immediately navigate to the print bill page with share token
+        router.push(`/app/bills/${res.billId}${res.shareToken ? `?token=${res.shareToken}` : ""}`);
       }
     });
   };
@@ -473,7 +481,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 pb-20 md:pb-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 pb-2 md:pb-4">
             {filteredItems.map((item) => {
               const inCart = cart.find((l) => l.itemId === item.id);
               return (
@@ -509,6 +517,28 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
           </div>
         )}
       </div>
+
+      {/* Mobile Sticky "Review Item List & Checkout" Bar (Does NOT complete bill directly without seeing items) */}
+      {cartCount > 0 && (
+        <div className="md:hidden shrink-0 bg-white border-t border-slate-200 p-2.5 shadow-lg z-30">
+          <button
+            type="button"
+            onClick={() => setMobileTab("bill")}
+            className="w-full py-2.5 px-3.5 rounded-xl font-black text-white text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/25 flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-md bg-blue-500/80 text-white font-bold text-xs">
+                {cartCount} {cartCount === 1 ? "item" : "items"}
+              </span>
+              <span className="text-white/95 font-bold text-xs sm:text-sm">₹{totals.grandTotal}</span>
+            </div>
+            <div className="flex items-center gap-1.5 font-bold">
+              <span>Review Item List & Bill</span>
+              <ArrowRight className="w-4 h-4" />
+            </div>
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -528,15 +558,25 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
             </span>
           )}
         </div>
-        {cart.length > 0 && (
+        <div className="flex items-center gap-2">
+          {/* Mobile shortcut to go back to add more items */}
           <button
             type="button"
-            onClick={clearCart}
-            className="px-2 py-1 text-xs text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md font-semibold transition-colors cursor-pointer"
+            onClick={() => setMobileTab("items")}
+            className="md:hidden px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded-md font-bold transition-colors cursor-pointer"
           >
-            Clear all
+            + Add Items
           </button>
-        )}
+          {cart.length > 0 && (
+            <button
+              type="button"
+              onClick={clearCart}
+              className="px-2 py-1 text-xs text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md font-semibold transition-colors cursor-pointer"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 2. Customer Details Card (shrink-0, PINNED AT TOP) */}
@@ -743,10 +783,10 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
         </div>
       </div>
 
-      {/* 5. Payment Mode Bar (shrink-0, PINNED AT BOTTOM - UNPAID LOGIC REMOVED) */}
+      {/* 5. Payment Mode Bar (shrink-0, PINNED AT BOTTOM) */}
       <div className="shrink-0 bg-white px-3 py-1.5 border-t border-slate-200/80 shadow-2xs space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-slate-700">Payment Mode</span>
+          <span className="text-[10px] sm:text-[11px] font-bold text-slate-700">Payment Mode</span>
         </div>
 
         <div className="grid grid-cols-4 gap-1 pt-0.5">
@@ -755,14 +795,14 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
               key={method}
               type="button"
               onClick={() => setPaymentMethod(method)}
-              className={`py-1 flex flex-col items-center gap-0.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+              className={`py-1.5 px-1 flex items-center justify-center gap-1 rounded-lg text-[10px] sm:text-xs font-bold border transition-colors cursor-pointer ${
                 paymentMethod === method
                   ? "bg-blue-50 border-blue-500 text-blue-700 shadow-2xs"
                   : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
               }`}
             >
               {paymentIcons[method]}
-              {method}
+              <span>{method}</span>
             </button>
           ))}
         </div>
@@ -837,13 +877,13 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
     <>
       {/* ─── Tablet & Desktop Layout (md+): Side-by-side ───────────────────── */}
       <div className="hidden md:grid md:grid-cols-12 gap-0 h-full min-h-0 overflow-hidden">
-        {/* Left: Items (7 cols) */}
-        <div className="md:col-span-7 border-r border-slate-200 flex flex-col overflow-hidden bg-white h-full min-h-0">
+        {/* Left: Items (md: 6 cols, lg: 7 cols) */}
+        <div className="md:col-span-6 lg:col-span-7 border-r border-slate-200 flex flex-col overflow-hidden bg-white h-full min-h-0">
           {renderItemsPanel()}
         </div>
 
-        {/* Right: Bill (5 cols) - distinct receipt background */}
-        <div className="md:col-span-5 bg-slate-50/70 border-l border-slate-200/80 flex flex-col overflow-hidden h-full min-h-0">
+        {/* Right: Bill (md: 6 cols, lg: 5 cols) - distinct receipt background */}
+        <div className="md:col-span-6 lg:col-span-5 bg-slate-50/70 border-l border-slate-200/80 flex flex-col overflow-hidden h-full min-h-0">
           {renderBillPanel()}
         </div>
       </div>
@@ -855,7 +895,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
           <button
             type="button"
             onClick={() => setMobileTab("items")}
-            className={`flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors cursor-pointer ${
+            className={`flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors cursor-pointer ${
               mobileTab === "items"
                 ? "border-blue-600 text-blue-600 bg-blue-50/50"
                 : "border-transparent text-slate-500 hover:text-slate-700"
@@ -867,7 +907,7 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
           <button
             type="button"
             onClick={() => setMobileTab("bill")}
-            className={`flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors cursor-pointer ${
+            className={`flex-1 py-2 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors cursor-pointer ${
               mobileTab === "bill"
                 ? "border-blue-600 text-blue-600 bg-blue-50/50"
                 : "border-transparent text-slate-500 hover:text-slate-700"
@@ -887,20 +927,6 @@ export function BillingWorkspace({ business, initialItems, categories }: Billing
         <div className={`flex-1 overflow-hidden min-h-0 ${mobileTab === "bill" ? "bg-slate-50/70" : "bg-white"}`}>
           {mobileTab === "items" ? renderItemsPanel() : renderBillPanel()}
         </div>
-
-        {/* Mobile: When on items tab, show floating "Go to Bill" if cart has items */}
-        {mobileTab === "items" && cartCount > 0 && (
-          <div className="fixed bottom-16 left-0 right-0 px-4 pb-1 z-30 pointer-events-none">
-            <button
-              type="button"
-              onClick={() => setMobileTab("bill")}
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 active:scale-[0.99] transition-all pointer-events-auto cursor-pointer"
-            >
-              <ReceiptText className="w-4 h-4" />
-              View Bill ({cartCount} item{cartCount !== 1 ? "s" : ""}) · ₹{totals.grandTotal}
-            </button>
-          </div>
-        )}
       </div>
 
       {/* ─── Custom Item Modal ────────────────────────────────────────────────── */}

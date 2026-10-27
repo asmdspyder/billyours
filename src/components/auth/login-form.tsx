@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Receipt, AlertCircle, Sparkles, Eye, EyeOff } from "lucide-react";
+import { Receipt, AlertCircle, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { loginAction } from "@/actions/auth-actions";
 
 export function LoginForm() {
@@ -26,11 +26,6 @@ export function LoginForm() {
     });
   };
 
-  const handleFillDemo = () => {
-    setEmail("demo@billyours.com");
-    setPassword("DemoOwner2026!");
-  };
-
   return (
     <div className="w-full max-w-sm space-y-6">
       {/* Brand */}
@@ -43,21 +38,6 @@ export function LoginForm() {
         </Link>
         <h1 className="text-2xl font-black text-slate-900">Welcome back</h1>
         <p className="text-slate-500 text-sm mt-1">Sign in to your billing workspace</p>
-      </div>
-
-      {/* Demo banner */}
-      <div className="flex items-center justify-between p-3.5 bg-amber-50 border border-amber-200 rounded-xl">
-        <div className="flex items-center gap-2 text-amber-900">
-          <Sparkles className="w-4 h-4 text-amber-500" />
-          <span className="text-xs font-semibold">Try the demo account</span>
-        </div>
-        <button
-          type="button"
-          onClick={handleFillDemo}
-          className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-lg transition-colors"
-        >
-          Fill Demo
-        </button>
       </div>
 
       {errorMsg && (
@@ -101,7 +81,7 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -111,7 +91,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
         >
           {isPending ? (
             <>
@@ -124,12 +104,23 @@ export function LoginForm() {
         </button>
       </form>
 
-      <p className="text-center text-sm text-slate-500">
-        Don&apos;t have an account?{" "}
-        <Link href="/signup" className="font-bold text-blue-600 hover:underline">
-          Start free trial
-        </Link>
-      </p>
+      <div className="flex flex-col gap-2 text-center text-sm text-slate-500">
+        <p>
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="font-bold text-blue-600 hover:underline">
+            Start free trial
+          </Link>
+        </p>
+        <div className="pt-2 border-t border-slate-100">
+          <Link
+            href="/admin/login"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-700 transition-colors"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Platform Administrator Login</span>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

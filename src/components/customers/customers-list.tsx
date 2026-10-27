@@ -102,54 +102,95 @@ export function CustomersList({ customers, currentSearch }: CustomersListProps) 
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Customer Name</th>
-                  <th className="px-4 py-3">Mobile Number</th>
-                  <th className="px-4 py-3 text-center">Bills</th>
-                  <th className="px-4 py-3 text-right">Total Spent</th>
-                  <th className="px-4 py-3">Last Visit</th>
-                  <th className="px-4 py-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {customers.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-slate-900">
-                      <Link href={`/app/customers/${c.id}`} className="hover:text-blue-600">
+          <>
+            {/* Mobile Card List: Fits 100% width with zero horizontal scrolling */}
+            <div className="sm:hidden divide-y divide-slate-100">
+              {customers.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/app/customers/${c.id}`}
+                  className="block p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-1.5">
+                    <div>
+                      <div className="font-bold text-sm text-slate-900 hover:text-blue-600">
                         {c.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 font-mono text-xs">
-                      {c.phone}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
-                        {c.totalBills}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-bold text-slate-900">
-                      ₹{c.totalSpent}
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
-                      {c.lastVisit}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        href={`/app/customers/${c.id}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded text-xs font-medium transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>History</span>
-                      </Link>
-                    </td>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono mt-0.5">
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        <span>{c.phone}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-sm font-extrabold text-slate-900">
+                        ₹{c.totalSpent}
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        {c.totalBills} bill{c.totalBills === 1 ? "" : "s"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-50 mt-2">
+                    <span>Last visit: {c.lastVisit}</span>
+                    <span className="text-blue-600 font-semibold flex items-center gap-1">
+                      <span>History</span>
+                      <Eye className="w-3 h-3" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Desktop & Tablet Table (sm+) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3">Customer Name</th>
+                    <th className="px-4 py-3">Mobile Number</th>
+                    <th className="px-4 py-3 text-center">Bills</th>
+                    <th className="px-4 py-3 text-right">Total Spent</th>
+                    <th className="px-4 py-3">Last Visit</th>
+                    <th className="px-4 py-3 text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {customers.map((c) => (
+                    <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-slate-900">
+                        <Link href={`/app/customers/${c.id}`} className="hover:text-blue-600">
+                          {c.name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600 font-mono text-xs">
+                        {c.phone}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                          {c.totalBills}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-slate-900">
+                        ₹{c.totalSpent}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                        {c.lastVisit}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Link
+                          href={`/app/customers/${c.id}`}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded text-xs font-medium transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>History</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

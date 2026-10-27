@@ -29,17 +29,9 @@ export function TrialBanner({ status, daysRemaining, isExpired }: TrialBannerPro
     );
   }
 
+  // User requested: "I no need that free trial message showing once logged in account"
   if (status === "TRIAL") {
-    return (
-      <div className="bg-blue-50 border-b border-blue-200 text-blue-900 px-4 py-1.5 text-xs font-medium flex items-center justify-between no-print">
-        <div className="flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-          <span>
-            <strong>Free Trial Active:</strong> {daysRemaining} day{daysRemaining === 1 ? "" : "s"} remaining in your 7-day trial. All features unlocked.
-          </span>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return null;

@@ -65,7 +65,7 @@ export default async function CustomerDetailPage(props: CustomerDetailPageProps)
   const averageBill = completedCount > 0 ? (totalSpent / completedCount).toFixed(2) : "0.00";
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
+    <div className="overflow-y-auto h-full p-4 md:p-6 max-w-5xl mx-auto space-y-6 pb-10">
       {/* Back button */}
       <div>
         <Link
@@ -139,74 +139,129 @@ export default async function CustomerDetailPage(props: CustomerDetailPageProps)
               No bills recorded for this customer yet.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">Bill Number</th>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3 text-right">Grand Total</th>
-                    <th className="px-4 py-3 text-center">Payment</th>
-                    <th className="px-4 py-3 text-center">Status</th>
-                    <th className="px-4 py-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {bills.map((b: any) => (
-                    <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/app/bills/${b.id}`}
-                          className="font-mono font-bold text-blue-600 hover:underline"
-                        >
-                          {b.bill_number}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">
+            <>
+              {/* Mobile Card List: Fits 100% width with zero horizontal scrolling */}
+              <div className="sm:hidden divide-y divide-slate-100">
+                {bills.map((b: any) => (
+                  <Link
+                    key={b.id}
+                    href={`/app/bills/${b.id}`}
+                    className="block p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="font-mono font-bold text-blue-600 text-xs">
+                        {b.bill_number}
+                      </span>
+                      <span className="text-sm font-extrabold text-slate-900">
+                        ₹{Number(b.grand_total).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
+                      <span>
                         {new Date(b.completed_at).toLocaleString("en-IN", {
                           dateStyle: "medium",
                           timeStyle: "short",
                           timeZone: "Asia/Kolkata",
                         })}
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-slate-900">
-                        ₹{Number(b.grand_total).toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                            b.payment_status === "PAID"
-                              ? "bg-green-50 text-green-700"
-                              : "bg-amber-50 text-amber-700"
-                          }`}
-                        >
-                          {b.payment_status} ({b.payment_method})
+                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
+                          {b.payment_method}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
                         <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                             b.status === "COMPLETED"
-                              ? "bg-slate-100 text-slate-700"
+                              ? "bg-green-50 text-green-700"
                               : "bg-red-50 text-red-600"
                           }`}
                         >
                           {b.status}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/app/bills/${b.id}`}
-                          className="text-xs font-semibold text-blue-600 hover:underline"
-                        >
-                          View Bill
-                        </Link>
-                      </td>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-50">
+                      <span className="text-slate-500">
+                        Status: <strong className="text-slate-700">{b.payment_status}</strong>
+                      </span>
+                      <span className="text-blue-600 font-semibold flex items-center gap-1">
+                        <span>View Bill</span>
+                        <ArrowLeft className="w-3 h-3 rotate-180" />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Desktop & Tablet Table (sm+) */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3">Bill Number</th>
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3 text-right">Grand Total</th>
+                      <th className="px-4 py-3 text-center">Payment</th>
+                      <th className="px-4 py-3 text-center">Status</th>
+                      <th className="px-4 py-3 text-right">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {bills.map((b: any) => (
+                      <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-4 py-3">
+                          <Link
+                            href={`/app/bills/${b.id}`}
+                            className="font-mono font-bold text-blue-600 hover:underline"
+                          >
+                            {b.bill_number}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-slate-500 text-xs">
+                          {new Date(b.completed_at).toLocaleString("en-IN", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                            timeZone: "Asia/Kolkata",
+                          })}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-slate-900">
+                          ₹{Number(b.grand_total).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                              b.payment_status === "PAID"
+                                ? "bg-green-50 text-green-700"
+                                : "bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            {b.payment_status} ({b.payment_method})
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                              b.status === "COMPLETED"
+                                ? "bg-slate-100 text-slate-700"
+                                : "bg-red-50 text-red-600"
+                            }`}
+                          >
+                            {b.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <Link
+                            href={`/app/bills/${b.id}`}
+                            className="text-xs font-semibold text-blue-600 hover:underline"
+                          >
+                            View Bill
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
