@@ -215,105 +215,153 @@ async function seed() {
   }
   console.log("✓ Cafe customers ready");
 
-  // 7. Re-seed Cafe Bills with food orders
+  // 7. Seed Cafe Bills with realistic 30-day history (Hourly today, daily past 30 days)
   await sql`DELETE FROM bill_items WHERE account_id = ${accountId}`;
+  await sql`DELETE FROM shared_bill_links WHERE bill_id IN (SELECT id FROM bills WHERE account_id = ${accountId})`;
   await sql`DELETE FROM bills WHERE account_id = ${accountId}`;
 
   const currentYear = new Date().getFullYear();
+  let billSeq = 1;
+  const paymentMethods = ['UPI', 'CASH', 'UPI', 'CARD', 'UPI', 'CASH'];
+  const now = new Date();
+  const allOrders = [];
+
+  function addOrder(daysAgo, hour, minute, customer, itemList, paymentMethod) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - daysAgo);
+    d.setHours(hour, minute, 0, 0);
+
+    let subtotal = 0;
+    const lineItems = [];
+    for (const { name, qty } of itemList) {
+      const it = itemMap.get(name) || cafeItems[0];
+      const price = Number(it.price || it.unit_price || 30);
+      const lineSub = price * qty;
+      subtotal += lineSub;
+      lineItems.push({
+        id: generateId("bli"),
+        itemId: itemMap.get(name) || null,
+        name: name,
+        price: price.toFixed(2),
+        qty,
+        lineSub: lineSub.toFixed(2)
+      });
+    }
+
+    const discountAmount = subtotal > 300 ? 20 : 0;
+    const taxable = subtotal - discountAmount;
+    const taxAmount = Number((taxable * 0.05).toFixed(2));
+    const grandTotal = Number((taxable + taxAmount).toFixed(2));
+
+    const billId = generateId("bil");
+    const billNumber = `CBC-${currentYear}-${String(billSeq++).padStart(6, '0')}`;
+
+    allOrders.push({
+      billId,
+      billNumber,
+      customerId: customer?.id || null,
+      customerName: customer?.name || "Walk-in Guest",
+      customerPhone: customer?.phone || null,
+      subtotal: subtotal.toFixed(2),
+      discountAmount: discountAmount.toFixed(2),
+      taxableAmount: taxable.toFixed(2),
+      taxAmount: taxAmount.toFixed(2),
+      grandTotal: grandTotal.toFixed(2),
+      paymentMethod,
+      completedAt: d.toISOString(),
+      lineItems
+    });
+  }
+
+  // Today (12 orders)
+  const cList = Array.from(customerMap.entries()).map(([name, id]) => ({ id, name }));
+  addOrder(0, 8, 30, cList[0], [{ name: "Special Kulhad Masala Chai", qty: 2 }, { name: "Maska Bun with Jam", qty: 2 }], 'UPI');
+  addOrder(0, 9, 15, cList[1], [{ name: "Filter Coffee", qty: 1 }, { name: "Cheese Chilli Toast", qty: 1 }], 'CASH');
+  addOrder(0, 10, 5, null, [{ name: "Special Kulhad Masala Chai", qty: 3 }], 'UPI');
+  addOrder(0, 11, 20, cList[2], [{ name: "Veg Cheese Grilled Sandwich", qty: 2 }, { name: "Fresh Mint Mojito", qty: 2 }], 'UPI');
+  addOrder(0, 12, 45, null, [{ name: "Classic Veg Burger", qty: 1 }, { name: "Crispy Peri Peri Fries", qty: 1 }, { name: "Cold Coffee with Ice Cream", qty: 1 }], 'CARD');
+  addOrder(0, 13, 30, cList[3], [{ name: "Paneer Tikka Grilled Sandwich", qty: 2 }, { name: "Crispy Veggie Maggi", qty: 1 }], 'UPI');
+  addOrder(0, 15, 10, null, [{ name: "Filter Coffee", qty: 2 }, { name: "Warm Chocolate Brownie", qty: 1 }], 'CASH');
+  addOrder(0, 16, 40, cList[0], [{ name: "Special Kulhad Masala Chai", qty: 4 }, { name: "Crispy Peri Peri Fries", qty: 2 }], 'UPI');
+  addOrder(0, 17, 25, cList[1], [{ name: "Iced Lemon Tea", qty: 2 }, { name: "Cheese Butter Maggi", qty: 2 }], 'UPI');
+  addOrder(0, 18, 15, null, [{ name: "Special Kulhad Masala Chai", qty: 2 }, { name: "Bombay Masala Toast", qty: 2 }], 'CASH');
+  addOrder(0, 19, 30, cList[2], [{ name: "Brownie with Vanilla Ice Cream", qty: 2 }, { name: "Cold Coffee with Ice Cream", qty: 2 }], 'CARD');
+  addOrder(0, 20, 15, cList[3], [{ name: "Crispy Paneer Wrap", qty: 2 }, { name: "Crispy Peri Peri Fries", qty: 1 }], 'UPI');
+
+  // Yesterday (7 orders)
+  addOrder(1, 9, 0, cList[1], [{ name: "Special Kulhad Masala Chai", qty: 2 }, { name: "Maska Bun with Jam", qty: 1 }], 'CASH');
+  addOrder(1, 11, 30, null, [{ name: "Veg Cheese Grilled Sandwich", qty: 1 }, { name: "Cold Coffee with Ice Cream", qty: 1 }], 'UPI');
+  addOrder(1, 13, 15, cList[0], [{ name: "Classic Veg Burger", qty: 2 }, { name: "Crispy Peri Peri Fries", qty: 2 }], 'CARD');
+  addOrder(1, 16, 45, cList[2], [{ name: "Special Kulhad Masala Chai", qty: 3 }, { name: "Cheese Chilli Toast", qty: 1 }], 'UPI');
+  addOrder(1, 18, 20, cList[3], [{ name: "Cheese Butter Maggi", qty: 2 }, { name: "Fresh Mint Mojito", qty: 1 }], 'UPI');
+  addOrder(1, 19, 50, null, [{ name: "Brownie with Vanilla Ice Cream", qty: 2 }], 'CASH');
+  addOrder(1, 21, 10, cList[1], [{ name: "Filter Coffee", qty: 2 }, { name: "Paneer Tikka Grilled Sandwich", qty: 1 }], 'UPI');
+
+  // Days 2 to 29 (Past 4 weeks)
+  for (let d = 2; d <= 29; d++) {
+    const ordersToday = (d % 6 === 0 || d % 7 === 0) ? 4 : 2;
+    for (let o = 0; o < ordersToday; o++) {
+      const cust = cList[Math.floor(Math.random() * cList.length)];
+      const hr = 10 + Math.floor(Math.random() * 11);
+      const min = Math.floor(Math.random() * 60);
+      const pm = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+      addOrder(d, hr, min, cust, [
+        { name: "Special Kulhad Masala Chai", qty: 1 + Math.floor(Math.random() * 3) },
+        { name: cafeItems[Math.floor(Math.random() * cafeItems.length)].name, qty: 1 }
+      ], pm);
+    }
+  }
+
+  for (const o of allOrders) {
+    await sql`
+      INSERT INTO bills (
+        id, account_id, bill_number, customer_id, customer_name_snapshot, customer_phone_snapshot,
+        subtotal, discount_type, discount_value, discount_amount, tax_enabled, tax_label,
+        tax_rate, tax_inclusive, taxable_amount, tax_amount, grand_total, payment_status,
+        payment_method, amount_paid, status, completed_at, created_by_user_id, created_at, updated_at
+      ) VALUES (
+        ${o.billId}, ${accountId}, ${o.billNumber}, ${o.customerId}, ${o.customerName}, ${o.customerPhone},
+        ${o.subtotal}, 'FIXED', '0.00', ${o.discountAmount}, true, 'GST',
+        '5.00', false, ${o.taxableAmount}, ${o.taxAmount}, ${o.grandTotal}, 'PAID',
+        ${o.paymentMethod}, ${o.grandTotal}, 'COMPLETED', ${o.completedAt}, ${finalDemoUserId}, ${o.completedAt}, ${o.completedAt}
+      );
+    `;
+
+    if (o.lineItems.length > 0) {
+      const ids = o.lineItems.map(l => l.id);
+      const itemIds = o.lineItems.map(l => l.itemId);
+      const names = o.lineItems.map(l => l.name);
+      const prices = o.lineItems.map(l => l.price);
+      const quantities = o.lineItems.map(l => l.qty);
+      const subtotals = o.lineItems.map(l => l.lineSub);
+
+      await sql`
+        INSERT INTO bill_items (
+          id, account_id, bill_id, item_id, item_name_snapshot, unit_price, quantity, line_subtotal, created_at
+        )
+        SELECT
+          u.id, ${accountId}, ${o.billId}, u.item_id, u.item_name, u.unit_price::numeric, u.qty::numeric, u.line_subtotal::numeric, ${o.completedAt}::timestamp
+        FROM unnest(
+          ${ids}::varchar[], ${itemIds}::varchar[], ${names}::varchar[], ${prices}::numeric[], ${quantities}::numeric[], ${subtotals}::numeric[]
+        ) AS u(id, item_id, item_name, unit_price, qty, line_subtotal);
+      `;
+    }
+  }
+
   await sql`
     INSERT INTO bill_sequences (id, account_id, year, current_number, updated_at)
-    VALUES (${generateId("seq")}, ${accountId}, ${currentYear}, 3, NOW())
+    VALUES (${generateId("seq")}, ${accountId}, ${currentYear}, ${billSeq}, NOW())
     ON CONFLICT (account_id, year)
-    DO UPDATE SET current_number = 3, updated_at = NOW();
+    DO UPDATE SET current_number = ${billSeq}, updated_at = NOW();
   `;
 
-  // Order 1: Aarav Mehta - Cold coffee, sandwich, fries (UPI paid)
-  const b1Id = generateId("bil");
-  const b1Number = `CBC-${currentYear}-000001`;
-  const aaravId = customerMap.get("Aarav Mehta");
-
-  // Subtotal: 95 (Cold Coffee) + 110 (Veg Cheese Grilled Sandwich) + 90 (Peri Peri Fries) = 295.00
-  // Discount: 5% = 14.75 -> Taxable: 280.25
-  // GST 5%: 14.01 -> Grand Total: 294.26
-  await sql`
-    INSERT INTO bills (
-      id, account_id, bill_number, customer_id, customer_name_snapshot, customer_phone_snapshot,
-      subtotal, discount_type, discount_value, discount_amount, tax_enabled, tax_label,
-      tax_rate, tax_inclusive, taxable_amount, tax_amount, grand_total, payment_status,
-      payment_method, amount_paid, status, completed_at, created_by_user_id, created_at, updated_at
-    ) VALUES (
-      ${b1Id}, ${accountId}, ${b1Number}, ${aaravId}, 'Aarav Mehta', '+919876541111',
-      '295.00', 'PERCENTAGE', '5.00', '14.75', true, 'GST',
-      '5.00', false, '280.25', '14.01', '294.26', 'PAID',
-      'UPI', '294.26', 'COMPLETED', NOW(), ${finalDemoUserId}, NOW(), NOW()
-    );
-  `;
-
-  await sql`
-    INSERT INTO bill_items (id, account_id, bill_id, item_id, item_name_snapshot, unit_price, quantity, line_subtotal, created_at)
-    VALUES
-      (${generateId("bli")}, ${accountId}, ${b1Id}, ${itemMap.get("Cold Coffee with Ice Cream")}, 'Cold Coffee with Ice Cream', '95.00', 1, '95.00', NOW()),
-      (${generateId("bli")}, ${accountId}, ${b1Id}, ${itemMap.get("Veg Cheese Grilled Sandwich")}, 'Veg Cheese Grilled Sandwich', '110.00', 1, '110.00', NOW()),
-      (${generateId("bli")}, ${accountId}, ${b1Id}, ${itemMap.get("Crispy Peri Peri Fries")}, 'Crispy Peri Peri Fries', '90.00', 1, '90.00', NOW())
-  `;
-
-  // Order 2: Pooja Hegde - 2 Kulhad Chai + 2 Maska Bun (Cash paid)
-  const b2Id = generateId("bil");
-  const b2Number = `CBC-${currentYear}-000002`;
-  const poojaId = customerMap.get("Pooja Hegde");
-  // 2 * 30 = 60, 2 * 45 = 90. Total = 150.00
-  await sql`
-    INSERT INTO bills (
-      id, account_id, bill_number, customer_id, customer_name_snapshot, customer_phone_snapshot,
-      subtotal, discount_type, discount_value, discount_amount, tax_enabled, tax_label,
-      tax_rate, tax_inclusive, taxable_amount, tax_amount, grand_total, payment_status,
-      payment_method, amount_paid, status, completed_at, created_by_user_id, created_at, updated_at
-    ) VALUES (
-      ${b2Id}, ${accountId}, ${b2Number}, ${poojaId}, 'Pooja Hegde', '+919876542222',
-      '150.00', NULL, '0.00', '0.00', false, 'GST',
-      '0.00', false, '150.00', '0.00', '150.00', 'PAID',
-      'CASH', '150.00', 'COMPLETED', NOW(), ${finalDemoUserId}, NOW(), NOW()
-    );
-  `;
-
-  await sql`
-    INSERT INTO bill_items (id, account_id, bill_id, item_id, item_name_snapshot, unit_price, quantity, line_subtotal, created_at)
-    VALUES
-      (${generateId("bli")}, ${accountId}, ${b2Id}, ${itemMap.get("Special Kulhad Masala Chai")}, 'Special Kulhad Masala Chai', '30.00', 2, '60.00', NOW()),
-      (${generateId("bli")}, ${accountId}, ${b2Id}, ${itemMap.get("Maska Bun with Jam")}, 'Maska Bun with Jam', '45.00', 2, '90.00', NOW())
-  `;
-
-  // Order 3: Walk-in Cafe Customer - Cheese Butter Maggi + Brownie with Ice Cream (Card paid)
-  const b3Id = generateId("bil");
-  const b3Number = `CBC-${currentYear}-000003`;
-  // 85 + 130 = 215.00
-  await sql`
-    INSERT INTO bills (
-      id, account_id, bill_number, customer_id, customer_name_snapshot, customer_phone_snapshot,
-      subtotal, discount_type, discount_value, discount_amount, tax_enabled, tax_label,
-      tax_rate, tax_inclusive, taxable_amount, tax_amount, grand_total, payment_status,
-      payment_method, amount_paid, status, completed_at, created_by_user_id, created_at, updated_at
-    ) VALUES (
-      ${b3Id}, ${accountId}, ${b3Number}, NULL, 'Table 4 Walk-in', NULL,
-      '215.00', NULL, '0.00', '0.00', false, 'GST',
-      '0.00', false, '215.00', '0.00', '215.00', 'PAID',
-      'CARD', '215.00', 'COMPLETED', NOW(), ${finalDemoUserId}, NOW(), NOW()
-    );
-  `;
-
-  await sql`
-    INSERT INTO bill_items (id, account_id, bill_id, item_id, item_name_snapshot, unit_price, quantity, line_subtotal, created_at)
-    VALUES
-      (${generateId("bli")}, ${accountId}, ${b3Id}, ${itemMap.get("Cheese Butter Maggi")}, 'Cheese Butter Maggi', '85.00', 1, '85.00', NOW()),
-      (${generateId("bli")}, ${accountId}, ${b3Id}, ${itemMap.get("Brownie with Vanilla Ice Cream")}, 'Brownie with Vanilla Ice Cream', '130.00', 1, '130.00', NOW())
-  `;
-
-  // Seed public share link for Bill 1
+  // Seed public share link for latest bill
+  const latestBill = allOrders[0];
   const rawToken = crypto.randomBytes(24).toString("hex");
   const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
   await sql`
     INSERT INTO shared_bill_links (id, bill_id, token_hash, created_at)
-    VALUES (${generateId("shl")}, ${b1Id}, ${tokenHash}, NOW())
+    VALUES (${generateId("shl")}, ${latestBill.billId}, ${tokenHash}, NOW())
   `;
 
   console.log("\n=======================================================");
