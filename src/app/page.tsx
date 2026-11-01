@@ -1,21 +1,27 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
-  ReceiptText,
-  Zap,
-  Printer,
-  Share2,
-  Users,
-  TrendingUp,
-  Percent,
-  CheckCircle2,
   ArrowRight,
+  CheckCircle2,
+  Percent,
+  Plus,
+  Printer,
+  ReceiptText,
+  Share2,
   ShieldCheck,
   Smartphone,
-  Store,
-  Sparkles,
-  Lock,
+  Users,
+  Zap,
 } from "lucide-react";
+import { BrandLogo } from "@/components/landing/brand-logo";
+import { FastBillingVisual, LookupVisual, PrintVisual, WhatsAppVisual } from "@/components/landing/feature-visuals";
+import { brandFont } from "@/components/landing/fonts";
+import { HeroReceipt } from "@/components/landing/hero-receipt";
+import { CatalogArt, ShareArt, StopwatchArt } from "@/components/landing/how-it-works-art";
+import { LandingMobileMenu } from "@/components/landing/landing-mobile-menu";
 import { PricingPlans } from "@/components/landing/pricing-plans";
+import { SalesShowcase } from "@/components/landing/sales-showcase";
+import styles from "@/components/landing/landing.module.css";
 
 export const metadata = {
   title: "BillYours — Simple Billing for Every Business",
@@ -23,391 +29,581 @@ export const metadata = {
     "Fast, lightweight billing software for small businesses in India. Create bills in seconds, share on WhatsApp, print receipts, and track daily sales.",
 };
 
+const NAV_LINKS = [
+  { href: "#features", label: "Features" },
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#dashboard", label: "Dashboard" },
+  { href: "#pricing", label: "Pricing" },
+  { href: "#faq", label: "FAQ" },
+];
+
+const FACTS = [
+  { value: "10s", label: "to complete a typical bill" },
+  { value: "1 tap", label: "to send a receipt link on WhatsApp" },
+  { value: "58/80mm", label: "thermal receipts, plus A4 invoices" },
+  { value: "₹0", label: "to start. No credit card required." },
+];
+
+const STEPS = [
+  {
+    title: "Add your items",
+    desc: "Save your products or services with prices in your catalog once — reuse forever.",
+    art: <CatalogArt />,
+  },
+  {
+    title: "Tap & complete",
+    desc: "Select items, enter the customer’s phone (optional), hit Complete Bill. Done in seconds.",
+    art: <StopwatchArt />,
+  },
+  {
+    title: "Print or share",
+    desc: "Print a thermal slip, send a WhatsApp link, or share a digital receipt link.",
+    art: <ShareArt />,
+  },
+];
+
+const DASHBOARD_METRICS = [
+  "Today’s sales and bill count",
+  "Average bill value",
+  "Last 7 days and this month",
+  "Daily sales trend for the week",
+  "Collections by Cash, UPI and Card",
+  "Your most recent completed bills",
+];
+
+const MORE_FEATURES = [
+  {
+    icon: Smartphone,
+    title: "Works on any device",
+    desc: "Android phone, iPhone, tablet or laptop. No app download needed.",
+  },
+  {
+    icon: Percent,
+    title: "GST & discounts",
+    desc: "Flat or percentage discounts and optional GST (5%, 12%, 18%) on any bill.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Secure by default",
+    desc: "Data is isolated per business. Shared bill links use private, unguessable tokens.",
+  },
+  {
+    icon: ReceiptText,
+    title: "Sequential bill numbers",
+    desc: "Automatic, gapless numbering with your own prefix, e.g. CBC-2026-000001.",
+  },
+];
+
+const LEDGER = [
+  { type: "General stores", item: "Toor dal 1 kg", price: "₹160" },
+  { type: "Cafés & restaurants", item: "Masala chai × 2", price: "₹60" },
+  { type: "Beauty salons", item: "Haircut & styling", price: "₹350" },
+  { type: "Repair shops", item: "Screen replacement", price: "₹1,800" },
+  { type: "Medical stores", item: "Cough syrup 100 ml", price: "₹95" },
+  { type: "Service providers", item: "AC servicing", price: "₹599" },
+];
+
+const FAQS = [
+  {
+    q: "Is BillYours difficult to use?",
+    a: "Not at all. If you can use WhatsApp, you can use BillYours. It's designed specifically for shop owners — tap items, hit complete, done.",
+  },
+  {
+    q: "Can I use it on my mobile phone?",
+    a: "Yes. BillYours has a mobile-first layout with a tab-based billing screen. Items on one tab, bill on the other — no scrolling chaos.",
+  },
+  {
+    q: "Can I print bills and share on WhatsApp?",
+    a: "Yes to both. Print thermal 58mm/80mm receipts or A4 invoices from your browser. Share a secure digital receipt link on WhatsApp with one tap.",
+  },
+  {
+    q: "What's the difference between the Free and Monthly plan?",
+    a: "Free gives you up to 50 bills per month — perfect for very small operations. Monthly/Yearly removes all limits and includes full customer history, sales dashboard, and priority support.",
+  },
+  {
+    q: "What happens after my 10-day free trial?",
+    a: "Your account enters renewal status and past records stay safe. Simply contact our setup team at 7904561269 or 7845418030 to activate your Monthly (₹299/mo) or Yearly (₹2,999/yr) plan.",
+  },
+  {
+    q: "Can I apply GST to bills?",
+    a: "Yes. There's a simple optional toggle to add GST percentage (5%, 12%, 18%) to any bill. Tax is completely optional per bill.",
+  },
+];
+
+function SectionHeading({
+  eyebrow,
+  title,
+  copy,
+  className = "",
+}: {
+  eyebrow: string;
+  title: string;
+  copy?: string;
+  className?: string;
+}) {
+  return (
+    <div className={`${styles.reveal} max-w-2xl ${className}`}>
+      <p className={styles.eyebrow}>{eyebrow}</p>
+      <h2 className={`${styles.display} ${styles.h2} mt-4`}>{title}</h2>
+      {copy && <p className={`${styles.lead} mt-5`}>{copy}</p>}
+    </div>
+  );
+}
+
+function FeatureCard({
+  icon: Icon,
+  title,
+  desc,
+  visual,
+  className = "",
+}: {
+  icon: typeof Zap;
+  title: string;
+  desc: string;
+  visual: ReactNode;
+  className?: string;
+}) {
+  return (
+    <article className={`${styles.card} ${styles.reveal} p-5 sm:p-6 gap-6 ${className}`}>
+      {visual}
+      <div className="flex gap-4">
+        <span className={styles.iconChip}>
+          <Icon aria-hidden="true" />
+        </span>
+        <div>
+          <h3 className={styles.cardTitle}>{title}</h3>
+          <p className={`${styles.muted} text-[0.95rem] leading-relaxed mt-1.5`}>{desc}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className={`${styles.page} ${brandFont.variable}`}>
+      {/* ─── Trial strip ──────────────────────────────────────────────────────── */}
+      <div className={`${styles.topStrip} ${styles.onInk}`}>
+        <p className="max-w-6xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-center gap-2.5 text-center">
+          <span className={styles.stripDot} aria-hidden="true" />
+          <span>
+            <span className="hidden sm:inline">Start with our </span>
+            <strong className="font-semibold text-white">10-day full access trial</strong>
+            <span className="hidden sm:inline"> — no card required</span>
+          </span>
+          <a href="#pricing" className={styles.stripLink}>
+            See pricing
+            <ArrowRight aria-hidden="true" />
+          </a>
+        </p>
+      </div>
+
       {/* ─── Nav ──────────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
-              <ReceiptText className="w-5 h-5" />
-            </div>
-            <span className="font-black text-slate-900 text-xl tracking-tight">
-              Bill<span className="text-blue-600">Yours</span>
-            </span>
+      <header className={`${styles.header} ${styles.onInk}`}>
+        <div className={styles.headerBar}>
+          <Link href="/" aria-label="BillYours home" className={styles.logoLink}>
+            <BrandLogo onInk />
           </Link>
 
-          <nav className="hidden sm:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
+          <nav aria-label="Primary" className="hidden lg:block">
+            <ul className={styles.navRail}>
+              {NAV_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a href={link.href} className={styles.navPill}>
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </nav>
 
-          <div className="flex items-center gap-2.5">
-            <Link href="/login" className="text-sm font-semibold text-slate-700 hover:text-blue-600 px-3 py-2 transition-colors">
-              Sign In
-            </Link>
-            <Link href="/signup" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
-              Try Free
-            </Link>
+          <div className={styles.headerActions}>
+            <span className="hidden sm:block">
+              <Link href="/login" className={styles.headerLink}>
+                Sign In
+              </Link>
+            </span>
+            {/* On the narrowest phones this CTA lives in the menu instead. */}
+            <span className="hidden min-[360px]:block">
+              <Link href="/signup" className={`${styles.btn} ${styles.btnPrimary} ${styles.btnShine}`}>
+                Try Free
+                <ArrowRight className={`${styles.arrow} hidden sm:block`} aria-hidden="true" />
+              </Link>
+            </span>
+            <LandingMobileMenu links={NAV_LINKS} />
           </div>
         </div>
       </header>
 
-      {/* ─── Hero ─────────────────────────────────────────────────────────────── */}
-      <section className="pt-16 pb-20 px-5 max-w-5xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold mb-6">
-          <Sparkles className="w-3.5 h-3.5" />
-          Built for Indian small businesses
-        </div>
+      <main>
+        {/* ─── Hero ───────────────────────────────────────────────────────────── */}
+        <section className={`${styles.hero} ${styles.onInk}`}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-20 sm:pt-16 sm:pb-24 lg:pt-20">
+            <div className="grid lg:grid-cols-[1.12fr_0.88fr] gap-14 lg:gap-10 items-center">
+              <div>
+                <p className={`${styles.pill} ${styles.rise}`}>
+                  <span className={styles.pillBadge} aria-hidden="true">
+                    ₹
+                  </span>
+                  Built for Indian small businesses
+                </p>
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.1] text-slate-900 mb-5">
-          Bill your customers
-          <br />
-          <span className="text-blue-600">in 10 seconds flat.</span>
-        </h1>
+                <h1 className={`${styles.display} ${styles.heroTitle} text-white mt-7`}>
+                  Bill your customers in{" "}
+                  <span className={styles.swash}>
+                    10 seconds
+                    <svg className={styles.swashLine} viewBox="0 0 200 13" preserveAspectRatio="none" aria-hidden="true">
+                      <path d="M2 10C52 4 122 2 198 6" pathLength={1} />
+                    </svg>
+                  </span>{" "}
+                  flat.
+                </h1>
 
-        <p className="text-lg text-slate-500 max-w-xl mx-auto leading-relaxed mb-8">
-          Simple billing for cafes, shops, salons, and service providers.
-          WhatsApp share, thermal print, GST — all with zero complexity.
-        </p>
+                <p className={`${styles.lead} ${styles.rise} ${styles.delay1} mt-7 max-w-xl`}>
+                  Simple billing for cafés, shops, salons and service providers. WhatsApp share, thermal print and GST —
+                  all with zero complexity.
+                </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-5">
-          <Link
-            href="/signup"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-base rounded-2xl shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/30 active:scale-[0.99]"
-          >
-            Start for free
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            href="/login"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold text-base rounded-2xl transition-colors"
-          >
-            Sign in
-          </Link>
-        </div>
-
-        <p className="text-sm text-slate-400">
-          Free forever for basic billing · No credit card required
-        </p>
-
-        {/* App Preview mockup */}
-        <div className="mt-14 max-w-3xl mx-auto">
-          <div className="bg-slate-900 rounded-2xl p-1.5 shadow-2xl">
-            <div className="bg-white rounded-xl overflow-hidden">
-              {/* Fake browser bar */}
-              <div className="bg-slate-100 px-4 py-2.5 flex items-center gap-2 border-b border-slate-200">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-amber-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
+                <div className={`${styles.rise} ${styles.delay2} mt-9 flex flex-col sm:flex-row gap-3`}>
+                  <Link href="/signup" className={`${styles.btn} ${styles.btnLg} ${styles.btnPrimary}`}>
+                    Start for free
+                    <ArrowRight className={styles.arrow} aria-hidden="true" />
+                  </Link>
+                  <Link href="/login" className={`${styles.btn} ${styles.btnLg} ${styles.btnGhostLight}`}>
+                    Sign in
+                  </Link>
                 </div>
-                <div className="flex-1 bg-white rounded-md px-3 py-1 text-xs text-slate-400 text-center">
-                  billyours.com/app/billing
+
+                <p className={`${styles.rise} ${styles.delay2} ${styles.mutedOnInk} text-sm mt-4`}>
+                  Free forever for basic billing · No credit card required
+                </p>
+              </div>
+
+              <div className={`${styles.rise} ${styles.delay2} lg:pl-4`}>
+                <HeroReceipt />
+              </div>
+            </div>
+
+            <ul className={`${styles.facts} ${styles.rise} ${styles.delay3} mt-16 lg:mt-20`}>
+              {FACTS.map((fact) => (
+                <li key={fact.value}>
+                  <p className={styles.factValue}>{fact.value}</p>
+                  <p className={styles.factLabel}>{fact.label}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className={styles.tornBottom} aria-hidden="true" />
+        </section>
+
+        {/* ─── The name ───────────────────────────────────────────────────────── */}
+        <section aria-labelledby="name-heading" className={`${styles.section} overflow-hidden`}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className={`${styles.reveal} text-center`}>
+              <p className={styles.eyebrow}>What’s in a name</p>
+            </div>
+
+            <h2 id="name-heading" className={`${styles.specimen} ${styles.reveal} mt-8`}>
+              <span className={styles.specimenBill}>Bill</span>
+              <span className={styles.specimenYours}>Yours</span>
+            </h2>
+
+            <div className={`${styles.seam} mt-12 grid md:grid-cols-2 gap-12 md:gap-0`}>
+              <div className={`${styles.reveal} md:pr-10 lg:pr-16 md:text-right`}>
+                <div className={styles.definition}>
+                  <p>
+                    <span className={styles.headword}>bill</span>{" "}
+                    <span className={styles.phonetic}>/bɪl/ · verb</span>
+                  </p>
+                  <p className="text-lg font-medium mt-2">To hand a customer a record of what they bought and what they owe.</p>
+                  <p className={`${styles.inProduct} mt-6`}>In BillYours</p>
+                  <p className={`${styles.muted} leading-relaxed mt-2`}>
+                    Tap items, adjust quantities, add a discount or GST, complete. A finished bill in about ten seconds —
+                    printed on 58mm, 80mm or A4, or sent as a WhatsApp link.
+                  </p>
                 </div>
               </div>
 
-              {/* Fake UI */}
-              <div className="grid grid-cols-5 divide-x divide-slate-100 min-h-[260px]">
-                {/* Left: item grid */}
-                <div className="col-span-3 p-4 space-y-3 bg-slate-50">
-                  <div className="flex gap-2">
-                    <div className="flex-1 bg-white rounded-lg px-3 py-2 text-xs text-slate-400 border border-slate-200">🔍 Search items...</div>
-                    <div className="bg-slate-900 text-white text-xs font-bold px-2.5 py-2 rounded-lg">+ Custom</div>
-                  </div>
-                  <div className="flex gap-1.5 text-[10px]">
-                    <span className="bg-blue-600 text-white px-2 py-1 rounded-full font-bold">All</span>
-                    <span className="bg-white text-slate-600 px-2 py-1 rounded-full border border-slate-200">Hot Drinks</span>
-                    <span className="bg-white text-slate-600 px-2 py-1 rounded-full border border-slate-200">Snacks</span>
-                    <span className="bg-white text-slate-600 px-2 py-1 rounded-full border border-slate-200">Desserts</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { name: "Masala Chai", price: "₹30", selected: true },
-                      { name: "Cold Coffee", price: "₹60" },
-                      { name: "Veg Sandwich", price: "₹80", selected: true },
-                      { name: "Samosa (2pc)", price: "₹25" },
-                      { name: "Maggi", price: "₹50" },
-                      { name: "Brownie", price: "₹90" },
-                    ].map((item) => (
-                      <div
-                        key={item.name}
-                        className={`p-2.5 rounded-lg border text-left text-[10px] ${
-                          item.selected
-                            ? "bg-blue-50 border-blue-400 ring-1 ring-blue-300"
-                            : "bg-white border-slate-200"
-                        }`}
-                      >
-                        <p className="font-bold text-slate-900 leading-tight">{item.name}</p>
-                        <p className="text-blue-600 font-black mt-1">{item.price}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Right: bill */}
-                <div className="col-span-2 p-4 space-y-3 bg-white">
-                  <div className="flex items-center gap-1.5">
-                    <ReceiptText className="w-3.5 h-3.5 text-blue-600" />
-                    <span className="text-xs font-bold text-slate-900">Current Bill</span>
-                    <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold">2 items</span>
-                  </div>
-                  <div className="space-y-1.5 text-[10px]">
-                    <div className="flex items-center justify-between bg-slate-50 px-2.5 py-2 rounded-lg border border-slate-100">
-                      <span className="font-semibold text-slate-900">Masala Chai</span>
-                      <div className="flex items-center gap-1">
-                        <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded">−</span>
-                        <span className="font-bold">1</span>
-                        <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded">+</span>
-                        <span className="font-bold w-10 text-right">₹30</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between bg-slate-50 px-2.5 py-2 rounded-lg border border-slate-100">
-                      <span className="font-semibold text-slate-900">Veg Sandwich</span>
-                      <div className="flex items-center gap-1">
-                        <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded">−</span>
-                        <span className="font-bold">1</span>
-                        <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded">+</span>
-                        <span className="font-bold w-10 text-right">₹80</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="border-t border-slate-100 pt-2 text-[10px] space-y-0.5">
-                    <div className="flex justify-between text-slate-500"><span>Subtotal</span><span>₹110</span></div>
-                    <div className="flex justify-between text-green-600 font-bold"><span>Discount 10%</span><span>−₹11</span></div>
-                    <div className="flex justify-between font-black text-sm text-slate-900 pt-1 border-t border-slate-100 mt-1">
-                      <span>Total</span>
-                      <span className="text-blue-600">₹99</span>
-                    </div>
-                  </div>
-                  <div className="bg-blue-600 rounded-lg py-2 text-center text-white text-[10px] font-black">
-                    ✓ Complete Bill · ₹99
-                  </div>
+              <div className={`${styles.reveal} md:pl-10 lg:pl-16`}>
+                <div className={`${styles.definition} ${styles.definitionYours}`}>
+                  <p>
+                    <span className={`${styles.headword} text-[#2563eb]`}>yours</span>{" "}
+                    <span className={styles.phonetic}>/jɔːz/ · pronoun</span>
+                  </p>
+                  <p className="text-lg font-medium mt-2">Belonging to you.</p>
+                  <p className={`${styles.inProduct} mt-6`}>In BillYours</p>
+                  <p className={`${styles.muted} leading-relaxed mt-2`}>
+                    Your catalog and prices, your bill prefix, your customers and their history, your daily sales by
+                    payment mode — isolated to your business and no one else’s.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ─── Logos / Social Proof ──────────────────────────────────────────────── */}
-      <section className="py-10 border-y border-slate-100 bg-slate-50">
-        <div className="max-w-4xl mx-auto px-5 text-center">
-          <p className="text-sm text-slate-400 font-medium mb-6">Trusted by shops, cafes & service providers</p>
-          <div className="flex flex-wrap justify-center gap-8 text-slate-500 text-sm font-semibold">
-            {["General Stores", "Cafes & Restaurants", "Beauty Salons", "Repair Shops", "Medical Stores", "Service Providers"].map((t) => (
-              <div key={t} className="flex items-center gap-2">
-                <Store className="w-4 h-4 text-slate-400" />
-                {t}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Features ─────────────────────────────────────────────────────────── */}
-      <section id="features" className="py-20 px-5 max-w-6xl mx-auto">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-3">
-            Everything you need. Nothing you don&apos;t.
-          </h2>
-          <p className="text-slate-500 text-base max-w-xl mx-auto">
-            Designed for ordinary shop owners, not accountants or enterprise IT.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            {
-              icon: Zap,
-              color: "bg-blue-100 text-blue-600",
-              title: "10-Second Billing",
-              desc: "Tap items from your catalog, adjust quantities, apply discounts, and complete a bill in seconds.",
-            },
-            {
-              icon: Smartphone,
-              color: "bg-violet-100 text-violet-600",
-              title: "Works on Any Device",
-              desc: "Fully responsive — use it on your Android phone, iPhone, or tablet. No app download needed.",
-            },
-            {
-              icon: Share2,
-              color: "bg-green-100 text-green-600",
-              title: "WhatsApp in One Tap",
-              desc: "Send customers a prefilled WhatsApp message with a secure digital receipt link instantly.",
-            },
-            {
-              icon: Printer,
-              color: "bg-amber-100 text-amber-600",
-              title: "Thermal & A4 Printing",
-              desc: "Print 58mm and 80mm thermal receipts or clean A4 invoices from your browser — no drivers.",
-            },
-            {
-              icon: Users,
-              color: "bg-sky-100 text-sky-600",
-              title: "Customer Auto-Lookup",
-              desc: "Type a mobile number and instantly see the customer's name and purchase history.",
-            },
-            {
-              icon: Percent,
-              color: "bg-rose-100 text-rose-600",
-              title: "GST & Discount Support",
-              desc: "Apply flat or percentage discounts and optional GST (5%, 12%, 18%) to any bill.",
-            },
-            {
-              icon: TrendingUp,
-              color: "bg-emerald-100 text-emerald-600",
-              title: "Sales Dashboard",
-              desc: "See today's revenue, bill count, average order value, and collections by payment mode at a glance.",
-            },
-            {
-              icon: ShieldCheck,
-              color: "bg-slate-100 text-slate-600",
-              title: "Secure by Default",
-              desc: "Your data is isolated per business. Bill links are cryptographically signed and private.",
-            },
-            {
-              icon: ReceiptText,
-              color: "bg-orange-100 text-orange-600",
-              title: "Sequential Bill Numbers",
-              desc: "Automatic, gapless bill numbering with your custom prefix (e.g. CBC-2026-000001).",
-            },
-          ].map((f) => (
-            <div key={f.title} className="group p-6 rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-md transition-all bg-white">
-              <div className={`w-10 h-10 rounded-xl ${f.color} flex items-center justify-center mb-4`}>
-                <f.icon className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-base mb-2">{f.title}</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
+        {/* ─── How it works ───────────────────────────────────────────────────── */}
+        <section id="how-it-works" className={`${styles.section} ${styles.sectionDeep} ${styles.anchor}`}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="grid lg:grid-cols-2 gap-6 lg:gap-16 items-end">
+              <SectionHeading eyebrow="How it works" title="Three steps. About ten seconds." />
+              <p className={`${styles.lead} ${styles.reveal} max-w-md`}>
+                Add your items once. After that, every bill is the same three moves — at the counter, on any phone.
+              </p>
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* ─── How it works ─────────────────────────────────────────────────────── */}
-      <section className="py-20 px-5 bg-slate-50 border-y border-slate-100">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-black text-slate-900 mb-12">Up and running in 3 steps</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { n: "1", title: "Add your items", desc: "Save your products or services with prices in your catalog once — reuse forever." },
-              { n: "2", title: "Tap & complete", desc: "Select items, enter customer phone (optional), hit Complete Bill. Done in seconds." },
-              { n: "3", title: "Print or share", desc: "Print a thermal slip, send a WhatsApp link, or share a digital receipt link." },
-            ].map((s) => (
-              <div key={s.n} className="relative flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white font-black text-lg flex items-center justify-center mb-4 shadow-md shadow-blue-500/20">
-                  {s.n}
+            <ol className="mt-14 grid md:grid-cols-3 gap-5 md:gap-8">
+              {STEPS.map((step, index) => (
+                <li key={step.title} className={`${styles.storyCard} ${styles.reveal}`}>
+                  <div className={styles.storyArt}>{step.art}</div>
+                  <div className="p-6">
+                    <span className={styles.stepNum} aria-hidden="true">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <h3 className={`${styles.cardTitle} mt-3`}>{step.title}</h3>
+                    <p className={`${styles.muted} leading-relaxed mt-2`}>{step.desc}</p>
+                  </div>
+                  {index < STEPS.length - 1 && (
+                    <span className={styles.storyArrow} aria-hidden="true">
+                      <ArrowRight />
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ─── Sales dashboard ────────────────────────────────────────────────── */}
+        <section id="dashboard" className={`${styles.section} ${styles.anchor} overflow-hidden`}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="grid lg:grid-cols-2 gap-6 lg:gap-16 items-end">
+              <SectionHeading eyebrow="Sales dashboard" title="Every bill adds up. Watch it happen." />
+              <div className={`${styles.reveal} max-w-md`}>
+                <p className={styles.lead}>
+                  Each bill you complete flows straight into your dashboard — no spreadsheets, no end-of-day maths.
+                </p>
+                <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <Link href="/signup" className={`${styles.btn} ${styles.btnPrimary}`}>
+                    See your own numbers
+                    <ArrowRight className={styles.arrow} aria-hidden="true" />
+                  </Link>
+                  <span className={`${styles.muted} text-sm`}>Full dashboard on Monthly &amp; Yearly</span>
                 </div>
-                <h3 className="font-bold text-slate-900 text-lg mb-2">{s.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{s.desc}</p>
               </div>
-            ))}
+            </div>
+
+            <div className={`${styles.reveal} mt-16`}>
+              <SalesShowcase />
+            </div>
+
+            <ul className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
+              {DASHBOARD_METRICS.map((metric) => (
+                <li key={metric} className="flex items-center gap-3 font-medium">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-[#2563eb]" aria-hidden="true" />
+                  {metric}
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ─── Pricing ──────────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-20 px-5">
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-3">
-            Simple, honest pricing
-          </h2>
-          <p className="text-slate-500 text-base">
-            Start with our 10-day full access trial. Choose a paid plan for dedicated assisted setup.
-          </p>
-        </div>
+        {/* ─── Features ───────────────────────────────────────────────────────── */}
+        <section id="features" className={`${styles.section} ${styles.sectionDeep} ${styles.anchor}`}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <SectionHeading
+              eyebrow="Features"
+              title="Built for the counter, not the accounts department."
+              copy="Everything you need. Nothing you don't. Designed for ordinary shop owners, not accountants or enterprise IT."
+            />
 
-        <div className="max-w-5xl mx-auto">
-          <PricingPlans />
-        </div>
-      </section>
+            <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              <FeatureCard
+                className="md:col-span-2"
+                icon={Zap}
+                title="10-second billing"
+                desc="Tap items from your catalog, adjust quantities, apply discounts, and complete a bill in seconds."
+                visual={<FastBillingVisual />}
+              />
+              <FeatureCard
+                icon={Share2}
+                title="WhatsApp in one tap"
+                desc="Send customers a prefilled WhatsApp message with a secure digital receipt link instantly."
+                visual={<WhatsAppVisual />}
+              />
+              <FeatureCard
+                icon={Printer}
+                title="Thermal & A4 printing"
+                desc="Print 58mm and 80mm thermal receipts or clean A4 invoices from your browser — no drivers."
+                visual={<PrintVisual />}
+              />
+              <FeatureCard
+                className="md:col-span-2"
+                icon={Users}
+                title="Customer auto-lookup"
+                desc="Type a mobile number and instantly see the customer's name and purchase history."
+                visual={<LookupVisual />}
+              />
+            </div>
 
-      {/* ─── FAQ ──────────────────────────────────────────────────────────────── */}
-      <section className="py-20 px-5 bg-slate-50 border-t border-slate-100">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 text-center mb-10">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-4">
-            {[
-              {
-                q: "Is BillYours difficult to use?",
-                a: "Not at all. If you can use WhatsApp, you can use BillYours. It's designed specifically for shop owners — tap items, hit complete, done.",
-              },
-              {
-                q: "Can I use it on my mobile phone?",
-                a: "Yes. BillYours has a mobile-first layout with a tab-based billing screen. Items on one tab, bill on the other — no scrolling chaos.",
-              },
-              {
-                q: "Can I print bills and share on WhatsApp?",
-                a: "Yes to both. Print thermal 58mm/80mm receipts or A4 invoices from your browser. Share a secure digital receipt link on WhatsApp with one tap.",
-              },
-              {
-                q: "What's the difference between the Free and Monthly plan?",
-                a: "Free gives you up to 50 bills per month — perfect for very small operations. Monthly/Yearly removes all limits and includes full customer history, sales dashboard, and priority support.",
-              },
-              {
-                q: "What happens after my 10-day free trial?",
-                a: "Your account enters renewal status and past records stay safe. Simply contact our setup team at 7904561269 or 7845418030 to activate your Monthly (₹299/mo) or Yearly (₹2,999/yr) plan.",
-              },
-              {
-                q: "Can I apply GST to bills?",
-                a: "Yes. There's a simple optional toggle to add GST percentage (5%, 12%, 18%) to any bill. Tax is completely optional per bill.",
-              },
-            ].map((faq, i) => (
-              <div key={i} className="bg-white rounded-xl border border-slate-100 px-5 py-4">
-                <h3 className="font-bold text-slate-900 text-sm mb-1.5">{faq.q}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{faq.a}</p>
+            <ul className="mt-4 sm:mt-5 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+              {MORE_FEATURES.map((feature) => (
+                <li key={feature.title} className={`${styles.card} ${styles.reveal} p-5`}>
+                  <span className={styles.iconChip}>
+                    <feature.icon aria-hidden="true" />
+                  </span>
+                  <h3 className="font-bold tracking-tight mt-4">{feature.title}</h3>
+                  <p className={`${styles.muted} text-sm leading-relaxed mt-1`}>{feature.desc}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* ─── Made for ───────────────────────────────────────────────────────── */}
+        <section aria-labelledby="made-for-heading" className={`${styles.inkBlock} ${styles.onInk} ${styles.section}`}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className={`${styles.reveal} grid lg:grid-cols-2 gap-6 lg:gap-16 items-end`}>
+              <div>
+                <p className={styles.eyebrow}>Made for</p>
+                <h2 id="made-for-heading" className={`${styles.display} ${styles.h2} text-white mt-4`}>
+                  Every counter in the neighbourhood.
+                </h2>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              <p className={`${styles.lead} max-w-md`}>
+                Whatever you sell — chai, haircuts or repairs — a bill looks the same: items, a total, and a receipt your
+                customer can keep.
+              </p>
+            </div>
 
-      {/* ─── CTA ──────────────────────────────────────────────────────────────── */}
-      <section className="py-20 px-5 bg-slate-900 text-center">
-        <div className="max-w-xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
-            Start billing today.
-          </h2>
-          <p className="text-slate-400 text-base mb-8">
-            Free to start. No credit card. Ready in 2 minutes.
-          </p>
-          <Link
-            href="/signup"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base rounded-2xl shadow-lg shadow-blue-500/30 transition-all"
-          >
-            Create your free account
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </section>
+            <ul className={`${styles.ledger} ${styles.reveal} mt-12`}>
+              {LEDGER.map((row) => (
+                <li key={row.type} className={styles.ledgerRow}>
+                  <span className={styles.ledgerType}>{row.type}</span>
+                  <span className={styles.ledgerLeader} aria-hidden="true" />
+                  <span className={styles.ledgerItem}>{row.item}</span>
+                  <span className={styles.ledgerPrice}>{row.price}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* ─── Pricing ────────────────────────────────────────────────────────── */}
+        <section id="pricing" className={`${styles.section} ${styles.sectionDeep} ${styles.anchor}`}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <SectionHeading
+              className="mx-auto text-center"
+              eyebrow="Pricing"
+              title="Simple, honest pricing."
+              copy="Start with our 10-day full access trial. Choose a paid plan for dedicated assisted setup."
+            />
+
+            <div className="mt-16 max-w-5xl mx-auto">
+              <PricingPlans />
+            </div>
+          </div>
+        </section>
+
+        {/* ─── FAQ ────────────────────────────────────────────────────────────── */}
+        <section id="faq" className={`${styles.section} ${styles.anchor}`}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-16">
+            <div>
+              <SectionHeading eyebrow="FAQ" title="Frequently asked questions." />
+              <p className={`${styles.muted} ${styles.reveal} mt-5 max-w-sm`}>
+                Still deciding? The free plan lets you try the full billing flow with your own items.
+              </p>
+            </div>
+
+            <div className={`${styles.reveal} border-t border-[rgba(10,14,26,0.18)]`}>
+              {FAQS.map((faq) => (
+                <details key={faq.q} className={styles.faqItem}>
+                  <summary>
+                    <h3>{faq.q}</h3>
+                    <span className={styles.faqToggle} aria-hidden="true">
+                      <Plus />
+                    </span>
+                  </summary>
+                  <p className={`${styles.muted} leading-relaxed pb-6 pr-12 -mt-1`}>{faq.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── CTA ────────────────────────────────────────────────────────────── */}
+        <section aria-labelledby="cta-heading" className={`${styles.finale} ${styles.onInk} pt-28 pb-24 sm:pt-36 sm:pb-32 px-4`}>
+          <div className={styles.tornTop} aria-hidden="true" />
+          <div className={`${styles.reveal} max-w-3xl mx-auto text-center`}>
+            <p className={styles.eyebrow}>Your first bill is minutes away</p>
+            <h2 id="cta-heading" className={`${styles.display} ${styles.finaleTitle} text-white mt-5`}>
+              Start billing today.
+            </h2>
+            <p className={`${styles.lead} mt-5`}>Free to start. No credit card. Ready in 2 minutes.</p>
+            <div className="mt-10 flex flex-col sm:flex-row justify-center gap-3">
+              <Link href="/signup" className={`${styles.btn} ${styles.btnLg} ${styles.btnPrimary}`}>
+                Create your free account
+                <ArrowRight className={styles.arrow} aria-hidden="true" />
+              </Link>
+              <Link href="/login" className={`${styles.btn} ${styles.btnLg} ${styles.btnGhostLight}`}>
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
 
       {/* ─── Footer ───────────────────────────────────────────────────────────── */}
-      <footer className="bg-slate-950 text-slate-500 py-8 px-5">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
-              <ReceiptText className="w-4.5 h-4.5" />
+      <footer className={`${styles.footer} ${styles.onInk}`}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-14">
+          <div className="grid gap-10 grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+            <div className="col-span-2 md:col-span-1">
+              <Link href="/" aria-label="BillYours home">
+                <BrandLogo onInk />
+              </Link>
+              <p className={`${styles.mutedOnInk} text-sm mt-4 max-w-xs leading-relaxed`}>
+                Simple billing for every business. Add items, create a bill, print or share it, track your sales.
+              </p>
             </div>
-            <span className="font-black text-white text-lg tracking-tight">
-              Bill<span className="text-blue-400">Yours</span>
-            </span>
-          </Link>
 
-          <div className="flex flex-wrap justify-center gap-5 text-xs">
-            <Link href="/login" className="hover:text-white transition-colors">Sign In</Link>
-            <Link href="/signup" className="hover:text-white transition-colors">Get Started</Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
-            <Link href="/admin/login" className="hover:text-white transition-colors text-slate-700">Admin</Link>
+            <nav aria-label="Product">
+              <p className={styles.footerHeading}>Product</p>
+              <ul className="mt-4 space-y-2.5">
+                <li><a href="#features" className={styles.footerLink}>Features</a></li>
+                <li><a href="#pricing" className={styles.footerLink}>Pricing</a></li>
+                <li><a href="#faq" className={styles.footerLink}>FAQ</a></li>
+              </ul>
+            </nav>
+
+            <nav aria-label="Account">
+              <p className={styles.footerHeading}>Account</p>
+              <ul className="mt-4 space-y-2.5">
+                <li><Link href="/login" className={styles.footerLink}>Sign In</Link></li>
+                <li><Link href="/signup" className={styles.footerLink}>Get Started</Link></li>
+              </ul>
+            </nav>
+
+            <nav aria-label="Legal">
+              <p className={styles.footerHeading}>Legal</p>
+              <ul className="mt-4 space-y-2.5">
+                <li><Link href="/privacy" className={styles.footerLink}>Privacy</Link></li>
+                <li><Link href="/terms" className={styles.footerLink}>Terms</Link></li>
+              </ul>
+            </nav>
           </div>
 
-          <p className="text-xs text-slate-600">
-            © {new Date().getFullYear()} BillYours
-          </p>
+          <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <p>© {new Date().getFullYear()} BillYours · Made for India’s small businesses</p>
+            <Link href="/admin/login" className="text-[#7d879c] hover:text-white transition-colors">
+              Admin
+            </Link>
+          </div>
         </div>
+
+        <p className={`${styles.giantWordmark} mt-10`} aria-hidden="true">
+          <span>Bill</span>
+          <span>Yours</span>
+        </p>
       </footer>
     </div>
   );

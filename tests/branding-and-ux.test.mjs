@@ -23,15 +23,26 @@ const url = rawUrl
 neonConfig.fetchEndpoint = (host) => `https://${host}/sql`;
 const sql = neon(url);
 
+async function queryWithRetry(fn, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      await new Promise((r) => setTimeout(r, 300 * (i + 1)));
+    }
+  }
+}
+
 test("Business Branding Fields: Persistence and Retrieval", async () => {
   // 1. Get active account
-  const accounts = await sql`
+  const accounts = await queryWithRetry(() => sql`
     SELECT id, business_name
     FROM business_accounts
     WHERE status = 'ACTIVE' AND (id = 'acc_demo_sharma' OR id NOT LIKE 'acc_%_%')
     ORDER BY created_at ASC
     LIMIT 1;
-  `;
+  `);
   assert.ok(accounts.length > 0, "Active account found");
   const accountId = accounts[0].id;
 
