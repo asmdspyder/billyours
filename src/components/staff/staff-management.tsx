@@ -27,6 +27,7 @@ import {
   deleteStaffMemberAction,
   getStaffBillsAction,
 } from "@/actions/staff-actions";
+import { AppLoader } from "@/components/ui/app-loader";
 
 interface StaffManagementProps {
   initialStaff: StaffMemberRecord[];
@@ -519,7 +520,7 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
 
             {loadingBills ? (
               <div className="py-12 text-center text-slate-400 text-xs">
-                <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <AppLoader size="lg" className="mb-[0.5rem] justify-center" />
                 Loading associated bills...
               </div>
             ) : activeStaffBills.bills.length === 0 ? (

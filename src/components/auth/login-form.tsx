@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Receipt, AlertCircle, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { loginAction } from "@/actions/auth-actions";
+import { AppLoader } from "@/components/ui/app-loader";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -97,8 +98,7 @@ export function LoginForm() {
         >
           {isPending ? (
             <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Signing in...
+              <AppLoader size="sm" inverse label="Signing in..." />
             </>
           ) : (
             "Sign in to BillYours"

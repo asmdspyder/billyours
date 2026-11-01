@@ -9,13 +9,13 @@ import {
   Printer,
   Eye,
   Trash2,
-  Loader2,
   ChevronLeft,
   ChevronRight,
   ReceiptText,
   FileText,
 } from "lucide-react";
 import { deleteBillAction } from "@/actions/billing-actions";
+import { AppLoader } from "@/components/ui/app-loader";
 
 interface BillSummary {
   id: string;
@@ -138,8 +138,7 @@ export function BillsList({
         <div className="flex items-center gap-2 w-full md:w-auto">
           {isFiltering && (
             <div className="flex items-center gap-1.5 text-xs text-blue-600 font-semibold px-2">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Filtering...</span>
+              <AppLoader size="sm" label="Filtering..." />
             </div>
           )}
           {/* Payment Method Filter */}
@@ -250,7 +249,7 @@ export function BillsList({
                           title="Delete / cancel bill"
                         >
                           {deletingId === b.id ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <AppLoader size="sm" />
                           ) : (
                             <Trash2 className="w-3 h-3" />
                           )}
@@ -340,7 +339,7 @@ export function BillsList({
                             title="Delete / cancel bill"
                           >
                             {deletingId === b.id ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <AppLoader size="sm" />
                             ) : (
                               <Trash2 className="w-3 h-3" />
                             )}

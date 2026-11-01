@@ -24,7 +24,6 @@ import {
   ShieldAlert,
   UserCheck,
   RotateCcw,
-  Loader2,
 } from "lucide-react";
 import {
   calculateBillTotals,
@@ -35,6 +34,7 @@ import {
   type PriceType,
 } from "@/lib/billing-calculations";
 import { completeBillAction, lookupCustomerPhoneAction } from "@/actions/billing-actions";
+import { AppLoader } from "@/components/ui/app-loader";
 
 interface Item {
   id: string;
@@ -435,10 +435,10 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
   };
 
   const paymentIcons = {
-    CASH: <Banknote className="w-3.5 h-3.5" />,
-    UPI: <QrCode className="w-3.5 h-3.5" />,
-    CARD: <CreditCard className="w-3.5 h-3.5" />,
-    OTHER: <MoreHorizontal className="w-3.5 h-3.5" />,
+    CASH: <Banknote className="w-[0.8125rem] h-[0.8125rem]" />,
+    UPI: <QrCode className="w-[0.8125rem] h-[0.8125rem]" />,
+    CARD: <CreditCard className="w-[0.8125rem] h-[0.8125rem]" />,
+    OTHER: <MoreHorizontal className="w-[0.8125rem] h-[0.8125rem]" />,
   };
 
   const cartCount = cart.reduce((acc, it) => acc + it.quantity, 0);
@@ -469,55 +469,64 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
 
   // ─── Item Catalog Panel ─────────────────────────────────────────────────────
   const renderItemsPanel = () => (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-white md:bg-[#fbfaf7]">
       {/* Search + Custom */}
-      <div className="p-3 border-b border-slate-100 space-y-2.5 bg-white shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+      <div className="px-[1rem] py-[0.625rem] md:px-[1.25rem] md:py-[0.625rem] border-b border-[#e8e5dc] space-y-[0.5rem] bg-white shrink-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[0.625rem] font-black uppercase tracking-[0.18em] text-[#2563eb]">Catalog</p>
+            <h1 className="mt-[0.125rem] text-[1.125rem] md:text-[1.25rem] font-black tracking-[-0.035em] text-slate-950">Create a new bill</h1>
+          </div>
+          <div className="rounded-full border border-[#e7e4db] bg-[#faf9f5] px-[0.5rem] py-[0.25rem] text-[0.6875rem] font-bold text-slate-500">
+            {filteredItems.length} items
+          </div>
+        </div>
+        <div className="flex items-center gap-[0.5rem]">
+          <div className="relative min-w-0 flex-1">
+            <Search className="w-[0.875rem] h-[0.875rem] absolute left-[0.75rem] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search products by name or category..."
+              placeholder="Search by item name, category, or HSN"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+              className="w-full h-[2.5rem] pl-[2.25rem] pr-[2.25rem] bg-[#f7f7f4] border border-[#e4e1d8] rounded-[0.75rem] text-[0.8125rem] placeholder:text-slate-400 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] focus:bg-white transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5"
+                className="absolute right-[0.625rem] top-1/2 -translate-y-1/2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-[0.375rem]"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-[0.875rem] h-[0.875rem]" />
               </button>
             )}
           </div>
           <button
             type="button"
             onClick={() => setShowCustomModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl transition-colors whitespace-nowrap cursor-pointer shadow-xs"
+            className="h-[2.5rem] shrink-0 flex items-center justify-center gap-[0.375rem] px-[0.75rem] bg-[#0a0e1a] hover:bg-[#1d2539] text-white font-bold text-[0.75rem] rounded-[0.75rem] transition-all whitespace-nowrap cursor-pointer shadow-[0_0.375rem_1rem_rgba(10,14,26,0.12)] active:scale-[0.98]"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Custom Item</span>
+            <Plus className="w-[1rem] h-[1rem]" />
+            <span>Custom item</span>
           </button>
         </div>
 
         {/* Category horizontal scrolling bar */}
         {categories.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto thin-scroll pb-1 pt-0.5 scroll-smooth">
+          <div className="flex items-center gap-[0.375rem] overflow-x-auto no-scrollbar scroll-smooth border-t border-[#f0eee7] pt-[0.5rem]">
             <button
               type="button"
               onClick={() => setSelectedCategory(null)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+              className={`inline-flex h-[2rem] items-center gap-[0.375rem] px-[0.75rem] rounded-full text-[0.75rem] font-bold whitespace-nowrap transition-all cursor-pointer border ${
                 selectedCategory === null
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-[#0a0e1a] text-white border-[#0a0e1a] shadow-[0_0.25rem_0.75rem_rgba(10,14,26,0.12)]"
+                  : "bg-white text-slate-600 border-[#e5e2d9] hover:border-[#b9c9f0] hover:text-[#2563eb]"
               }`}
             >
               <span>All</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-md font-bold ${
-                  selectedCategory === null ? "bg-blue-700/60 text-white" : "bg-slate-200 text-slate-600"
+                className={`min-w-[1.25rem] text-center text-[0.625rem] leading-[1.125rem] rounded-full font-black tabular-nums ${
+                  selectedCategory === null ? "bg-white/15 text-white" : "bg-[#f0efea] text-slate-500"
                 }`}
               >
                 {initialItems.length}
@@ -532,16 +541,16 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(isSelected ? null : cat)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`inline-flex h-[2rem] items-center gap-[0.375rem] px-[0.75rem] rounded-full text-[0.75rem] font-bold whitespace-nowrap transition-all cursor-pointer border ${
                     isSelected
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      ? "bg-[#0a0e1a] text-white border-[#0a0e1a] shadow-[0_0.25rem_0.75rem_rgba(10,14,26,0.12)]"
+                      : "bg-white text-slate-600 border-[#e5e2d9] hover:border-[#b9c9f0] hover:text-[#2563eb]"
                   }`}
                 >
                   <span>{cat}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-md font-bold ${
-                      isSelected ? "bg-blue-700/60 text-white" : "bg-slate-200 text-slate-600"
+                    className={`min-w-[1.25rem] text-center text-[0.625rem] leading-[1.125rem] rounded-full font-black tabular-nums ${
+                      isSelected ? "bg-white/15 text-white" : "bg-[#f0efea] text-slate-500"
                     }`}
                   >
                     {count}
@@ -554,7 +563,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
       </div>
 
       {/* Item Grid (scrollable) */}
-      <div className="flex-1 overflow-y-auto p-3 thin-scroll bg-slate-50/50">
+      <div className="flex-1 overflow-y-auto p-[1rem] md:p-[1.25rem] thin-scroll bg-[#fbfaf7]">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-12">
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-2">
@@ -564,7 +573,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
             <p className="text-slate-400 text-xs mt-1">Try another search or add a custom item.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] content-start gap-[0.875rem] md:gap-[1rem] pb-[0.5rem]">
             {filteredItems.map((item) => {
               const inCart = cart.find((l) => l.itemId === item.id);
               const isTaxable = item.taxTreatment === "TAXABLE" && (item.gstRate || 0) > 0;
@@ -573,33 +582,37 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                   key={item.id}
                   type="button"
                   onClick={() => addToCart(item)}
-                  className={`text-left p-3 rounded-2xl border transition-all active:scale-[0.97] flex flex-col justify-between relative cursor-pointer group shadow-2xs ${
+                  className={`text-left w-full min-w-[12rem] h-[8rem] p-[1rem] rounded-[1rem] border transition-all duration-200 active:scale-[0.98] flex flex-col justify-between relative cursor-pointer overflow-hidden group ${
                     inCart
-                      ? "bg-blue-50/90 border-blue-400 ring-2 ring-blue-500/20"
-                      : "bg-white hover:bg-slate-50/80 border-slate-200/90 hover:border-blue-300"
+                      ? "bg-[#edf3ff] border-[#2563eb] shadow-[0_8px_24px_rgba(37,99,235,0.10)]"
+                      : "bg-white border-[#e8e5dc] shadow-[0_2px_10px_rgba(10,14,26,0.035)] hover:border-[#9db8ff] hover:shadow-[0_10px_28px_rgba(37,99,235,0.08)] hover:-translate-y-0.5"
                   }`}
                 >
                   {inCart && (
-                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shadow-xs">
+                    <span
+                      className="absolute right-[0.625rem] top-[0.625rem] z-20 inline-flex h-[1.375rem] items-center gap-[0.25rem] rounded-full border border-[#d7e2ff] bg-white px-[0.4375rem] text-[0.625rem] font-black tabular-nums text-[#2563eb] shadow-[0_0.25rem_0.625rem_rgba(37,99,235,0.12)]"
+                      aria-label={`${inCart.quantity} selected`}
+                    >
+                      <span className="h-[0.375rem] w-[0.375rem] rounded-full bg-[#2563eb]" />
                       {inCart.quantity}
                     </span>
                   )}
                   <div className="space-y-1">
                     {item.category && (
                       <div className="flex items-center gap-1 flex-wrap">
-                        <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded truncate max-w-[95%]">
+                        <span className="text-[0.625rem] md:text-[0.6875rem] leading-[1rem] font-bold uppercase tracking-[0.08em] text-slate-500 bg-[#f1f0ec] px-[0.5rem] py-[0.25rem] rounded-[0.375rem] truncate max-w-full">
                           {item.category}
                         </span>
                       </div>
                     )}
-                    <p className="font-bold text-slate-900 text-xs leading-snug line-clamp-2 pt-0.5">
+                    <p className="font-extrabold text-slate-950 text-[0.875rem] md:text-[0.9375rem] leading-[1.25] line-clamp-2 pt-[0.25rem] break-words">
                       {item.name}
                     </p>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between">
-                    <p className="font-extrabold text-blue-700 text-sm">₹{item.unitPrice.toFixed(2)}</p>
+                    <p className="font-black text-[#111827] text-[1rem] md:text-[1.0625rem] leading-none tracking-tight">₹{item.unitPrice.toFixed(2)}</p>
                     {item.unitLabel ? (
-                      <span className="text-[10px] text-slate-400">/{item.unitLabel}</span>
+                      <span className="text-[0.6875rem] leading-none font-semibold text-slate-400 truncate ml-[0.25rem] max-w-[4rem]">/{item.unitLabel}</span>
                     ) : null}
                   </div>
                 </button>
@@ -635,126 +648,100 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
 
   // ─── Bill / Cart Panel (Zero-Scroll Architecture) ───────────────────────────
   const renderBillPanel = () => (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50/60 select-none">
-      {/* 1. Header (shrink-0) */}
-      <div className="shrink-0 h-10 px-3.5 bg-white border-b border-slate-200/90 flex items-center justify-between shadow-2xs">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-2xs">
-            <ReceiptText className="w-3 h-3" />
-          </div>
-          <span className="font-bold text-slate-900 text-xs sm:text-sm">Current Bill</span>
-          {cart.length > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
-              {cartCount} {cartCount === 1 ? "item" : "items"}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setMobileTab("items")}
-            className="md:hidden px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded-md font-bold transition-colors cursor-pointer"
-          >
-            + Add Items
-          </button>
-          {(cart.length > 0 || customerPhone || customerName) && (
+    <div className="relative flex flex-col h-full min-h-0 overflow-hidden bg-[#f7f6f1] select-none">
+      {/* 2. Customer Info (shrink-0) */}
+      <div className="shrink-0 bg-white px-[1rem] md:px-[1.25rem] py-[0.625rem] border-b border-[#e7e4db] space-y-[0.5rem]">
+        <div className="flex items-center justify-between">
+          <span className="text-[0.75rem] md:text-[0.8125rem] font-black text-slate-800 flex items-center gap-[0.375rem]">
+            <span className="w-[1.5rem] h-[1.5rem] rounded-[0.5rem] bg-[#edf3ff] text-[#2563eb] flex items-center justify-center"><User className="w-[0.875rem] h-[0.875rem]" /></span>
+            Customer details <span className="font-semibold text-slate-400 text-[0.6875rem]">Optional</span>
+          </span>
+          <div className="flex items-center gap-[0.375rem]">
             <button
               type="button"
-              onClick={() => {
-                if (confirm("Clear entire bill? All items and customer info will be reset.")) {
-                  clearCart();
-                }
-              }}
-              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200/80 rounded-lg font-bold transition-all active:scale-95 cursor-pointer shadow-2xs"
-              title="Clear entire bill (Undo)"
+              onClick={() => setMobileTab("items")}
+              className="md:hidden h-[1.75rem] px-[0.5rem] text-[0.625rem] text-[#2563eb] bg-[#edf3ff] rounded-[0.5rem] font-black cursor-pointer"
             >
-              <RotateCcw className="w-3 h-3" />
-              <span>Clear Bill</span>
+              Add items
             </button>
-          )}
+            {(cart.length > 0 || customerPhone || customerName) && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm("Clear entire bill? All items and customer info will be reset.")) clearCart();
+                }}
+                className="h-[1.75rem] inline-flex items-center gap-[0.25rem] px-[0.5rem] text-[0.625rem] text-slate-500 hover:text-red-600 bg-white hover:bg-red-50 border border-[#e7e4db] hover:border-red-200 rounded-[0.5rem] font-black transition-colors cursor-pointer"
+                title="Clear entire bill"
+              >
+                <RotateCcw className="w-[0.75rem] h-[0.75rem]" /> Clear
+              </button>
+            )}
+            {staffList && staffList.length > 0 && (
+              <select
+                value={selectedStaffId}
+                onChange={(e) => setSelectedStaffId(e.target.value)}
+                className="h-[1.75rem] max-w-[7rem] text-[0.625rem] bg-[#f7f7f4] border border-[#e6e3da] rounded-[0.5rem] px-[0.375rem] font-bold text-slate-700 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 cursor-pointer"
+                aria-label="Assign staff"
+              >
+                {staffList.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}{s.isDefault ? " (Default)" : ""}</option>
+                ))}
+              </select>
+            )}
+            {isSearchingCustomer && (
+              <span className="text-[0.625rem] text-blue-600 flex items-center gap-[0.25rem] font-semibold">
+                <AppLoader size="sm" label="Searching" />
+              </span>
+            )}
+            {!isSearchingCustomer && existingCustomerFound && (
+              <span className="text-[0.625rem] text-green-600 flex items-center gap-[0.25rem] font-bold">
+                <CheckCircle2 className="w-[0.75rem] h-[0.75rem]" /> Saved
+              </span>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* 2. Customer Info (shrink-0) */}
-      <div className="shrink-0 bg-white px-3 py-2 border-b border-slate-200/80 shadow-2xs space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-            <User className="w-3 h-3 text-blue-600" />
-            Customer Info <span className="font-normal text-slate-400 text-[10px]">(optional)</span>
-          </span>
-          {isSearchingCustomer && (
-            <span className="text-[10px] text-blue-600 flex items-center gap-1 font-semibold">
-              <Loader2 className="w-3 h-3 animate-spin" /> Searching customer...
-            </span>
-          )}
-          {!isSearchingCustomer && existingCustomerFound && (
-            <span className="text-[10px] text-green-600 flex items-center gap-0.5 font-bold">
-              <CheckCircle2 className="w-3 h-3" /> Saved customer
-            </span>
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-[0.625rem]">
           <div className="relative">
-            <Phone className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Phone className="w-[0.875rem] h-[0.875rem] absolute left-[0.875rem] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="tel"
               placeholder="Mobile number"
               value={customerPhone}
               autoComplete="off"
               onChange={(e) => handlePhoneChange(e.target.value)}
-              className="w-full pl-7 pr-7 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white font-medium"
+              className="w-full h-[2.75rem] pl-[2.375rem] pr-[1rem] text-[0.8125rem] bg-[#f7f7f4] border border-[#e6e3da] rounded-[0.75rem] focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] focus:bg-white font-semibold"
             />
             {isSearchingCustomer && (
-              <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <span className="absolute right-[0.625rem] top-1/2 -translate-y-1/2 pointer-events-none"><AppLoader size="sm" /></span>
             )}
           </div>
           <div className="relative">
-            <User className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <User className="w-[0.875rem] h-[0.875rem] absolute left-[0.875rem] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Customer name"
               value={customerName}
               autoComplete="off"
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full pl-7 pr-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white font-medium"
+              className="w-full h-[2.75rem] pl-[2.375rem] pr-[1rem] text-[0.8125rem] bg-[#f7f7f4] border border-[#e6e3da] rounded-[0.75rem] focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] focus:bg-white font-semibold"
             />
           </div>
         </div>
 
-        {/* Staff Attribution Selector */}
-        {staffList && staffList.length > 0 && (
-          <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-            <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1">
-              <UserCheck className="w-3 h-3 text-blue-600" />
-              <span>Staff:</span>
-            </span>
-            <select
-              value={selectedStaffId}
-              onChange={(e) => setSelectedStaffId(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-            >
-              {staffList.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} {s.isDefault ? "(Default)" : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       {/* 3. Items in Bill (Scrollable Area) */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1.5 thin-scroll">
+      <div className="flex-1 min-h-[6rem] overflow-y-auto px-[0.75rem] py-[0.625rem] md:px-[1rem] md:py-[0.75rem] space-y-[0.625rem] thin-scroll bg-[#f7f6f1]">
         {cart.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-6">
-            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mb-1.5">
-              <ReceiptText className="w-5 h-5 text-slate-300" />
+          <div className="mx-auto flex h-full max-h-[16rem] w-full flex-col items-center justify-center rounded-[1rem] border border-dashed border-[#ddd9ce] bg-white/55 px-[1rem] text-center">
+            <div className="mb-[0.75rem] w-[3rem] h-[3rem] rounded-[0.875rem] bg-[#edf3ff] flex items-center justify-center text-[#2563eb] shadow-[0_0.5rem_1.25rem_rgba(37,99,235,0.08)]">
+              <ReceiptText className="w-[1.375rem] h-[1.375rem]" />
             </div>
-            <p className="text-slate-700 font-bold text-xs">No items in bill</p>
-            <p className="text-slate-400 text-[11px] mt-0.5">Select items from catalog to add</p>
+            <p className="text-[0.875rem] font-black text-slate-800">Your bill is ready for items</p>
+            <p className="mt-[0.25rem] max-w-[14rem] text-[0.75rem] font-semibold leading-[1.4] text-slate-400">Choose products from the catalog to start a new order.</p>
           </div>
         ) : (
-          <div className="space-y-1.5">
+          <div className="space-y-[0.625rem]">
             {totals.items.map((processed, idx) => {
               const line = cart[idx];
               if (!line) return null;
@@ -764,15 +751,15 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               return (
                 <div
                   key={line.tempId}
-                  className={`flex items-center justify-between gap-1.5 px-2.5 py-2 rounded-xl border transition-all duration-200 shadow-2xs ${
+                  className={`flex min-h-[3.875rem] items-center justify-between gap-[0.625rem] px-[0.75rem] py-[0.5rem] rounded-[0.875rem] border transition-all duration-200 ${
                     isRecent
-                      ? "bg-blue-100/90 border-blue-400 ring-1 ring-blue-400/50"
-                      : "bg-white hover:bg-blue-50/40 border-slate-200/90"
+                      ? "bg-[#edf3ff] border-[#2563eb] ring-[0.0625rem] ring-[#2563eb]/20"
+                      : "bg-white hover:border-[#cbd8f4] border-[#e7e4db] shadow-[0_0.25rem_0.875rem_rgba(15,23,42,0.035)]"
                   }`}
                 >
                   {/* Item info with GST badge */}
-                  <div className="flex-1 min-w-0 pr-1">
-                    <p className="font-bold text-slate-900 text-xs truncate leading-snug">{line.name}</p>
+                  <div className="flex-1 min-w-0 pr-[0.25rem]">
+                    <p className="font-black text-slate-950 text-[0.8125rem] md:text-[0.875rem] truncate leading-[1.25]">{line.name}</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-slate-500 text-[11px] font-semibold">
                         ₹{line.unitPrice.toFixed(2)}
@@ -842,9 +829,9 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
       </div>
 
       {/* 4. Discount Bar (shrink-0, Pinned at Bottom) */}
-      <div className="shrink-0 bg-white px-3 py-1.5 border-t border-slate-200/80 shadow-2xs space-y-1.5">
+      <div className="shrink-0 bg-white px-[1rem] md:px-[1.25rem] py-[0.5rem] border-t border-[#e7e4db] space-y-[0.25rem]">
         <div className="flex items-center justify-between gap-1">
-          <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1 shrink-0">
+          <span className="text-[0.6875rem] font-black text-slate-700 flex items-center gap-[0.375rem] shrink-0">
             <Tag className="w-3 h-3 text-blue-600" /> Overall Discount
           </span>
           <div className="flex items-center gap-1">
@@ -856,8 +843,8 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               }}
               className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
                 discountType === null
-                  ? "bg-blue-50 text-blue-700"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? "bg-[#edf3ff] text-[#2563eb]"
+                  : "bg-[#f4f3ef] text-slate-500 hover:bg-[#eceae3]"
               }`}
             >
               None
@@ -897,7 +884,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                 step="any"
                 value={discountValue}
                 onChange={(e) => setDiscountValue(e.target.value)}
-                className="w-14 px-1.5 py-0.5 text-right text-xs font-bold bg-slate-50 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="w-[3.75rem] h-[1.875rem] px-[0.375rem] text-right text-[0.75rem] font-black bg-[#f7f7f4] border border-[#e6e3da] rounded-[0.5rem] focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:outline-none"
               />
             )}
           </div>
@@ -907,7 +894,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
         <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
           <div className="flex items-center gap-1.5">
             <Percent className="w-3 h-3 text-blue-600" />
-            <span className="text-[11px] font-bold text-slate-700">Total GST Calculated</span>
+            <span className="text-[0.6875rem] font-black text-slate-700">Total GST</span>
             {totals.gstSummary.length > 0 && (
               <button
                 type="button"
@@ -949,18 +936,18 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
       </div>
 
       {/* 5. Payment Mode Bar (shrink-0) */}
-      <div className="shrink-0 bg-white px-3 py-1.5 border-t border-slate-200/80 shadow-2xs space-y-1">
-        <span className="text-[10px] font-bold text-slate-700">Payment Mode</span>
-        <div className="grid grid-cols-4 gap-1 pt-0.5">
+      <div className="shrink-0 bg-white px-[1rem] md:px-[1.25rem] py-[0.375rem] border-t border-[#e7e4db] flex items-center gap-[0.625rem]">
+        <span className="w-[4.75rem] shrink-0 text-[0.6875rem] font-black text-slate-700">Payment</span>
+        <div className="grid flex-1 grid-cols-4 gap-[0.25rem]">
           {(["CASH", "UPI", "CARD", "OTHER"] as const).map((method) => (
             <button
               key={method}
               type="button"
               onClick={() => setPaymentMethod(method)}
-              className={`py-1.5 px-1 flex items-center justify-center gap-1 rounded-lg text-[10px] sm:text-xs font-bold border transition-colors cursor-pointer ${
+              className={`h-[1.875rem] px-[0.125rem] flex items-center justify-center gap-[0.25rem] rounded-[0.5rem] text-[0.625rem] sm:text-[0.6875rem] font-black border transition-colors cursor-pointer ${
                 paymentMethod === method
-                  ? "bg-blue-50 border-blue-500 text-blue-700 shadow-2xs"
-                  : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                  ? "bg-blue-50 border-blue-500 text-blue-700"
+                  : "bg-[#f8f8f5] border-[#e7e4db] text-slate-600 hover:bg-slate-100"
               }`}
             >
               {paymentIcons[method]}
@@ -971,34 +958,22 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
       </div>
 
       {/* 6. Pinned Bottom Checkout Footer - ALWAYS VISIBLE */}
-      <div className="shrink-0 bg-white border-t-2 border-slate-200 p-2.5 sm:p-3 shadow-md space-y-1.5">
-        <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold px-0.5">
-          <span>Subtotal: ₹{totals.subtotal}</span>
-          <div className="flex items-center gap-2">
-            {Number(totals.discountAmount) > 0 && (
-              <span className="text-green-600 font-bold">Disc: −₹{totals.discountAmount}</span>
-            )}
-            <span className="text-slate-700 font-bold">
-              GST: +₹{totals.totalTax}
-            </span>
-          </div>
-        </div>
-
+      <div className="shrink-0 bg-white border-t border-[#dedbd1] px-[1rem] md:px-[1.25rem] py-[0.375rem] shadow-[0_-0.375rem_1.25rem_rgba(15,23,42,0.045)]">
         {submitError && (
-          <div className="p-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-center justify-between">
+          <div className="mb-[0.375rem] px-[0.625rem] py-[0.5rem] bg-red-50 border border-red-200 text-red-700 text-[0.75rem] rounded-[0.625rem] flex items-center justify-between">
             <span>{submitError}</span>
             <button type="button" onClick={() => setSubmitError(null)}>
-              <X className="w-3.5 h-3.5" />
+              <X className="w-[0.875rem] h-[0.875rem]" />
             </button>
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-3 pt-0.5">
-          <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block leading-none">
-              Total Payable
+        <div className="flex items-center gap-[0.75rem]">
+          <div className="min-w-[7.5rem]">
+            <span className="text-[0.5625rem] text-slate-400 font-black uppercase tracking-[0.14em] block leading-none mb-[0.25rem]">
+              Total payable
             </span>
-            <span className="text-xl sm:text-2xl font-black text-blue-600 leading-none">
+            <span className="text-[1.375rem] md:text-[1.5rem] font-black text-slate-950 leading-none tracking-tight">
               ₹{totals.grandTotal}
             </span>
           </div>
@@ -1007,15 +982,15 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
             type="button"
             disabled={isPending || cart.length === 0}
             onClick={handleCompleteBill}
-            className={`flex-1 py-2.5 px-4 rounded-xl font-black text-white text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer ${
+            className={`h-[2.625rem] flex-1 rounded-[0.75rem] font-black text-[0.75rem] md:text-[0.8125rem] flex items-center justify-center gap-[0.5rem] transition-all active:scale-[0.98] cursor-pointer ${
               isPending || cart.length === 0
-                ? "bg-slate-300 cursor-not-allowed shadow-none"
-                : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/25 ring-2 ring-blue-500/20"
+                ? "bg-[#e5e3dc] text-slate-400 cursor-not-allowed"
+                : "bg-[#2563eb] text-white hover:bg-[#1d4ed8] shadow-[0_0.625rem_1.25rem_rgba(37,99,235,0.20)]"
             }`}
           >
             {isPending ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <AppLoader size="sm" inverse />
                 <span>Completing...</span>
               </>
             ) : (
@@ -1033,14 +1008,14 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
   return (
     <>
       {/* ─── Tablet & Desktop Layout (md+): Side-by-side ───────────────────── */}
-      <div className="hidden md:grid md:grid-cols-12 gap-0 h-full min-h-0 overflow-hidden">
+      <div className="hidden md:grid md:grid-cols-12 gap-3 p-3 lg:p-4 h-full min-h-0 overflow-hidden bg-[#f2f0e8]">
         {/* Left: Items (md: 6 cols, lg: 7 cols) */}
-        <div className="md:col-span-6 lg:col-span-7 border-r border-slate-200 flex flex-col overflow-hidden bg-white h-full min-h-0">
+        <div className="md:col-span-6 lg:col-span-7 border border-[#e6e3da] rounded-[20px] flex flex-col overflow-hidden bg-white h-full min-h-0 shadow-[0_8px_30px_rgba(10,14,26,0.04)]">
           {renderItemsPanel()}
         </div>
 
         {/* Right: Bill (md: 6 cols, lg: 5 cols) */}
-        <div className="md:col-span-6 lg:col-span-5 bg-slate-50/70 border-l border-slate-200/80 flex flex-col overflow-hidden h-full min-h-0">
+        <div className="md:col-span-6 lg:col-span-5 bg-[#fbfaf7] border border-[#e6e3da] rounded-[20px] flex flex-col overflow-hidden h-full min-h-0 shadow-[0_8px_30px_rgba(10,14,26,0.04)]">
           {renderBillPanel()}
         </div>
       </div>

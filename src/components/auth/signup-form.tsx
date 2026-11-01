@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Receipt, AlertCircle, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { signupAction } from "@/actions/auth-actions";
+import { AppLoader } from "@/components/ui/app-loader";
 
 export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -155,8 +156,7 @@ export function SignupForm() {
         >
           {isPending ? (
             <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Setting up your shop...
+              <AppLoader size="sm" inverse label="Setting up your shop..." />
             </>
           ) : (
             "Create Account & Start 10-Day Free Trial"
