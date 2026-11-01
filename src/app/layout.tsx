@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getBaseUrl } from "@/lib/base-url";
+import { brandFont } from "@/components/landing/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+      <body className={`${brandFont.variable} min-h-screen bg-slate-50 text-slate-900 antialiased`}>
         {children}
       </body>
     </html>

@@ -502,13 +502,13 @@ function ItemForm({
       </div>
 
       {/* Step 3: Live Calculation Preview */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-sm space-y-2">
-        <div className="flex items-center justify-between text-xs text-slate-300 pb-1.5 border-b border-slate-700/60">
+      <div className="bg-[#fffdf7] text-slate-800 p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+        <div className="flex items-center justify-between text-xs text-slate-600 pb-1.5 border-b border-slate-200">
           <span className="font-semibold flex items-center gap-1.5">
             <Percent className="w-3.5 h-3.5 text-blue-400" />
             Live Price & GST Preview
           </span>
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600">
             {applyGst && taxTreatment === "TAXABLE"
               ? `${effectiveGstRate}% ${priceType === "INCLUSIVE" ? "Included" : "Extra"}`
               : "No GST"}
@@ -516,23 +516,23 @@ function ItemForm({
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
-          <div className="bg-slate-800/60 p-2 rounded-xl border border-slate-700/40">
+          <div className="bg-white p-2 rounded-xl border border-slate-200">
             <span className="block text-[10px] text-slate-400 uppercase font-bold">Taxable Base</span>
-            <span className="block text-sm font-bold text-slate-100 mt-0.5">
+            <span className="block text-sm font-bold text-slate-900 mt-0.5">
               ₹{preview.taxableValue.toFixed(2)}
             </span>
           </div>
-          <div className="bg-slate-800/60 p-2 rounded-xl border border-slate-700/40">
+          <div className="bg-white p-2 rounded-xl border border-slate-200">
             <span className="block text-[10px] text-slate-400 uppercase font-bold">
               GST ({preview.effectiveRate}%)
             </span>
-            <span className="block text-sm font-bold text-amber-300 mt-0.5">
+            <span className="block text-sm font-bold text-amber-700 mt-0.5">
               ₹{preview.gstAmount.toFixed(2)}
             </span>
           </div>
-          <div className="bg-blue-600/30 p-2 rounded-xl border border-blue-500/40">
-            <span className="block text-[10px] text-blue-200 uppercase font-bold">Customer Pays</span>
-            <span className="block text-sm font-black text-white mt-0.5">
+          <div className="bg-blue-50 p-2 rounded-xl border border-blue-200">
+            <span className="block text-[10px] text-blue-700 uppercase font-bold">Customer Pays</span>
+            <span className="block text-sm font-black text-blue-800 mt-0.5">
               ₹{preview.finalPrice.toFixed(2)}
             </span>
           </div>

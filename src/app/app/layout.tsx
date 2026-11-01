@@ -24,7 +24,7 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="h-screen h-[100dvh] flex flex-col bg-slate-50 overflow-hidden">
+    <div className="app-shell h-screen h-[100dvh] flex flex-col overflow-hidden">
       {session.isImpersonating && session.adminUser && (
         <AdminBanner
           businessName={session.account.businessName}
@@ -44,7 +44,7 @@ export default async function AppLayout({
       />
 
       {/* Main content area — full width on tablet/laptop/desktop, pb-14 on mobile above fixed nav */}
-      <main className="flex-1 pb-14 md:pb-0 min-h-0 bg-slate-50 flex flex-col overflow-hidden">
+      <main className="app-content flex-1 pb-14 md:pb-0 min-h-0 flex flex-col overflow-hidden">
         {children}
       </main>
     </div>

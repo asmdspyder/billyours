@@ -18,7 +18,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
+    <div className="auth-shell min-h-screen bg-[#faf7f0] flex flex-col">
       {/* Minimal header */}
       <header className="px-5 py-4">
         <Link href="/" className="inline-flex items-center gap-2">

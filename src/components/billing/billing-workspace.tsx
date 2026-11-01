@@ -495,7 +495,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
           <button
             type="button"
             onClick={() => setShowCustomModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition-colors whitespace-nowrap cursor-pointer shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl transition-colors whitespace-nowrap cursor-pointer shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Custom Item</span>
@@ -856,7 +856,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               }}
               className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
                 discountType === null
-                  ? "bg-slate-900 text-white"
+                  ? "bg-blue-50 text-blue-700"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -1281,16 +1281,16 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               </div>
 
               {/* Live Preview Card */}
-              <div className="bg-slate-900 text-white p-3 rounded-xl space-y-1 text-xs">
+              <div className="bg-[#fffdf7] text-slate-800 p-3 rounded-xl space-y-1 text-xs border border-slate-200">
                 <div className="flex justify-between text-slate-400 text-[10px] font-bold uppercase">
                   <span>Base Taxable</span>
                   <span>GST ({customPreview.effectiveRate}%)</span>
-                  <span className="text-blue-300">Total</span>
+                  <span className="text-blue-700">Total</span>
                 </div>
                 <div className="flex justify-between font-black text-sm">
                   <span>₹{customPreview.taxableValue.toFixed(2)}</span>
-                  <span className="text-amber-300">₹{customPreview.gstAmount.toFixed(2)}</span>
-                  <span className="text-blue-400">₹{customPreview.finalPrice.toFixed(2)}</span>
+                  <span className="text-amber-700">₹{customPreview.gstAmount.toFixed(2)}</span>
+                  <span className="text-blue-700">₹{customPreview.finalPrice.toFixed(2)}</span>
                 </div>
               </div>
 

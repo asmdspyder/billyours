@@ -20,7 +20,7 @@ export function AdminBanner({ businessName, adminEmail }: AdminBannerProps) {
       <form action={stopImpersonationAction}>
         <button
           type="submit"
-          className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-md shadow transition-colors"
+          className="flex items-center gap-1.5 bg-white hover:bg-amber-50 text-amber-950 border border-amber-300 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Exit Support Mode</span>

@@ -15,7 +15,7 @@ export default async function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
+    <div className="auth-shell min-h-screen bg-[#faf7f0] flex flex-col">
       <header className="px-5 py-4">
         <Link href="/" className="inline-flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
@@ -25,7 +25,7 @@ export default async function SignupPage() {
         </Link>
       </header>
 
-      <div className="flex-1 flex items-center justify-center px-5 py-8">
+      <div className="flex-1 flex items-start sm:items-center justify-center px-5 py-8">
         <SignupForm />
       </div>
     </div>

@@ -638,7 +638,8 @@ export function BillDetailView({
           </div>
 
           {/* Line items table with GST details */}
-          <table className="w-full text-left text-xs border-collapse">
+          <div className="w-full overflow-x-auto print:overflow-visible">
+          <table className="min-w-[680px] print:min-w-0 w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b-2 border-slate-200 text-[11px] uppercase font-bold text-slate-600 bg-slate-50/50">
                 <th className="py-2.5 px-2">#</th>
@@ -683,6 +684,7 @@ export function BillDetailView({
               })}
             </tbody>
           </table>
+          </div>
 
           {/* Consolidated Rate-wise GST Summary Table */}
           {totalTaxNum > 0 && gstSummaryGroups.length > 0 && (
@@ -691,7 +693,8 @@ export function BillDetailView({
                 <TableIcon className="w-3.5 h-3.5 text-blue-600" />
                 <span>GST Tax Summary Breakdown</span>
               </div>
-              <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden">
+              <div className="overflow-x-auto print:overflow-visible">
+              <table className="min-w-[520px] print:min-w-0 w-full text-xs border border-slate-200 rounded-lg overflow-hidden">
                 <thead className="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-bold">
                   <tr>
                     <th className="py-2 px-3 text-left">GST Rate</th>
@@ -758,6 +761,7 @@ export function BillDetailView({
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
           )}
 

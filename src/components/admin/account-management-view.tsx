@@ -291,14 +291,14 @@ export function AccountManagementView({
               <button
                 onClick={() => handleActivateSubscription("MONTHLY")}
                 disabled={isPending}
-                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-lg transition-colors shadow-xs"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors shadow-xs"
               >
                 Activate Monthly (₹299/mo)
               </button>
               <button
                 onClick={() => handleActivateSubscription("YEARLY")}
                 disabled={isPending}
-                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-lg transition-colors shadow-xs"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors shadow-xs"
               >
                 Activate Yearly (₹2,999/yr)
               </button>

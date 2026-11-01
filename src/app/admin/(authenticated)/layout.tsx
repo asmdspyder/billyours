@@ -15,17 +15,17 @@ export default async function AuthenticatedAdminLayout({
   const session = await requirePlatformAdmin();
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col text-slate-900">
+    <div className="admin-shell min-h-screen bg-[#faf7f0] flex flex-col text-slate-900">
       {/* Admin Top Navigation */}
-      <header className="bg-slate-900 text-white border-b border-slate-800 px-4 md:px-6 py-3 flex items-center justify-between shadow-sm sticky top-0 z-40">
+      <header className="bg-white/95 text-slate-900 border-b border-slate-200 px-4 md:px-6 py-3 flex items-center justify-between shadow-sm sticky top-0 z-40 backdrop-blur-md">
         <div className="flex items-center gap-6">
           <Link href="/admin" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-xs">
-              BY
+              <div className="w-8 h-8 rounded-[10px] bg-blue-600 flex items-center justify-center font-bold text-white shadow-xs">
+                BY
             </div>
             <div>
               <span className="font-extrabold text-sm tracking-tight">BillYours</span>
-              <span className="ml-2 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">
+              <span className="ml-2 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
                 Admin Panel
               </span>
             </div>
@@ -34,19 +34,19 @@ export default async function AuthenticatedAdminLayout({
           <nav className="hidden sm:flex items-center gap-1 text-xs font-medium text-slate-300">
             <Link
               href="/admin"
-              className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition-colors"
+              className="px-3 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-50 transition-colors"
             >
               Overview
             </Link>
             <Link
               href="/admin/accounts"
-              className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition-colors"
+              className="px-3 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-50 transition-colors"
             >
               Business Accounts (SSO)
             </Link>
             <Link
               href="/admin/accounts/new"
-              className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition-colors"
+              className="px-3 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-50 transition-colors"
             >
               + Create Business
             </Link>
@@ -71,11 +71,11 @@ export default async function AuthenticatedAdminLayout({
       </header>
 
       {/* Mobile Sub-Navigation (<sm) */}
-      <nav className="sm:hidden bg-slate-800 text-white border-b border-slate-700 px-3 py-2 flex items-center justify-around text-xs font-semibold">
-        <Link href="/admin" className="px-2.5 py-1 rounded-md hover:bg-slate-700 text-slate-200 transition-colors">
+      <nav className="sm:hidden bg-white text-slate-700 border-b border-slate-200 px-3 py-2 flex items-center justify-around text-xs font-semibold">
+        <Link href="/admin" className="px-2.5 py-1 rounded-md hover:bg-slate-100 text-slate-700 transition-colors">
           Overview
         </Link>
-        <Link href="/admin/accounts" className="px-2.5 py-1 rounded-md hover:bg-slate-700 text-slate-200 transition-colors">
+        <Link href="/admin/accounts" className="px-2.5 py-1 rounded-md hover:bg-slate-100 text-slate-700 transition-colors">
           Accounts
         </Link>
         <Link href="/admin/accounts/new" className="px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors">

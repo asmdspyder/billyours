@@ -25,7 +25,7 @@ export function SignupForm() {
   };
 
   return (
-    <div className="w-full max-w-sm space-y-6">
+    <div className="w-full max-w-sm space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       {/* Brand */}
       <div className="text-center">
         <Link href="/" className="inline-flex items-center gap-2.5 mb-5 group">

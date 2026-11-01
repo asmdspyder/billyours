@@ -34,7 +34,7 @@ export function AdminLoginForm() {
     <div className="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-700 space-y-6">
       {/* Brand Header */}
       <div className="text-center space-y-1">
-        <div className="w-12 h-12 rounded-xl bg-slate-900 text-blue-400 flex items-center justify-center font-black mx-auto mb-2 shadow-sm">
+        <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-black mx-auto mb-2">
           <ShieldCheck className="w-6 h-6" />
         </div>
         <h1 className="text-xl font-bold text-slate-900">Platform Administrator</h1>
@@ -100,7 +100,7 @@ export function AdminLoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-xl shadow-md transition-all"
+          className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-sm transition-all"
         >
           {isPending ? "Authenticating..." : "Sign In to Admin Panel"}
         </button>

@@ -13,7 +13,7 @@ export default async function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+    <div className="admin-shell min-h-screen bg-[#faf7f0] flex items-center justify-center p-4">
       <AdminLoginForm />
     </div>
   );

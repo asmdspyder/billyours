@@ -25,7 +25,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="auth-shell min-h-screen bg-[#faf7f0] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-xl space-y-6">
         <div className="text-center space-y-1">
           <Link href="/" className="inline-flex items-center gap-2 mb-2">

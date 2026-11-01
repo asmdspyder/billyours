@@ -555,29 +555,29 @@ export function ModernSalesChart({
         {/* Floating Tooltip */}
         {hoveredPoint && (
           <div
-            className="absolute z-30 bg-slate-900 text-white rounded-xl p-3 shadow-xl pointer-events-none transform -translate-x-1/2 -translate-y-full transition-all border border-slate-700/60"
+            className="absolute z-30 bg-white text-slate-900 rounded-xl p-3 shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-full transition-all border border-slate-200"
             style={{
               left: `${(hoveredPoint.x / svgWidth) * 100}%`,
               top: `${Math.max(10, (hoveredPoint.y / svgHeight) * 100 - 15)}%`,
             }}
           >
-            <div className="text-[11px] font-semibold text-slate-400 pb-1 border-b border-slate-800">
+            <div className="text-[11px] font-semibold text-slate-600 pb-1 border-b border-slate-200">
               {hoveredPoint.data.fullLabel}
             </div>
             <div className="mt-1.5 space-y-1">
               <div className="flex items-center justify-between gap-4 text-xs font-bold">
-                <span className="text-slate-300">Revenue:</span>
-                <span className="text-blue-400 font-mono">
+                <span className="text-slate-600">Revenue:</span>
+                <span className="text-blue-700 font-mono">
                   ₹{hoveredPoint.data.revenue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-4 text-xs">
-                <span className="text-slate-400">Total Bills:</span>
-                <span className="text-white font-bold">{hoveredPoint.data.orders} bills</span>
+                <span className="text-slate-500">Total Bills:</span>
+                <span className="text-slate-900 font-bold">{hoveredPoint.data.orders} bills</span>
               </div>
               <div className="flex items-center justify-between gap-4 text-xs">
-                <span className="text-slate-400">Avg Bill:</span>
-                <span className="text-emerald-400 font-bold">₹{hoveredPoint.data.avg.toFixed(2)}</span>
+                <span className="text-slate-500">Avg Bill:</span>
+                <span className="text-emerald-700 font-bold">₹{hoveredPoint.data.avg.toFixed(2)}</span>
               </div>
             </div>
           </div>

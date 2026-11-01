@@ -84,7 +84,7 @@ export default async function PublicBillPage(props: PublicBillPageProps) {
   const isInterState = Boolean(bill.is_inter_state);
 
   return (
-    <div className="min-h-screen bg-slate-100 py-6 px-4 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-[#faf7f0] py-6 px-4 flex flex-col items-center justify-center">
       {/* Printable Card */}
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden print-area">
         {/* Banner */}
