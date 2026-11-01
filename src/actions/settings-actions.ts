@@ -18,6 +18,18 @@ export async function updateBusinessDetailsAction(
     const address = (formData.get("address") as string)?.trim() || null;
     const state = (formData.get("state") as string)?.trim() || null;
     const businessType = (formData.get("businessType") as string)?.trim() || "retail";
+    const gstin = (formData.get("gstin") as string)?.trim().toUpperCase() || null;
+    const rawRegType = (formData.get("gstRegistrationType") as string)?.trim();
+    const gstRegistrationType =
+      rawRegType === "COMPOSITION" || rawRegType === "UNREGISTERED" ? rawRegType : "REGULAR";
+    const pan =
+      (formData.get("pan") as string)?.trim().toUpperCase() ||
+      (gstin && gstin.length >= 12 ? gstin.slice(2, 12) : null);
+    const fssai = (formData.get("fssai") as string)?.trim() || null;
+    const website = (formData.get("website") as string)?.trim() || null;
+    const facebook = (formData.get("facebook") as string)?.trim() || null;
+    const instagram = (formData.get("instagram") as string)?.trim() || null;
+    const googleReviewLink = (formData.get("googleReviewLink") as string)?.trim() || null;
 
     if (!businessName || !ownerName) {
       return { success: false, error: "Business name and owner name are required." };
@@ -33,12 +45,22 @@ export async function updateBusinessDetailsAction(
         address = ${address},
         state = ${state},
         business_type = ${businessType},
+        gstin = ${gstin},
+        gst_registration_type = ${gstRegistrationType},
+        pan = ${pan},
+        fssai = ${fssai},
+        website = ${website},
+        facebook = ${facebook},
+        instagram = ${instagram},
+        google_review_link = ${googleReviewLink},
         updated_at = NOW()
       WHERE id = ${accountId};
     `;
 
     revalidatePath("/app/settings");
     revalidatePath("/app/billing");
+    revalidatePath("/app/bills");
+    revalidatePath("/app/bills/[id]", "page");
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || "Failed to update business details." };

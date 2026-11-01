@@ -2,6 +2,7 @@ import { requireBusinessAccount, checkSubscriptionStatus } from "@/lib/auth";
 import { AppNavbar } from "@/components/nav/app-navbar";
 import { AdminBanner } from "@/components/admin/admin-banner";
 import { TrialBanner } from "@/components/nav/trial-banner";
+import { SubscriptionExpiredScreen } from "@/components/subscription/subscription-expired-screen";
 
 export default async function AppLayout({
   children,
@@ -10,6 +11,17 @@ export default async function AppLayout({
 }) {
   const session = await requireBusinessAccount();
   const subStatus = checkSubscriptionStatus(session.account);
+
+  // When free trial or paid subscription has expired, block access and show contact numbers
+  if (subStatus.isExpired && !session.isImpersonating) {
+    return (
+      <SubscriptionExpiredScreen
+        businessName={session.account.businessName}
+        ownerName={session.user.name}
+        accountId={session.account.id}
+      />
+    );
+  }
 
   return (
     <div className="h-screen h-[100dvh] flex flex-col bg-slate-50 overflow-hidden">

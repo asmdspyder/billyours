@@ -27,7 +27,7 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="font-bold text-base text-slate-900">2. Free Trial & Subscriptions</h2>
           <p>
-            New business accounts receive a 7-day free trial. Following the trial, accounts transition to read-only access where historical records are permanently preserved. Subscription plans are available at ₹299/month and ₹2,999/year.
+            New business accounts receive a 10-day free trial. Following the trial, accounts transition to read-only access where historical records are permanently preserved. Subscription plans are available at ₹299/month and ₹2,999/year.
           </p>
         </section>
 

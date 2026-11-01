@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -7,11 +8,14 @@ import {
   Search,
   Printer,
   Eye,
+  Trash2,
+  Loader2,
   ChevronLeft,
   ChevronRight,
   ReceiptText,
   FileText,
 } from "lucide-react";
+import { deleteBillAction } from "@/actions/billing-actions";
 
 interface BillSummary {
   id: string;
@@ -47,6 +51,32 @@ export function BillsList({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isFiltering, startTransition] = useTransition();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDeleteBill = async (billId: string, billNumber: string) => {
+    const reason = window.prompt(
+      `Are you sure you want to delete bill ${billNumber}? It will be soft-deleted and marked as Cancelled.\n\nEnter reason:`,
+      "Cancelled by user"
+    );
+    if (!reason) return;
+
+    setDeletingId(billId);
+    try {
+      const res = await deleteBillAction(billId, reason.trim());
+      if (res.success) {
+        startTransition(() => {
+          router.refresh();
+        });
+      } else {
+        alert(res.error || "Failed to delete bill.");
+      }
+    } catch (err: any) {
+      alert(err.message || "An unexpected error occurred while deleting bill.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleFilterChange = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -56,13 +86,17 @@ export function BillsList({
       params.delete(key);
     }
     params.set("page", "1"); // Reset to page 1 on filter change
-    router.push(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(newPage));
-    router.push(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   return (
@@ -102,6 +136,12 @@ export function BillsList({
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
+          {isFiltering && (
+            <div className="flex items-center gap-1.5 text-xs text-blue-600 font-semibold px-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Filtering...</span>
+            </div>
+          )}
           {/* Payment Method Filter */}
           <select
             value={currentPayment}
@@ -186,7 +226,7 @@ export function BillsList({
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-50">
                     <span>{b.completedAt}</span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <Link
                         href={`/app/bills/${b.id}`}
                         className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
@@ -201,6 +241,22 @@ export function BillsList({
                         <Printer className="w-3.5 h-3.5" />
                         <span>Print</span>
                       </Link>
+                      {b.status === "COMPLETED" && (
+                        <button
+                          type="button"
+                          disabled={deletingId === b.id}
+                          onClick={() => handleDeleteBill(b.id, b.billNumber)}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/60 rounded transition-colors cursor-pointer disabled:opacity-50"
+                          title="Delete / cancel bill"
+                        >
+                          {deletingId === b.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3 h-3" />
+                          )}
+                          <span>Delete</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -260,7 +316,7 @@ export function BillsList({
                           {b.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                      <td className="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
                         <Link
                           href={`/app/bills/${b.id}`}
                           className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
@@ -275,6 +331,22 @@ export function BillsList({
                           <Printer className="w-3.5 h-3.5" />
                           <span>Print</span>
                         </Link>
+                        {b.status === "COMPLETED" && (
+                          <button
+                            type="button"
+                            disabled={deletingId === b.id}
+                            onClick={() => handleDeleteBill(b.id, b.billNumber)}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/60 rounded transition-colors cursor-pointer disabled:opacity-50"
+                            title="Delete / cancel bill"
+                          >
+                            {deletingId === b.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3 h-3" />
+                            )}
+                            <span>Delete</span>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

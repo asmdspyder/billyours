@@ -90,7 +90,7 @@ export async function signupAction(
 
   const passwordHash = await bcrypt.hash(password, 10);
   const now = new Date();
-  const trialDays = Number(process.env.DEFAULT_TRIAL_DAYS) || 7;
+  const trialDays = Number(process.env.DEFAULT_TRIAL_DAYS) || 10;
   const trialEnds = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
 
   // Atomic creation of user, business tenant, and membership
@@ -124,6 +124,17 @@ export async function signupAction(
     await sql`
       INSERT INTO bill_sequences (id, account_id, year, current_number, updated_at)
       VALUES (${seqId}, ${accountId}, ${now.getFullYear()}, 0, NOW());
+    `;
+
+    // Seed initial owner as first default staff member for bill attribution
+    const staffId = "stf_" + crypto.randomBytes(8).toString("hex");
+    await sql`
+      INSERT INTO staff_members (
+        id, account_id, name, email, phone, is_active, is_default, created_at, updated_at
+      )
+      VALUES (
+        ${staffId}, ${accountId}, ${ownerName}, ${email}, ${businessPhone || null}, true, true, NOW(), NOW()
+      );
     `;
 
   } catch (err: any) {

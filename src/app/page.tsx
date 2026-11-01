@@ -15,6 +15,7 @@ import {
   Sparkles,
   Lock,
 } from "lucide-react";
+import { PricingPlans } from "@/components/landing/pricing-plans";
 
 export const metadata = {
   title: "BillYours — Simple Billing for Every Business",
@@ -313,117 +314,12 @@ export default function LandingPage() {
             Simple, honest pricing
           </h2>
           <p className="text-slate-500 text-base">
-            Start free. Upgrade when you need more.
+            Start with our 10-day full access trial. Choose a paid plan for dedicated assisted setup.
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Free */}
-          <div className="relative bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
-            <div>
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Free</span>
-              <div className="text-3xl font-black text-slate-900 mt-1">₹0 <span className="text-sm font-normal text-slate-400">/ forever</span></div>
-              <p className="text-slate-500 text-sm mt-1">For individuals just getting started</p>
-            </div>
-            <ul className="space-y-2.5 text-sm text-slate-600">
-              {[
-                "Up to 50 bills / month",
-                "Unlimited catalog items",
-                "WhatsApp share links",
-                "Basic thermal printing",
-                "1 business account",
-              ].map((f) => (
-                <li key={f} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                  {f}
-                </li>
-              ))}
-              <li className="flex items-start gap-2.5 text-slate-400">
-                <Lock className="w-4 h-4 mt-0.5 shrink-0" />
-                Customer history (limited)
-              </li>
-              <li className="flex items-start gap-2.5 text-slate-400">
-                <Lock className="w-4 h-4 mt-0.5 shrink-0" />
-                Sales dashboard (limited)
-              </li>
-            </ul>
-            <Link
-              href="/signup"
-              className="block w-full py-2.5 text-center bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold text-sm rounded-xl transition-colors"
-            >
-              Get started free
-            </Link>
-          </div>
-
-          {/* Monthly */}
-          <div className="relative bg-blue-600 rounded-2xl border border-blue-500 p-6 space-y-5 text-white shadow-xl shadow-blue-500/20">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
-              Most Popular
-            </div>
-            <div>
-              <span className="text-xs font-bold text-blue-200 uppercase tracking-widest">Monthly</span>
-              <div className="text-3xl font-black mt-1">₹299 <span className="text-sm font-normal text-blue-300">/ month</span></div>
-              <p className="text-blue-200 text-sm mt-1">For growing businesses</p>
-            </div>
-            <ul className="space-y-2.5 text-sm text-blue-100">
-              {[
-                "Unlimited bills & receipts",
-                "Unlimited catalog items",
-                "WhatsApp share links",
-                "Thermal 58mm/80mm + A4 print",
-                "Full customer history",
-                "Complete sales dashboard",
-                "GST & discount support",
-                "Priority support",
-              ].map((f) => (
-                <li key={f} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-blue-200 mt-0.5 shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/signup"
-              className="block w-full py-2.5 text-center bg-white hover:bg-blue-50 text-blue-600 font-bold text-sm rounded-xl transition-colors shadow-sm"
-            >
-              Start 7-day free trial
-            </Link>
-            <p className="text-center text-xs text-blue-300">No card required to start</p>
-          </div>
-
-          {/* Yearly */}
-          <div className="relative bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
-            <div className="absolute -top-3 right-4 bg-green-600 text-white text-[11px] font-black px-2.5 py-1 rounded-full">
-              Save 17%
-            </div>
-            <div>
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Yearly</span>
-              <div className="text-3xl font-black text-slate-900 mt-1">₹2,999 <span className="text-sm font-normal text-slate-400">/ year</span></div>
-              <p className="text-green-700 text-sm font-semibold mt-1">≈ ₹250/mo · 2 months free</p>
-            </div>
-            <ul className="space-y-2.5 text-sm text-slate-600">
-              {[
-                "Everything in Monthly",
-                "Full 12 months access",
-                "Priority onboarding support",
-                "Early access to new features",
-              ].map((f) => (
-                <li key={f} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 font-medium">
-              💳 Online payments coming soon. Contact us to pay manually.
-            </p>
-            <Link
-              href="/signup"
-              className="block w-full py-2.5 text-center bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-xl transition-colors"
-            >
-              Start 7-day free trial
-            </Link>
-          </div>
+        <div className="max-w-5xl mx-auto">
+          <PricingPlans />
         </div>
       </section>
 
@@ -452,8 +348,8 @@ export default function LandingPage() {
                 a: "Free gives you up to 50 bills per month — perfect for very small operations. Monthly/Yearly removes all limits and includes full customer history, sales dashboard, and priority support.",
               },
               {
-                q: "What happens after my 7-day free trial?",
-                a: "Your data stays safe in read-only mode. You can still view past bills and records. Upgrade anytime to resume creating new bills.",
+                q: "What happens after my 10-day free trial?",
+                a: "Your account enters renewal status and past records stay safe. Simply contact our setup team at 7904561269 or 7845418030 to activate your Monthly (₹299/mo) or Yearly (₹2,999/yr) plan.",
               },
               {
                 q: "Can I apply GST to bills?",

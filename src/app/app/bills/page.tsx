@@ -26,47 +26,86 @@ export default async function BillsPage(props: BillsPageProps) {
   const page = Math.max(1, Number(searchParams.page) || 1);
   const pageSize = 15;
   const offset = (page - 1) * pageSize;
+  const searchPattern = search ? `%${search}%` : "%";
 
-  // Build filter conditions
-  const searchPattern = `%${search}%`;
+  // Fetch page with total count in a single round-trip using window count.
+  // Branching when search is empty allows PostgreSQL optimizer to execute a clean index scan without evaluation overhead.
+  const bills = search
+    ? await sql`
+        SELECT
+          id,
+          bill_number,
+          customer_id,
+          customer_name_snapshot,
+          customer_phone_snapshot,
+          subtotal,
+          discount_amount,
+          tax_amount,
+          grand_total,
+          payment_status,
+          payment_method,
+          status,
+          completed_at,
+          created_at,
+          count(*) OVER()::int as filtered_total_count
+        FROM bills
+        WHERE account_id = ${accountId}
+          AND (bill_number ILIKE ${searchPattern} OR customer_name_snapshot ILIKE ${searchPattern} OR customer_phone_snapshot ILIKE ${searchPattern})
+          AND (${payment === "ALL"} OR payment_method = ${payment})
+          AND (${status === "ALL"} OR status = ${status})
+        ORDER BY completed_at DESC, id DESC
+        LIMIT ${pageSize}
+        OFFSET ${offset};
+      `
+    : await sql`
+        SELECT
+          id,
+          bill_number,
+          customer_id,
+          customer_name_snapshot,
+          customer_phone_snapshot,
+          subtotal,
+          discount_amount,
+          tax_amount,
+          grand_total,
+          payment_status,
+          payment_method,
+          status,
+          completed_at,
+          created_at,
+          count(*) OVER()::int as filtered_total_count
+        FROM bills
+        WHERE account_id = ${accountId}
+          AND (${payment === "ALL"} OR payment_method = ${payment})
+          AND (${status === "ALL"} OR status = ${status})
+        ORDER BY completed_at DESC, id DESC
+        LIMIT ${pageSize}
+        OFFSET ${offset};
+      `;
 
-  const bills = await sql`
-    SELECT
-      id,
-      bill_number,
-      customer_id,
-      customer_name_snapshot,
-      customer_phone_snapshot,
-      subtotal,
-      discount_amount,
-      tax_amount,
-      grand_total,
-      payment_status,
-      payment_method,
-      status,
-      completed_at,
-      created_at
-    FROM bills
-    WHERE account_id = ${accountId}
-      AND (${search === ""} OR bill_number ILIKE ${searchPattern} OR customer_name_snapshot ILIKE ${searchPattern} OR customer_phone_snapshot ILIKE ${searchPattern})
-      AND (${payment === "ALL"} OR payment_method = ${payment})
-      AND (${status === "ALL"} OR status = ${status})
-    ORDER BY completed_at DESC
-    LIMIT ${pageSize}
-    OFFSET ${offset};
-  `;
+  let totalCount = 0;
+  if (bills.length > 0) {
+    totalCount = Number(bills[0].filtered_total_count) || 0;
+  } else if (page > 1) {
+    // If user navigated to an empty high page, fetch total count to render pagination cleanly
+    const countRes = search
+      ? await sql`
+          SELECT COUNT(*)::int as count FROM bills
+          WHERE account_id = ${accountId}
+            AND (bill_number ILIKE ${searchPattern} OR customer_name_snapshot ILIKE ${searchPattern} OR customer_phone_snapshot ILIKE ${searchPattern})
+            AND (${payment === "ALL"} OR payment_method = ${payment})
+            AND (${status === "ALL"} OR status = ${status});
+        `
+      : await sql`
+          SELECT COUNT(*)::int as count FROM bills
+          WHERE account_id = ${accountId}
+            AND (${payment === "ALL"} OR payment_method = ${payment})
+            AND (${status === "ALL"} OR status = ${status});
+        `;
+    totalCount = countRes[0]?.count || 0;
+  }
 
-  const totalCountResult = await sql`
-    SELECT COUNT(*)::int as count
-    FROM bills
-    WHERE account_id = ${accountId}
-      AND (${search === ""} OR bill_number ILIKE ${searchPattern} OR customer_name_snapshot ILIKE ${searchPattern} OR customer_phone_snapshot ILIKE ${searchPattern})
-      AND (${payment === "ALL"} OR payment_method = ${payment})
-      AND (${status === "ALL"} OR status = ${status});
-  `;
-
-  const totalCount = totalCountResult[0]?.count || 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
     <div className="overflow-y-auto h-full p-4 md:p-6 max-w-6xl mx-auto space-y-4 pb-8">

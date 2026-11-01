@@ -15,9 +15,20 @@ export interface CompleteBillInput {
     name: string;
     unitPrice: number;
     quantity: number;
+    unitLabel?: string;
+    hsnSacCode?: string | null;
+    taxTreatment?: "TAXABLE" | "EXEMPT" | "NIL_RATED" | "NON_GST" | null;
+    gstRate?: number | null;
+    priceType?: "INCLUSIVE" | "EXCLUSIVE" | null;
   }[];
+  idempotencyKey?: string;
   customerName?: string;
   customerPhone?: string;
+  customerState?: string;
+  customerGstin?: string;
+  placeOfSupplyState?: string;
+  staffId?: string;
+  staffName?: string;
   discountType?: "FIXED" | "PERCENTAGE" | null;
   discountValue?: number;
   taxEnabled?: boolean;
@@ -36,167 +47,423 @@ export interface CompleteBillResponse {
   billNumber?: string;
   shareToken?: string;
   grandTotal?: string;
+  isIdempotentReplay?: boolean;
 }
 
 export async function completeBillAction(input: CompleteBillInput): Promise<CompleteBillResponse> {
-  try {
-    const session = await requireActiveSubscription();
-    const account = session.account;
-    const accountId = account.id;
+  const session = await requireActiveSubscription();
+  const account = session.account;
+  const accountId = account.id;
+  let payloadHash: string | null = null;
 
+  try {
     if (!input.items || input.items.length === 0) {
       return { success: false, error: "Cannot create an empty bill. Please add at least one item." };
     }
 
-    // Recalculate totals authoritatively on server
-    const calc = calculateBillTotals({
-      items: input.items.map((it) => ({
-        unitPrice: it.unitPrice,
-        quantity: it.quantity,
-      })),
-      discountType: input.discountType,
-      discountValue: input.discountValue,
-      taxEnabled: input.taxEnabled,
-      taxRate: input.taxRate,
-      taxInclusive: input.taxInclusive,
-    });
+    // 1. Strict validation of all line items
+    for (let i = 0; i < input.items.length; i++) {
+      const it = input.items[i];
+      if (!it.name || typeof it.name !== "string" || it.name.trim().length === 0) {
+        return { success: false, error: `Item at position ${i + 1} has an empty or invalid name.` };
+      }
+      if (typeof it.unitPrice !== "number" || isNaN(it.unitPrice) || it.unitPrice < 0) {
+        return { success: false, error: `Item "${it.name}" has an invalid unit price.` };
+      }
+      if (typeof it.quantity !== "number" || isNaN(it.quantity) || it.quantity <= 0) {
+        return { success: false, error: `Item "${it.name}" has an invalid quantity (must be greater than 0).` };
+      }
+    }
 
-    // Handle customer linking or creation (tenant scoped)
-    let customerId: string | null = null;
-    let customerNameSnapshot = input.customerName?.trim() || null;
+    const cleanIdempotencyKey = input.idempotencyKey?.trim() || null;
     const rawPhone = input.customerPhone?.trim() || null;
     const normalizedPhone = normalizePhone(rawPhone);
+    const customerState = input.customerState?.trim() || null;
+    const customerGstin = input.customerGstin?.trim()?.toUpperCase() || null;
 
-    if (normalizedPhone) {
-      // Find existing customer by normalized phone in this tenant
-      const existingCustomers = await sql`
-        SELECT id, name FROM customers
-        WHERE account_id = ${accountId} AND normalized_phone = ${normalizedPhone}
+    // 2. Cryptographic payload fingerprint bound to idempotency key
+    payloadHash = crypto
+      .createHash("sha256")
+      .update(
+        JSON.stringify({
+          accountId,
+          items: input.items.map((it) => ({
+            id: it.itemId || null,
+            name: it.name.trim(),
+            price: Number(it.unitPrice),
+            qty: Number(it.quantity),
+            tax: it.taxTreatment || "TAXABLE",
+            rate: Number(it.gstRate || 0),
+            priceType: it.priceType || "EXCLUSIVE",
+          })),
+          discountType: input.discountType || null,
+          discountValue: Number(input.discountValue || 0),
+          customerPhone: normalizedPhone || null,
+          customerState: customerState || null,
+          staffId: input.staffId || null,
+        })
+      )
+      .digest("hex");
+
+    // 3. Idempotency Check: Return existing bill if replay, or reject if payload mismatch
+    if (cleanIdempotencyKey) {
+      const existingBills = await sql`
+        SELECT b.id, b.bill_number, b.grand_total, b.payload_hash
+        FROM bills b
+        WHERE b.account_id = ${accountId} AND b.idempotency_key = ${cleanIdempotencyKey}
         LIMIT 1;
       `;
 
-      if (existingCustomers.length > 0) {
-        customerId = existingCustomers[0].id;
-        if (!customerNameSnapshot) {
-          customerNameSnapshot = existingCustomers[0].name;
+      if (existingBills.length > 0) {
+        const existing = existingBills[0];
+        if (existing.payload_hash && existing.payload_hash !== payloadHash) {
+          return {
+            success: false,
+            error: "Idempotency key conflict: This key was already used for a different checkout request.",
+          };
         }
-      } else {
-        // Create new customer for this tenant
-        const newCustId = "cst_" + crypto.randomBytes(8).toString("hex");
-        const defaultName = customerNameSnapshot || "Customer";
-        await sql`
-          INSERT INTO customers (id, account_id, name, phone, normalized_phone, created_at, updated_at)
-          VALUES (${newCustId}, ${accountId}, ${defaultName}, ${rawPhone}, ${normalizedPhone}, NOW(), NOW());
-        `;
-        customerId = newCustId;
+        return {
+          success: true,
+          billId: existing.id,
+          billNumber: existing.bill_number,
+          grandTotal: existing.grand_total,
+          isIdempotentReplay: true,
+        };
+      }
+    }
+
+    const supplierState = account.state || "";
+    const placeOfSupply = input.placeOfSupplyState?.trim() || input.customerState?.trim() || supplierState;
+
+    // 4. Authoritative Recalculation on server using Decimal-safe Item-Level GST Engine
+    const calc = calculateBillTotals({
+      items: input.items.map((it) => ({
+        itemId: it.itemId,
+        name: it.name,
+        unitPrice: it.unitPrice,
+        quantity: it.quantity,
+        unitLabel: it.unitLabel,
+        hsnSacCode: it.hsnSacCode,
+        taxTreatment: it.taxTreatment,
+        gstRate: it.gstRate,
+        priceType: it.priceType,
+      })),
+      discountType: input.discountType,
+      discountValue: input.discountValue,
+      supplierState,
+      placeOfSupplyState: placeOfSupply,
+      gstRegistrationType: account.gstRegistrationType,
+      taxEnabled: input.taxEnabled,
+      taxRate: input.taxRate,
+      taxInclusive: input.taxInclusive,
+      taxLabel: input.taxLabel,
+    });
+
+    // 5. Handle tenant-scoped customer linking or atomic upsert (race-free)
+    let customerId: string | null = null;
+    let customerNameSnapshot = input.customerName?.trim() || null;
+
+    if (normalizedPhone) {
+      const newCustId = "cst_" + crypto.randomBytes(8).toString("hex");
+      const defaultName = customerNameSnapshot || "Customer";
+
+      // Atomic upsert guarantees zero race conditions or duplicate customer creation
+      const custRes = await sql`
+        INSERT INTO customers (
+          id, account_id, name, phone, normalized_phone, state, gstin, created_at, updated_at
+        ) VALUES (
+          ${newCustId}, ${accountId}, ${defaultName}, ${rawPhone}, ${normalizedPhone},
+          ${customerState}, ${customerGstin}, NOW(), NOW()
+        )
+        ON CONFLICT (account_id, normalized_phone) WHERE archived_at IS NULL AND normalized_phone IS NOT NULL
+        DO UPDATE SET
+          name = CASE WHEN customers.name IN ('Customer', 'Walk-in Customer') THEN EXCLUDED.name ELSE customers.name END,
+          state = COALESCE(EXCLUDED.state, customers.state),
+          gstin = COALESCE(EXCLUDED.gstin, customers.gstin),
+          updated_at = NOW()
+        RETURNING id, name;
+      `;
+
+      if (custRes.length > 0) {
+        customerId = custRes[0].id;
         if (!customerNameSnapshot) {
-          customerNameSnapshot = defaultName;
+          customerNameSnapshot = custRes[0].name;
         }
       }
     }
 
-    // Atomically allocate sequential bill number
-    const { billNumber } = await allocateNextBillNumber(accountId, account.invoicePrefix || "BY");
+    // 4. Verify catalog item ownership to strictly prevent cross-tenant catalog references
+    const candidateItemIds = input.items
+      .map((it) => it.itemId)
+      .filter((id): id is string => typeof id === "string" && id.trim().length > 0);
 
+    let validItemIds = new Set<string>();
+    if (candidateItemIds.length > 0) {
+      const existingItems = await sql`
+        SELECT id FROM items
+        WHERE account_id = ${accountId} AND id = ANY(${candidateItemIds}::varchar[])
+      `;
+      validItemIds = new Set(existingItems.map((r: any) => r.id));
+    }
+
+    // 5. Prepare arrays for unnest() batch insertion inside CTE
+    const itemIds: string[] = [];
+    const catalogItemIds: (string | null)[] = [];
+    const itemNames: string[] = [];
+    const unitPrices: string[] = [];
+    const quantities: number[] = [];
+    const lineSubtotals: string[] = [];
+    const hsnCodes: (string | null)[] = [];
+    const taxTreatments: string[] = [];
+    const priceTypes: string[] = [];
+    const gstRates: string[] = [];
+    const taxableAmounts: string[] = [];
+    const cgstRates: string[] = [];
+    const cgstAmounts: string[] = [];
+    const sgstRates: string[] = [];
+    const sgstAmounts: string[] = [];
+    const igstRates: string[] = [];
+    const igstAmounts: string[] = [];
+    const totalTaxes: string[] = [];
+    const lineTotals: string[] = [];
+
+    for (let i = 0; i < input.items.length; i++) {
+      const raw = input.items[i];
+      const processed = calc.items[i];
+
+      itemIds.push("bli_" + crypto.randomBytes(8).toString("hex"));
+      const safeItemId = raw.itemId && validItemIds.has(raw.itemId) ? raw.itemId : null;
+      catalogItemIds.push(safeItemId);
+      itemNames.push(raw.name.trim());
+      unitPrices.push(processed.unitPrice);
+      quantities.push(Number(processed.quantity));
+      lineSubtotals.push(processed.grossSubtotal);
+      hsnCodes.push(processed.hsnSacCode || null);
+      taxTreatments.push(processed.taxTreatment);
+      priceTypes.push(processed.priceType);
+      gstRates.push(processed.gstRate);
+      taxableAmounts.push(processed.taxableAmount);
+      cgstRates.push(processed.cgstRate);
+      cgstAmounts.push(processed.cgstAmount);
+      sgstRates.push(processed.sgstRate);
+      sgstAmounts.push(processed.sgstAmount);
+      igstRates.push(processed.igstRate);
+      igstAmounts.push(processed.igstAmount);
+      totalTaxes.push(processed.totalTax);
+      lineTotals.push(processed.lineTotal);
+    }
+
+    // Explicit cardinality check: Validate that all 19 arrays have the exact same length as input.items
+    const expectedCount = input.items.length;
+    const unnestArrays = [
+      itemIds, catalogItemIds, itemNames, unitPrices, quantities, lineSubtotals,
+      hsnCodes, taxTreatments, priceTypes, gstRates, taxableAmounts,
+      cgstRates, cgstAmounts, sgstRates, sgstAmounts, igstRates, igstAmounts,
+      totalTaxes, lineTotals
+    ];
+    for (const arr of unnestArrays) {
+      if (arr.length !== expectedCount) {
+        throw new Error(`[MULTI_ARRAY_UNNEST_CARDINALITY_ERROR] Expected ${expectedCount} elements in unnest array, but found ${arr.length}. Aborting checkout.`);
+      }
+    }
+
+    // 6. Setup IDs and tokens for the single atomic write operation
     const billId = "bil_" + crypto.randomBytes(8).toString("hex");
+    const seqId = "seq_" + crypto.randomBytes(8).toString("hex");
+    const linkId = "shl_" + crypto.randomBytes(8).toString("hex");
+    const shareToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(shareToken).digest("hex");
+    const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+
+    const currentYear = new Date().getFullYear();
+    const prefix = (account.invoicePrefix || "BY").trim().toUpperCase();
+    const staffNameSnapshot = input.staffName?.trim() || session.user.name || "Owner";
     const paymentStatus = "PAID";
     const paymentMethod = input.paymentMethod || "CASH";
     const amountPaid = calc.grandTotal;
     const taxLabel = input.taxLabel?.trim() || account.defaultTaxLabel || "GST";
 
-    // Insert bill record
-    await sql`
-      INSERT INTO bills (
-        id, account_id, bill_number, customer_id, customer_name_snapshot, customer_phone_snapshot,
-        subtotal, discount_type, discount_value, discount_amount, tax_enabled, tax_label,
-        tax_rate, tax_inclusive, taxable_amount, tax_amount, grand_total, payment_status,
-        payment_method, amount_paid, status, notes, completed_at, created_by_user_id, created_at, updated_at
-      ) VALUES (
-        ${billId}, ${accountId}, ${billNumber}, ${customerId}, ${customerNameSnapshot}, ${normalizedPhone},
-        ${calc.subtotal}, ${calc.discountType}, ${calc.discountValue}, ${calc.discountAmount},
-        ${calc.taxEnabled}, ${taxLabel}, ${calc.taxRate}, ${calc.taxInclusive},
-        ${calc.taxableAmount}, ${calc.taxAmount}, ${calc.grandTotal}, ${paymentStatus},
-        ${paymentMethod}, ${amountPaid}, 'COMPLETED', ${input.notes?.trim() || null}, NOW(),
-        ${session.user.id}, NOW(), NOW()
-      );
-    `;
-
-    // Batch insert all bill items in ONE SINGLE roundtrip (eliminates sequential N-roundtrip network lag)
-    if (input.items.length > 0) {
-      // Validate that catalog item IDs actually exist for this tenant.
-      // If an item was deleted, reseeded, or comes from an old draft, we gracefully set item_id to null
-      // so the historical bill snapshot is saved without violating foreign key constraints.
-      const candidateItemIds = input.items
-        .map((it) => it.itemId)
-        .filter((id): id is string => typeof id === "string" && id.trim().length > 0);
-
-      let validItemIds = new Set<string>();
-      if (candidateItemIds.length > 0) {
-        const existingItems = await sql`
-          SELECT id FROM items
-          WHERE account_id = ${accountId} AND id = ANY(${candidateItemIds}::varchar[])
-        `;
-        validItemIds = new Set(existingItems.map((r: any) => r.id));
-      }
-
-      const itemIds: string[] = [];
-      const accountIds: string[] = [];
-      const billIds: string[] = [];
-      const catalogItemIds: (string | null)[] = [];
-      const itemNames: string[] = [];
-      const unitPrices: string[] = [];
-      const quantities: number[] = [];
-      const lineSubtotals: string[] = [];
-
-      for (let i = 0; i < input.items.length; i++) {
-        const item = input.items[i];
-        const processed = calc.items[i];
-        itemIds.push("bli_" + crypto.randomBytes(8).toString("hex"));
-        accountIds.push(accountId);
-        billIds.push(billId);
-        // Only link catalog item if it truly exists in this tenant's items catalog
-        const safeItemId = item.itemId && validItemIds.has(item.itemId) ? item.itemId : null;
-        catalogItemIds.push(safeItemId);
-        itemNames.push(item.name.trim());
-        unitPrices.push(processed.unitPrice);
-        quantities.push(Number(processed.quantity));
-        lineSubtotals.push(processed.lineSubtotal);
-      }
-
-      await sql`
-        INSERT INTO bill_items (
-          id, account_id, bill_id, item_id, item_name_snapshot, unit_price, quantity, line_subtotal, created_at
+    // 7. Execute sequence allocation, bill insert, line items insert, and share link in ONE ATOMIC STATEMENT
+    const createdBills = await sql`
+      WITH next_seq AS (
+        INSERT INTO bill_sequences (id, account_id, year, current_number, updated_at)
+        VALUES (${seqId}, ${accountId}, ${currentYear}, 1, NOW())
+        ON CONFLICT (account_id, year)
+        DO UPDATE SET
+          current_number = bill_sequences.current_number + 1,
+          updated_at = NOW()
+        RETURNING current_number
+      ),
+      inserted_bill AS (
+        INSERT INTO bills (
+          id, account_id, bill_number, idempotency_key, payload_hash, customer_id, customer_name_snapshot, customer_phone_snapshot,
+          staff_id, staff_name_snapshot,
+          subtotal, discount_type, discount_value, discount_amount, tax_enabled, tax_label,
+          tax_rate, tax_inclusive, taxable_amount, tax_amount,
+          place_of_supply_state, is_inter_state, total_cgst, total_sgst, total_igst, total_tax, round_off,
+          grand_total, payment_status, payment_method, amount_paid, status, notes,
+          completed_at, created_by_user_id, created_at, updated_at
         )
-        SELECT 
-          u.id, u.account_id, u.bill_id, u.item_id, u.item_name_snapshot, u.unit_price, u.quantity, u.line_subtotal, NOW()
-        FROM unnest(
+        SELECT
+          ${billId},
+          ${accountId},
+          ${prefix} || '-' || ${currentYear} || '-' || LPAD(next_seq.current_number::text, 6, '0'),
+          ${cleanIdempotencyKey},
+          ${payloadHash},
+          ${customerId},
+          ${customerNameSnapshot},
+          ${normalizedPhone},
+          ${input.staffId || null},
+          ${staffNameSnapshot},
+          ${calc.subtotal},
+          ${calc.discountType},
+          ${calc.discountValue},
+          ${calc.discountAmount},
+          ${calc.taxEnabled},
+          ${taxLabel},
+          ${calc.taxRate},
+          ${calc.taxInclusive},
+          ${calc.taxableAmount},
+          ${calc.totalTax},
+          ${placeOfSupply || null},
+          ${calc.isInterState},
+          ${calc.totalCgst},
+          ${calc.totalSgst},
+          ${calc.totalIgst},
+          ${calc.totalTax},
+          ${calc.roundOff},
+          ${calc.grandTotal},
+          ${paymentStatus},
+          ${paymentMethod},
+          ${amountPaid},
+          'COMPLETED',
+          ${input.notes?.trim() || null},
+          NOW(),
+          ${session.user.id},
+          NOW(),
+          NOW()
+        FROM next_seq
+        RETURNING id, bill_number
+      ),
+      inserted_items AS (
+        INSERT INTO bill_items (
+          id, account_id, bill_id, item_id, item_name_snapshot, unit_price, quantity, line_subtotal,
+          hsn_sac_code, tax_treatment, price_type, gst_rate, taxable_amount,
+          cgst_rate, cgst_amount, sgst_rate, sgst_amount, igst_rate, igst_amount, total_tax, line_total, created_at
+        )
+        SELECT
+          u.id,
+          ${accountId},
+          b.id,
+          u.catalog_item_id,
+          u.item_name,
+          u.unit_price,
+          u.quantity,
+          u.line_subtotal,
+          u.hsn_code,
+          u.tax_treatment,
+          u.price_type,
+          u.gst_rate,
+          u.taxable_amount,
+          u.cgst_rate,
+          u.cgst_amount,
+          u.sgst_rate,
+          u.sgst_amount,
+          u.igst_rate,
+          u.igst_amount,
+          u.total_tax,
+          u.line_total,
+          NOW()
+        FROM inserted_bill b
+        CROSS JOIN unnest(
           ${itemIds}::varchar[],
-          ${accountIds}::varchar[],
-          ${billIds}::varchar[],
           ${catalogItemIds}::varchar[],
           ${itemNames}::varchar[],
           ${unitPrices}::numeric[],
           ${quantities}::numeric[],
-          ${lineSubtotals}::numeric[]
-        ) AS u(id, account_id, bill_id, item_id, item_name_snapshot, unit_price, quantity, line_subtotal);
-      `;
+          ${lineSubtotals}::numeric[],
+          ${hsnCodes}::varchar[],
+          ${taxTreatments}::varchar[],
+          ${priceTypes}::varchar[],
+          ${gstRates}::numeric[],
+          ${taxableAmounts}::numeric[],
+          ${cgstRates}::numeric[],
+          ${cgstAmounts}::numeric[],
+          ${sgstRates}::numeric[],
+          ${sgstAmounts}::numeric[],
+          ${igstRates}::numeric[],
+          ${igstAmounts}::numeric[],
+          ${totalTaxes}::numeric[],
+          ${lineTotals}::numeric[]
+        ) AS u(
+          id, catalog_item_id, item_name, unit_price, quantity, line_subtotal,
+          hsn_code, tax_treatment, price_type, gst_rate, taxable_amount,
+          cgst_rate, cgst_amount, sgst_rate, sgst_amount, igst_rate, igst_amount, total_tax, line_total
+        )
+        RETURNING id
+      ),
+      inserted_link AS (
+        INSERT INTO shared_bill_links (
+          id, bill_id, token_hash, expires_at, created_at
+        )
+        SELECT
+          ${linkId},
+          b.id,
+          ${tokenHash},
+          ${expiresAt}::timestamptz,
+          NOW()
+        FROM inserted_bill b
+        RETURNING id
+      )
+      SELECT id, bill_number FROM inserted_bill;
+    `;
+
+    if (!createdBills || createdBills.length === 0) {
+      throw new Error("Failed to insert invoice record atomically.");
     }
 
-    // Create shared bill token
-    const { token: shareToken } = await createSharedBillLink(billId);
+    const createdBill = createdBills[0];
 
+    // 8. Revalidate paths outside of the database write
     revalidatePath("/app/bills");
     revalidatePath("/app/dashboard");
+    revalidatePath("/app/staff");
 
     return {
       success: true,
-      billId,
-      billNumber,
+      billId: createdBill.id,
+      billNumber: createdBill.bill_number,
       shareToken,
       grandTotal: calc.grandTotal,
     };
   } catch (err: any) {
-    console.error("Complete bill error:", err);
+    // 9. Concurrency race handler: If two simultaneous requests pass the initial check,
+    // the database unique constraint idx_bills_account_idempotency catches the second one.
+    if (err.code === "23505" && err.constraint === "idx_bills_account_idempotency" && input.idempotencyKey) {
+      const existing = await sql`
+        SELECT b.id, b.bill_number, b.grand_total, b.payload_hash
+        FROM bills b
+        WHERE b.account_id = ${accountId} AND b.idempotency_key = ${input.idempotencyKey}
+        LIMIT 1;
+      `;
+      if (existing.length > 0) {
+        if (existing[0].payload_hash && existing[0].payload_hash !== payloadHash) {
+          return {
+            success: false,
+            error: "Idempotency key conflict: This key was already used for a different bill payload.",
+          };
+        }
+        return {
+          success: true,
+          billId: existing[0].id,
+          billNumber: existing[0].bill_number,
+          grandTotal: existing[0].grand_total,
+          isIdempotentReplay: true,
+        };
+      }
+    }
+
+    console.error("[ATOMIC_BILL_ERROR]", err?.message || err);
     return { success: false, error: err.message || "Failed to complete bill. Please try again." };
   }
 }
@@ -240,6 +507,16 @@ export async function cancelBillAction(
     console.error("Cancel bill error:", err);
     return { success: false, error: err.message || "Failed to cancel bill." };
   }
+}
+
+/**
+ * Soft delete bill from bills history (marks status as CANCELLED)
+ */
+export async function deleteBillAction(
+  billId: string,
+  reason: string = "Deleted by user"
+): Promise<{ success: boolean; error?: string }> {
+  return cancelBillAction(billId, reason || "Deleted by user");
 }
 
 export async function lookupCustomerPhoneAction(phone: string): Promise<{

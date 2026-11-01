@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Store, Receipt, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
+import { Store, Receipt, ShieldCheck, CheckCircle2, AlertCircle, Building2, HelpCircle } from "lucide-react";
 import { updateBusinessDetailsAction, updateBillPreferencesAction } from "@/actions/settings-actions";
+import { INDIAN_STATES } from "@/lib/billing-calculations";
 
 interface SettingsFormProps {
   account: {
@@ -19,6 +20,14 @@ interface SettingsFormProps {
     receiptPreference: string;
     defaultTaxRate: string | null;
     defaultTaxLabel: string | null;
+    gstin?: string | null;
+    gstRegistrationType?: string | null;
+    pan?: string | null;
+    fssai?: string | null;
+    website?: string | null;
+    facebook?: string | null;
+    instagram?: string | null;
+    googleReviewLink?: string | null;
   };
   user: {
     name: string;
@@ -77,7 +86,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
           <Store className="w-5 h-5 text-blue-600" />
-          <h2 className="font-bold text-base text-slate-900">Business Profile</h2>
+          <h2 className="font-bold text-base text-slate-900">Business Profile & Bill Print Details</h2>
         </div>
 
         {bizMessage && (
@@ -126,6 +135,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 placeholder="+91 98765 43210"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
             </div>
 
             <div>
@@ -139,6 +149,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 placeholder="contact@business.com"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
             </div>
 
             <div className="md:col-span-2">
@@ -155,13 +166,21 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">State</label>
-              <input
-                type="text"
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Registered Business State *
+              </label>
+              <select
                 name="state"
                 defaultValue={account.state || "Karnataka"}
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                {INDIAN_STATES.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-slate-400 mt-1">Default state for sales and Intra-state GST</p>
             </div>
 
             <div>
@@ -179,6 +198,123 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 <option value="service">Services / Repairs</option>
                 <option value="other">Other Business</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                GST Registration Type *
+              </label>
+              <select
+                name="gstRegistrationType"
+                defaultValue={account.gstRegistrationType || "REGULAR"}
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="REGULAR">Regular Taxpayer (Standard GST Invoicing)</option>
+                <option value="COMPOSITION">Composition Scheme (Bill of Supply - No GST collection)</option>
+                <option value="UNREGISTERED">Unregistered Business (No GST)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                GSTIN (Goods & Services Tax ID)
+              </label>
+              <input
+                type="text"
+                name="gstin"
+                maxLength={15}
+                defaultValue={account.gstin || ""}
+                placeholder="e.g. 29ABCDE1234F1Z5"
+                className="w-full px-3 py-2 text-sm font-mono uppercase bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                FSSAI License Number
+              </label>
+              <input
+                type="text"
+                name="fssai"
+                maxLength={20}
+                defaultValue={account.fssai || ""}
+                placeholder="e.g. 11223344556677"
+                className="w-full px-3 py-2 text-sm font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Food safety license — printed on bill if provided</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Permanent Account Number (PAN)
+              </label>
+              <input
+                type="text"
+                name="pan"
+                maxLength={10}
+                defaultValue={account.pan || ""}
+                placeholder="e.g. ABCDE1234F"
+                className="w-full px-3 py-2 text-sm font-mono uppercase bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Website
+              </label>
+              <input
+                type="text"
+                name="website"
+                defaultValue={account.website || ""}
+                placeholder="e.g. www.chaibites.in"
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Facebook Account Name
+              </label>
+              <input
+                type="text"
+                name="facebook"
+                defaultValue={account.facebook || ""}
+                placeholder="e.g. @chaibites or fb.com/chaibites"
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Instagram Account Name
+              </label>
+              <input
+                type="text"
+                name="instagram"
+                defaultValue={account.instagram || ""}
+                placeholder="e.g. @chaibites.official"
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Google Review Link
+              </label>
+              <input
+                type="url"
+                name="googleReviewLink"
+                defaultValue={account.googleReviewLink || ""}
+                placeholder="e.g. https://g.page/r/chaibites-review/review"
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">
+                Included in WhatsApp bill messages to request customer reviews.
+              </p>
             </div>
           </div>
 
@@ -291,7 +427,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
             <span className="text-[11px] font-semibold text-slate-400 uppercase">Status</span>
             <p className="font-bold text-sm text-slate-900 mt-0.5">
               {subscriptionInfo.status === "TRIAL"
-                ? `7-Day Free Trial (${subscriptionInfo.daysRemaining} days left)`
+                ? `10-Day Free Trial (${subscriptionInfo.daysRemaining} days left)`
                 : subscriptionInfo.status}
             </p>
           </div>

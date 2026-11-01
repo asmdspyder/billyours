@@ -9,6 +9,7 @@ export const metadata = {
 interface CustomersPageProps {
   searchParams: Promise<{
     search?: string;
+    page?: string;
   }>;
 }
 
@@ -17,9 +18,23 @@ export default async function CustomersPage(props: CustomersPageProps) {
   const accountId = session.account.id;
   const searchParams = await props.searchParams;
   const search = searchParams.search?.trim() || "";
+  const page = Math.max(1, Number(searchParams.page) || 1);
+  const pageSize = 25;
+  const offset = (page - 1) * pageSize;
   const searchPattern = `%${search}%`;
 
-  // Efficient scoped aggregation query (avoids N+1)
+  // Total count for proper server-side pagination
+  const countResult = await sql`
+    SELECT COUNT(*)::int as total
+    FROM customers
+    WHERE account_id = ${accountId}
+      AND archived_at IS NULL
+      AND (${search === ""} OR name ILIKE ${searchPattern} OR phone ILIKE ${searchPattern} OR normalized_phone ILIKE ${searchPattern});
+  `;
+  const totalCount = countResult[0]?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+  // High-performance bounded query with LATERAL aggregation and proper pagination
   const customers = await sql`
     SELECT
       c.id,
@@ -29,15 +44,29 @@ export default async function CustomersPage(props: CustomersPageProps) {
       c.email,
       c.notes,
       c.created_at,
-      COUNT(b.id)::int as total_bills,
-      COALESCE(SUM(CASE WHEN b.status = 'COMPLETED' THEN b.grand_total ELSE 0 END), 0)::numeric as total_spent,
-      MAX(b.completed_at) as last_bill_at
-    FROM customers c
-    LEFT JOIN bills b ON c.id = b.customer_id AND b.account_id = ${accountId}
-    WHERE c.account_id = ${accountId}
-      AND c.archived_at IS NULL
-      AND (${search === ""} OR c.name ILIKE ${searchPattern} OR c.phone ILIKE ${searchPattern} OR c.normalized_phone ILIKE ${searchPattern})
-    GROUP BY c.id
+      COALESCE(stats.total_bills, 0)::int as total_bills,
+      COALESCE(stats.total_spent, 0)::numeric as total_spent,
+      stats.last_bill_at
+    FROM (
+      SELECT id, name, phone, normalized_phone, email, notes, created_at
+      FROM customers
+      WHERE account_id = ${accountId}
+        AND archived_at IS NULL
+        AND (${search === ""} OR name ILIKE ${searchPattern} OR phone ILIKE ${searchPattern} OR normalized_phone ILIKE ${searchPattern})
+      ORDER BY created_at DESC
+      LIMIT ${pageSize}
+      OFFSET ${offset}
+    ) c
+    LEFT JOIN LATERAL (
+      SELECT
+        COUNT(id)::int as total_bills,
+        COALESCE(SUM(grand_total), 0)::numeric as total_spent,
+        MAX(completed_at) as last_bill_at
+      FROM bills
+      WHERE customer_id = c.id
+        AND account_id = ${accountId}
+        AND status = 'COMPLETED'
+    ) stats ON true
     ORDER BY total_spent DESC, c.name ASC;
   `;
 
@@ -59,6 +88,9 @@ export default async function CustomersPage(props: CustomersPageProps) {
             : "No bills yet",
         }))}
         currentSearch={search}
+        currentPage={page}
+        totalPages={totalPages}
+        totalCount={totalCount}
       />
     </div>
   );

@@ -8,6 +8,8 @@ const rawConnectionString =
   "postgresql://neondb_owner:npg_0MdJsyABDk3S@ep-plain-dew-azwdsnvh-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
 const connectionString = rawConnectionString.replace(/&channel_binding=require/g, "").replace(/\?channel_binding=require&?/g, "?");
 
+neonConfig.fetchEndpoint = (h) => `https://${h}/sql`;
+
 const originalFetch = globalThis.fetch;
 neonConfig.fetchFunction = async (url, options) => {
   let attempts = 0;

@@ -8,6 +8,8 @@ const rawConnectionString =
   "postgresql://neondb_owner:npg_0MdJsyABDk3S@ep-plain-dew-azwdsnvh-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
 const connectionString = rawConnectionString.replace(/&channel_binding=require/g, "").replace(/\?channel_binding=require&?/g, "?");
 
+neonConfig.fetchEndpoint = (h) => `https://${h}/sql`;
+
 const originalFetch = globalThis.fetch;
 neonConfig.fetchFunction = async (url, options) => {
   let attempts = 0;
@@ -109,6 +111,69 @@ test("Tenant isolation: cross-tenant data access is strictly prevented", async (
       RETURNING id
     `;
     assert.equal(cancelResult.length, 0, "Tenant A should not be able to cancel Tenant B bill");
+
+    // 9. Relational Integrity: Database composite FK rejects cross-tenant bill_items -> bills link
+    let fkBillRejected = false;
+    try {
+      await sql`
+        INSERT INTO bill_items (
+          id, account_id, bill_id, item_name_snapshot, unit_price, quantity, line_subtotal
+        ) VALUES (
+          ${generateId("bli_cross")}, ${tenantAId}, ${billBId}, 'Illicit Item', 100, 1, 100
+        )
+      `;
+    } catch (fkErr) {
+      fkBillRejected = fkErr.message.includes("fk_bill_items_account_bill") || fkErr.code === "23503";
+    }
+    assert.ok(fkBillRejected, "Composite FK fk_bill_items_account_bill must reject cross-tenant bill items");
+
+    // 10. Relational Integrity: Database composite FK rejects cross-tenant bill_items -> items link
+    const billAId = generateId("bil_A");
+    await sql`
+      INSERT INTO bills (
+        id, account_id, bill_number, subtotal, taxable_amount, grand_total, payment_status, completed_at, created_at, updated_at
+      ) VALUES (
+        ${billAId}, ${tenantAId}, 'BY-2026-000001', '100.00', '100.00', '100.00', 'PAID', NOW(), NOW(), NOW()
+      )
+    `;
+
+    let fkItemRejected = false;
+    try {
+      await sql`
+        INSERT INTO bill_items (
+          id, account_id, bill_id, item_id, item_name_snapshot, unit_price, quantity, line_subtotal
+        ) VALUES (
+          ${generateId("bli_cross2")}, ${tenantAId}, ${billAId}, ${itemBId}, 'Cross Catalog Item', 100, 1, 100
+        )
+      `;
+    } catch (fkErr) {
+      fkItemRejected = fkErr.message.includes("fk_bill_items_account_item") || fkErr.code === "23503";
+    }
+    assert.ok(fkItemRejected, "Composite FK fk_bill_items_account_item must reject cross-tenant item references");
+
+    // 11. Relational Integrity: Database composite FK rejects cross-tenant bills -> customers link
+    let fkCustomerRejected = false;
+    try {
+      await sql`
+        INSERT INTO bills (
+          id, account_id, bill_number, customer_id, subtotal, taxable_amount, grand_total, payment_status, completed_at, created_at, updated_at
+        ) VALUES (
+          ${generateId("bil_cross_cust")}, ${tenantAId}, 'BY-2026-000002', ${custBId}, '100.00', '100.00', '100.00', 'PAID', NOW(), NOW(), NOW()
+        )
+      `;
+    } catch (fkErr) {
+      fkCustomerRejected = fkErr.message.includes("fk_bills_account_customer") || fkErr.code === "23503";
+    }
+    assert.ok(fkCustomerRejected, "Composite FK fk_bills_account_customer must reject cross-tenant customer references");
+
+    // 12. Financial Retention: Deleting business_account while bills exist MUST be blocked by fk_bills_business_account
+    let deleteAccountBlocked = false;
+    try {
+      await sql`DELETE FROM business_accounts WHERE id = ${tenantAId}`;
+    } catch (delErr) {
+      deleteAccountBlocked = delErr.message.includes("fk_bills_business_account") || delErr.code === "23503";
+    }
+    assert.ok(deleteAccountBlocked, "Account hard-deletion must be blocked by ON DELETE RESTRICT when historical bills exist");
 
   } finally {
     // Cleanup test records

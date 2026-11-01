@@ -24,7 +24,6 @@ export const users = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    index("idx_users_email").on(table.email),
     index("idx_users_role").on(table.role),
   ]
 );
@@ -47,6 +46,14 @@ export const businessAccounts = pgTable(
     receiptPreference: varchar("receipt_preference", { length: 20 }).notNull().default("thermal"), // 'thermal' | 'a4'
     defaultTaxRate: numeric("default_tax_rate", { precision: 5, scale: 2 }).default("0"),
     defaultTaxLabel: varchar("default_tax_label", { length: 50 }).default("GST"),
+    gstin: varchar("gstin", { length: 20 }),
+    gstRegistrationType: varchar("gst_registration_type", { length: 30 }).notNull().default("REGULAR"), // 'REGULAR' | 'COMPOSITION' | 'UNREGISTERED'
+    pan: varchar("pan", { length: 20 }),
+    fssai: varchar("fssai", { length: 50 }),
+    website: varchar("website", { length: 255 }),
+    facebook: varchar("facebook", { length: 100 }),
+    instagram: varchar("instagram", { length: 100 }),
+    googleReviewLink: varchar("google_review_link", { length: 500 }),
     status: varchar("status", { length: 50 }).notNull().default("ACTIVE"), // 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED'
     subscriptionStatus: varchar("subscription_status", { length: 50 }).notNull().default("TRIAL"), // 'TRIAL' | 'ACTIVE' | 'EXPIRED'
     subscriptionPlan: varchar("subscription_plan", { length: 50 }), // 'MONTHLY' | 'YEARLY'
@@ -124,16 +131,22 @@ export const items = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
     category: varchar("category", { length: 100 }),
-    unitLabel: varchar("unit_label", { length: 50 }).default("piece"),
+    unitLabel: varchar("unit_label", { length: 50 }),
     unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
+    taxTreatment: varchar("tax_treatment", { length: 30 }).notNull().default("TAXABLE"), // 'TAXABLE' | 'EXEMPT' | 'NIL_RATED' | 'NON_GST'
+    gstRate: numeric("gst_rate", { precision: 5, scale: 2 }).notNull().default("0"),
+    priceType: varchar("price_type", { length: 20 }).notNull().default("EXCLUSIVE"), // 'EXCLUSIVE' | 'INCLUSIVE'
+    hsnSacCode: varchar("hsn_sac_code", { length: 20 }),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (table) => [
+    uniqueIndex("idx_items_account_id").on(table.accountId, table.id),
     index("idx_items_account_active").on(table.accountId, table.isActive),
     index("idx_items_account_name").on(table.accountId, table.name),
+    index("idx_items_account_active_name").on(table.accountId, table.isActive, table.name),
   ]
 );
 
@@ -149,12 +162,17 @@ export const customers = pgTable(
     phone: varchar("phone", { length: 50 }),
     normalizedPhone: varchar("normalized_phone", { length: 50 }),
     email: varchar("email", { length: 255 }),
+    gstin: varchar("gstin", { length: 20 }),
+    state: varchar("state", { length: 100 }),
+    address: text("address"),
     notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (table) => [
+    uniqueIndex("idx_customers_account_id").on(table.accountId, table.id),
+    uniqueIndex("idx_customers_account_phone_unique").on(table.accountId, table.normalizedPhone),
     index("idx_customers_account_phone").on(table.accountId, table.normalizedPhone),
     index("idx_customers_account_name").on(table.accountId, table.name),
   ]
@@ -177,6 +195,29 @@ export const billSequences = pgTable(
   ]
 );
 
+// 7b. Staff Members
+export const staffMembers = pgTable(
+  "staff_members",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    accountId: varchar("account_id", { length: 64 })
+      .notNull()
+      .references(() => businessAccounts.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 50 }),
+    isActive: boolean("is_active").notNull().default(true),
+    isDefault: boolean("is_default").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_staff_account_id").on(table.accountId, table.id),
+    index("idx_staff_account_active").on(table.accountId, table.isActive),
+    index("idx_staff_account_name").on(table.accountId, table.name),
+  ]
+);
+
 // 8. Bills
 export const bills = pgTable(
   "bills",
@@ -184,13 +225,17 @@ export const bills = pgTable(
     id: varchar("id", { length: 64 }).primaryKey(),
     accountId: varchar("account_id", { length: 64 })
       .notNull()
-      .references(() => businessAccounts.id, { onDelete: "cascade" }),
+      .references(() => businessAccounts.id, { onDelete: "restrict" }),
     billNumber: varchar("bill_number", { length: 50 }).notNull(),
     customerId: varchar("customer_id", { length: 64 }).references(() => customers.id, {
       onDelete: "set null",
     }),
     customerNameSnapshot: varchar("customer_name_snapshot", { length: 255 }),
     customerPhoneSnapshot: varchar("customer_phone_snapshot", { length: 50 }),
+    staffId: varchar("staff_id", { length: 64 }).references(() => staffMembers.id, {
+      onDelete: "set null",
+    }),
+    staffNameSnapshot: varchar("staff_name_snapshot", { length: 255 }),
     subtotal: numeric("subtotal", { precision: 12, scale: 2 }).notNull(),
     discountType: varchar("discount_type", { length: 20 }), // 'FIXED' | 'PERCENTAGE'
     discountValue: numeric("discount_value", { precision: 12, scale: 2 }).notNull().default("0"),
@@ -201,6 +246,13 @@ export const bills = pgTable(
     taxInclusive: boolean("tax_inclusive").notNull().default(false),
     taxableAmount: numeric("taxable_amount", { precision: 12, scale: 2 }).notNull(),
     taxAmount: numeric("tax_amount", { precision: 12, scale: 2 }).notNull().default("0"),
+    placeOfSupplyState: varchar("place_of_supply_state", { length: 100 }),
+    isInterState: boolean("is_inter_state").notNull().default(false),
+    totalCgst: numeric("total_cgst", { precision: 12, scale: 2 }).notNull().default("0"),
+    totalSgst: numeric("total_sgst", { precision: 12, scale: 2 }).notNull().default("0"),
+    totalIgst: numeric("total_igst", { precision: 12, scale: 2 }).notNull().default("0"),
+    totalTax: numeric("total_tax", { precision: 12, scale: 2 }).notNull().default("0"),
+    roundOff: numeric("round_off", { precision: 12, scale: 2 }).notNull().default("0"),
     grandTotal: numeric("grand_total", { precision: 12, scale: 2 }).notNull(),
     paymentStatus: varchar("payment_status", { length: 20 }).notNull().default("PAID"), // 'PAID' | 'UNPAID'
     paymentMethod: varchar("payment_method", { length: 20 }).default("CASH"), // 'CASH' | 'UPI' | 'CARD' | 'OTHER'
@@ -210,6 +262,8 @@ export const bills = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
     cancellationReason: text("cancellation_reason"),
+    idempotencyKey: varchar("idempotency_key", { length: 128 }),
+    payloadHash: varchar("payload_hash", { length: 64 }),
     createdByUserId: varchar("created_by_user_id", { length: 64 }).references(() => users.id, {
       onDelete: "set null",
     }),
@@ -217,10 +271,14 @@ export const bills = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
+    uniqueIndex("idx_bills_account_id").on(table.accountId, table.id),
     uniqueIndex("idx_bills_account_number").on(table.accountId, table.billNumber),
+    uniqueIndex("idx_bills_account_idempotency").on(table.accountId, table.idempotencyKey),
     index("idx_bills_account_completed").on(table.accountId, table.completedAt),
     index("idx_bills_account_status").on(table.accountId, table.status),
+    index("idx_bills_account_completed_status").on(table.accountId, table.completedAt, table.status),
     index("idx_bills_account_customer").on(table.accountId, table.customerId),
+    index("idx_bills_account_staff").on(table.accountId, table.staffId),
   ]
 );
 
@@ -242,11 +300,26 @@ export const billItems = pgTable(
     unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
     quantity: numeric("quantity", { precision: 12, scale: 3 }).notNull(),
     lineSubtotal: numeric("line_subtotal", { precision: 12, scale: 2 }).notNull(),
+    hsnSacCode: varchar("hsn_sac_code", { length: 20 }),
+    taxTreatment: varchar("tax_treatment", { length: 30 }).default("TAXABLE"),
+    priceType: varchar("price_type", { length: 20 }).default("EXCLUSIVE"),
+    gstRate: numeric("gst_rate", { precision: 5, scale: 2 }).default("0"),
+    taxableAmount: numeric("taxable_amount", { precision: 12, scale: 2 }).default("0"),
+    cgstRate: numeric("cgst_rate", { precision: 5, scale: 2 }).default("0"),
+    cgstAmount: numeric("cgst_amount", { precision: 12, scale: 2 }).default("0"),
+    sgstRate: numeric("sgst_rate", { precision: 5, scale: 2 }).default("0"),
+    sgstAmount: numeric("sgst_amount", { precision: 12, scale: 2 }).default("0"),
+    igstRate: numeric("igst_rate", { precision: 5, scale: 2 }).default("0"),
+    igstAmount: numeric("igst_amount", { precision: 12, scale: 2 }).default("0"),
+    totalTax: numeric("total_tax", { precision: 12, scale: 2 }).default("0"),
+    lineTotal: numeric("line_total", { precision: 12, scale: 2 }).default("0"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
+    uniqueIndex("idx_bill_items_account_id").on(table.accountId, table.id),
     index("idx_bill_items_bill").on(table.billId),
     index("idx_bill_items_account").on(table.accountId),
+    index("idx_bill_items_account_bill").on(table.accountId, table.billId),
   ]
 );
 
@@ -308,6 +381,25 @@ export const passwordResets = pgTable(
   (table) => [
     index("idx_pwd_resets_token").on(table.tokenHash),
     index("idx_pwd_resets_user").on(table.userId),
+  ]
+);
+
+// 13. Paid Setup Requests (Customer onboarding leads)
+export const paidSetupRequests = pgTable(
+  "paid_setup_requests",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    plan: varchar("plan", { length: 50 }).notNull(),
+    businessName: varchar("business_name", { length: 255 }).notNull(),
+    contactName: varchar("contact_name", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 50 }).notNull(),
+    email: varchar("email", { length: 255 }),
+    city: varchar("city", { length: 100 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index("idx_paid_setup_phone").on(table.phone),
+    index("idx_paid_setup_created").on(table.createdAt),
   ]
 );
 

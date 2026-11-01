@@ -106,7 +106,7 @@ export function checkSubscriptionStatus(account: NonNullable<SessionData["accoun
         isExpired: true,
         status: "EXPIRED",
         daysRemaining: 0,
-        message: "Your 7-day free trial has expired. Historical bills and records are available in read-only mode.",
+        message: "Your 10-day free trial has expired. Historical bills and records are available in read-only mode.",
       };
     }
     const daysRemaining = Math.max(

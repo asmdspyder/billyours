@@ -53,6 +53,13 @@ export async function getBillByShareToken(token: string) {
       b.tax_inclusive,
       b.taxable_amount,
       b.tax_amount,
+      b.place_of_supply_state,
+      b.is_inter_state,
+      b.total_cgst,
+      b.total_sgst,
+      b.total_igst,
+      b.total_tax,
+      b.round_off,
       b.grand_total,
       b.payment_status,
       b.payment_method,
@@ -62,11 +69,20 @@ export async function getBillByShareToken(token: string) {
       b.completed_at,
       b.cancelled_at,
       b.cancellation_reason,
+      b.staff_id,
+      b.staff_name_snapshot,
       acc.business_name,
       acc.business_phone,
       acc.business_email,
       acc.address as business_address,
       acc.state as business_state,
+      acc.gstin as business_gstin,
+      acc.gst_registration_type as business_gst_type,
+      acc.fssai as business_fssai,
+      acc.website as business_website,
+      acc.facebook as business_facebook,
+      acc.instagram as business_instagram,
+      acc.google_review_link as business_google_review_link,
       acc.currency
     FROM shared_bill_links l
     JOIN bills b ON l.bill_id = b.id
@@ -83,14 +99,27 @@ export async function getBillByShareToken(token: string) {
 
   const bill = links[0];
 
-  // Fetch line items for this specific bill
+  // Fetch line items for this specific bill with GST snapshots
   const items = await sql`
     SELECT
       id,
       item_name_snapshot,
       unit_price,
       quantity,
-      line_subtotal
+      line_subtotal,
+      hsn_sac_code,
+      tax_treatment,
+      price_type,
+      gst_rate,
+      taxable_amount,
+      cgst_rate,
+      cgst_amount,
+      sgst_rate,
+      sgst_amount,
+      igst_rate,
+      igst_amount,
+      total_tax,
+      line_total
     FROM bill_items
     WHERE bill_id = ${bill.bill_id}
     ORDER BY created_at ASC;

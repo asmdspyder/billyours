@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useMemo } from "react";
 import Link from "next/link";
 import {
   Printer,
@@ -17,10 +17,46 @@ import {
   ReceiptText,
   PlusCircle,
   X,
+  MapPin,
+  Building2,
+  Table as TableIcon,
+  Globe,
 } from "lucide-react";
 import { buildWhatsAppShareUrl } from "@/lib/whatsapp";
 import { getBillShareUrl } from "@/lib/base-url";
 import { cancelBillAction } from "@/actions/billing-actions";
+
+export function InstagramLogo({ className = "w-3.5 h-3.5" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-label="Instagram"
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
+
+export function FacebookLogo({ className = "w-3.5 h-3.5" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-label="Facebook"
+    >
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  );
+}
 
 interface BillItem {
   id: string;
@@ -28,6 +64,19 @@ interface BillItem {
   unitPrice: string;
   quantity: number;
   lineSubtotal: string;
+  hsnSacCode?: string | null;
+  taxTreatment?: string | null;
+  priceType?: string | null;
+  gstRate?: string | null;
+  taxableAmount?: string | null;
+  cgstRate?: string | null;
+  cgstAmount?: string | null;
+  sgstRate?: string | null;
+  sgstAmount?: string | null;
+  igstRate?: string | null;
+  igstAmount?: string | null;
+  totalTax?: string | null;
+  lineTotal?: string | null;
 }
 
 interface BillData {
@@ -35,6 +84,10 @@ interface BillData {
   billNumber: string;
   customerName: string;
   customerPhone?: string | null;
+  customerGstin?: string | null;
+  customerState?: string | null;
+  placeOfSupplyState?: string | null;
+  isInterState?: boolean;
   subtotal: string;
   discountType: "FIXED" | "PERCENTAGE" | null;
   discountValue: string;
@@ -45,6 +98,11 @@ interface BillData {
   taxInclusive: boolean;
   taxableAmount: string;
   taxAmount: string;
+  totalCgst?: string;
+  totalSgst?: string;
+  totalIgst?: string;
+  totalTax?: string;
+  roundOff?: string;
   grandTotal: string;
   paymentStatus: "PAID" | "UNPAID";
   paymentMethod: string;
@@ -55,6 +113,8 @@ interface BillData {
   cancelledAt?: string | null;
   cancellationReason?: string | null;
   createdByName: string;
+  staffId?: string | null;
+  staffNameSnapshot?: string | null;
 }
 
 interface BillDetailViewProps {
@@ -67,6 +127,13 @@ interface BillDetailViewProps {
     address?: string | null;
     state?: string | null;
     currency: string;
+    gstin?: string | null;
+    gstRegistrationType?: string | null;
+    fssai?: string | null;
+    website?: string | null;
+    facebook?: string | null;
+    instagram?: string | null;
+    googleReviewLink?: string | null;
   };
   bill: BillData;
   items: BillItem[];
@@ -102,24 +169,36 @@ export function BillDetailView({
     }
   }, [initialAutoPrint]);
 
-  const publicShareUrl = getBillShareUrl(shareToken);
+  // Construct WhatsApp & Share URLs
+  const shareUrl = getBillShareUrl(shareToken);
+  const whatsAppUrl = bill.customerPhone
+    ? buildWhatsAppShareUrl({
+        phone: bill.customerPhone,
+        customerName: bill.customerName,
+        businessName: business.businessName,
+        billNumber: bill.billNumber,
+        grandTotal: bill.grandTotal,
+        shareToken,
+        googleReviewLink: business.googleReviewLink,
+      })
+    : null;
 
   const copyShareLink = async () => {
     try {
-      await navigator.clipboard.writeText(publicShareUrl);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
-      setCopied(false);
+      alert(`Share Link:\n${shareUrl}`);
     }
   };
 
-  const handleCancelSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cancelReason.trim()) {
-      setCancelError("Please provide a reason for cancelling this bill.");
+  const handleCancelBill = () => {
+    if (!cancelReason.trim() || cancelReason.trim().length < 3) {
+      setCancelError("Please enter a cancellation reason (min 3 chars).");
       return;
     }
+    setCancelError(null);
 
     startTransition(async () => {
       const res = await cancelBillAction(bill.id, cancelReason);
@@ -132,99 +211,151 @@ export function BillDetailView({
     });
   };
 
-  return (
-    <div className="overflow-y-auto h-full p-4 md:p-6 max-w-4xl mx-auto space-y-6 pb-12">
-      {/* Top Action Bar (hidden on print) */}
-      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <div className="flex items-center gap-2.5">
-          <Link
-            href="/app/billing"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>+ New Bill</span>
-          </Link>
-          <Link
-            href="/app/bills"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-1.5"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>All Bills</span>
-          </Link>
-        </div>
+  const isComposition = business.gstRegistrationType === "COMPOSITION";
+  const hasItemLevelGst = items.some(
+    (it) => it.gstRate !== null && it.gstRate !== undefined
+  );
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Format Toggle */}
-          <div className="bg-slate-100 p-0.5 rounded-lg flex items-center text-xs">
-            <button
-              onClick={() => setPrintFormat("thermal")}
-              className={`px-2.5 py-1 rounded-md font-semibold transition-colors ${
-                printFormat === "thermal" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
-              }`}
+  // Group items by GST Rate for the Consolidated GST Summary Table
+  const gstSummaryGroups = useMemo(() => {
+    const map = new Map<
+      string,
+      { rate: string; taxable: number; cgst: number; sgst: number; igst: number; totalTax: number }
+    >();
+
+    items.forEach((it) => {
+      const rate = it.gstRate ? Number(it.gstRate).toFixed(2) : "0.00";
+      const taxable = Number(it.taxableAmount || it.lineSubtotal || 0);
+      const cgst = Number(it.cgstAmount || 0);
+      const sgst = Number(it.sgstAmount || 0);
+      const igst = Number(it.igstAmount || 0);
+      const tax = Number(it.totalTax || 0);
+
+      const existing = map.get(rate) || {
+        rate,
+        taxable: 0,
+        cgst: 0,
+        sgst: 0,
+        igst: 0,
+        totalTax: 0,
+      };
+
+      existing.taxable += taxable;
+      existing.cgst += cgst;
+      existing.sgst += sgst;
+      existing.igst += igst;
+      existing.totalTax += tax;
+      map.set(rate, existing);
+    });
+
+    return Array.from(map.values()).sort(
+      (a, b) => Number(a.rate) - Number(b.rate)
+    );
+  }, [items]);
+
+  const totalCgstNum = Number(bill.totalCgst || 0);
+  const totalSgstNum = Number(bill.totalSgst || 0);
+  const totalIgstNum = Number(bill.totalIgst || 0);
+  const totalTaxNum = Number(bill.totalTax || bill.taxAmount || 0);
+
+  return (
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
+      {/* Action Bar (hidden when printing) */}
+      <div className="bg-white p-3 md:p-3.5 rounded-2xl border border-slate-200/90 shadow-xs no-print">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Left Group: Navigation & Format Switcher */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+            <Link
+              href="/app/bills"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors shrink-0"
             >
-              Thermal Receipt
-            </button>
-            <button
-              onClick={() => setPrintFormat("a4")}
-              className={`px-2.5 py-1 rounded-md font-semibold transition-colors ${
-                printFormat === "a4" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
-              }`}
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Bill History</span>
+            </Link>
+            <Link
+              href="/app/billing"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition-colors shrink-0"
             >
-              A4 Invoice
-            </button>
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>New Bill</span>
+            </Link>
+
+            <div className="h-5 w-px bg-slate-200 hidden sm:block shrink-0" />
+
+            {/* Format Switcher */}
+            <div className="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/80 text-xs shrink-0">
+              <button
+                type="button"
+                onClick={() => setPrintFormat("thermal")}
+                className={`px-2.5 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
+                  printFormat === "thermal"
+                    ? "bg-white text-slate-900 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Thermal (80mm)
+              </button>
+              <button
+                type="button"
+                onClick={() => setPrintFormat("a4")}
+                className={`px-2.5 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
+                  printFormat === "a4"
+                    ? "bg-white text-slate-900 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Tax Invoice (A4)
+              </button>
+            </div>
           </div>
 
-          {/* Print Button */}
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print</span>
-          </button>
-
-          {/* WhatsApp Share */}
-          {bill.customerPhone && (
-            <a
-              href={
-                buildWhatsAppShareUrl({
-                  phone: bill.customerPhone,
-                  customerName: bill.customerName,
-                  businessName: business.businessName,
-                  billNumber: bill.billNumber,
-                  grandTotal: bill.grandTotal,
-                  billLink: publicShareUrl,
-                }) || "#"
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>WhatsApp</span>
-            </a>
-          )}
-
-          {/* Copy Public Link */}
-          <button
-            onClick={copyShareLink}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? "Link Copied" : "Copy Link"}</span>
-          </button>
-
-          {/* Cancel Bill Button */}
-          {bill.status === "COMPLETED" && (
+          {/* Right Group: Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Print Button */}
             <button
-              onClick={() => setShowCancelModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold transition-colors"
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
             >
-              <Ban className="w-3.5 h-3.5" />
-              <span>Cancel Bill</span>
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print</span>
             </button>
-          )}
+
+            {/* WhatsApp Share */}
+            {whatsAppUrl && (
+              <a
+                href={whatsAppUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>WhatsApp</span>
+              </a>
+            )}
+
+            {/* Copy Public Link */}
+            <button
+              type="button"
+              onClick={copyShareLink}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? "Link Copied" : "Copy Link"}</span>
+            </button>
+
+            {/* Cancel Bill Button */}
+            {bill.status === "COMPLETED" && (
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200/60 text-red-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <Ban className="w-3.5 h-3.5" />
+                <span>Cancel</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -252,9 +383,32 @@ export function BillDetailView({
           <div className="text-center pb-3 border-b border-dashed border-slate-300 space-y-1">
             <h2 className="font-extrabold text-base tracking-tight">{business.businessName}</h2>
             {business.address && <p className="text-[11px] text-slate-600">{business.address}</p>}
+            {business.state && <p className="text-[11px] text-slate-600">State: {business.state}</p>}
+            {business.gstin && (
+              <p className="text-[11px] font-bold text-slate-800">GSTIN: {business.gstin}</p>
+            )}
+            {business.fssai && (
+              <p className="text-[11px] font-medium text-slate-700">FSSAI Lic: {business.fssai}</p>
+            )}
             {business.businessPhone && (
               <p className="text-[11px] text-slate-600">Tel: {business.businessPhone}</p>
             )}
+            {business.businessEmail && (
+              <p className="text-[11px] text-slate-600">Email: {business.businessEmail}</p>
+            )}
+            {business.website && (
+              <p className="text-[11px] text-slate-600">Web: {business.website}</p>
+            )}
+            {isComposition ? (
+              <div className="py-1 px-2 my-1 bg-slate-100 text-[10px] font-bold uppercase rounded">
+                BILL OF SUPPLY (Composition Taxpayer)
+              </div>
+            ) : totalTaxNum > 0 ? (
+              <div className="py-0.5 text-[10px] font-bold uppercase text-blue-700">
+                TAX INVOICE
+              </div>
+            ) : null}
+
             <div className="pt-2 text-left text-[11px] text-slate-600 space-y-0.5">
               <div className="flex justify-between">
                 <span>Bill #:</span>
@@ -270,24 +424,46 @@ export function BillDetailView({
                   <span className="font-bold text-slate-900">{bill.customerName}</span>
                 </div>
               )}
+              {bill.customerGstin && (
+                <div className="flex justify-between">
+                  <span>Cust GSTIN:</span>
+                  <span className="font-bold font-mono text-slate-900">{bill.customerGstin}</span>
+                </div>
+              )}
+              {bill.placeOfSupplyState && (
+                <div className="flex justify-between">
+                  <span>Place of Supply:</span>
+                  <span>{bill.placeOfSupplyState}</span>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Item Table */}
           <div className="py-3 border-b border-dashed border-slate-300">
             <div className="flex justify-between font-bold text-[11px] pb-1 border-b border-slate-200 mb-2">
-              <span>Item</span>
-              <span className="text-right">Qty × Price</span>
-              <span className="text-right">Total</span>
+              <span className="flex-1">Item</span>
+              <span className="text-right w-20">Qty × Price</span>
+              <span className="text-right w-16">Total</span>
             </div>
             <div className="space-y-1.5">
               {items.map((it) => (
                 <div key={it.id} className="flex justify-between text-[11px]">
-                  <span className="flex-1 truncate mr-2">{it.name}</span>
-                  <span className="text-slate-600 text-right whitespace-nowrap mr-2">
+                  <div className="flex-1 truncate mr-1">
+                    <p className="font-bold truncate">{it.name}</p>
+                    {it.gstRate && Number(it.gstRate) > 0 ? (
+                      <p className="text-[10px] text-slate-500">
+                        GST: {it.gstRate}% {it.priceType === "INCLUSIVE" ? "Incl" : "Excl"}
+                        {it.hsnSacCode ? ` | HSN:${it.hsnSacCode}` : ""}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className="text-slate-600 text-right whitespace-nowrap w-20">
                     {it.quantity} × {it.unitPrice}
                   </span>
-                  <span className="font-bold text-right whitespace-nowrap">₹{it.lineSubtotal}</span>
+                  <span className="font-bold text-right whitespace-nowrap w-16">
+                    ₹{it.lineTotal || it.lineSubtotal}
+                  </span>
                 </div>
               ))}
             </div>
@@ -305,13 +481,39 @@ export function BillDetailView({
                 <span>- ₹{bill.discountAmount}</span>
               </div>
             )}
-            {bill.taxEnabled && Number(bill.taxAmount) > 0 && (
-              <div className="flex justify-between text-slate-700">
-                <span>{bill.taxLabel} ({bill.taxRate}%):</span>
-                <span>+ ₹{bill.taxAmount}</span>
-              </div>
+            <div className="flex justify-between text-slate-600">
+              <span>Taxable Value:</span>
+              <span>₹{bill.taxableAmount}</span>
+            </div>
+
+            {/* GST Breakdown in Thermal Receipt */}
+            {totalTaxNum > 0 && (
+              <>
+                {bill.isInterState ? (
+                  <div className="flex justify-between text-slate-700 font-semibold">
+                    <span>IGST:</span>
+                    <span>+ ₹{bill.totalIgst || bill.taxAmount}</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-slate-700">
+                      <span>CGST:</span>
+                      <span>+ ₹{bill.totalCgst || (totalTaxNum / 2).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-700">
+                      <span>SGST:</span>
+                      <span>+ ₹{bill.totalSgst || (totalTaxNum / 2).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between text-slate-800 font-bold">
+                  <span>Total GST:</span>
+                  <span>+ ₹{bill.totalTax || bill.taxAmount}</span>
+                </div>
+              </>
             )}
-            <div className="flex justify-between font-extrabold text-sm pt-1 border-t border-slate-200 text-slate-900">
+
+            <div className="flex justify-between font-extrabold text-sm pt-1.5 border-t border-slate-200 text-slate-900">
               <span>Grand Total:</span>
               <span>₹{bill.grandTotal}</span>
             </div>
@@ -322,7 +524,23 @@ export function BillDetailView({
           </div>
 
           {/* Footer */}
-          <div className="text-center pt-3 text-[10px] text-slate-500 space-y-0.5">
+          <div className="text-center pt-3 text-[10px] text-slate-500 space-y-1">
+            {(business.instagram || business.facebook) && (
+              <div className="flex items-center justify-center gap-3 font-semibold text-slate-700 text-[10px] pb-1 flex-wrap">
+                {business.instagram && (
+                  <span className="inline-flex items-center gap-1">
+                    <InstagramLogo className="w-3.5 h-3.5 text-pink-600 shrink-0" />
+                    <span>{business.instagram}</span>
+                  </span>
+                )}
+                {business.facebook && (
+                  <span className="inline-flex items-center gap-1">
+                    <FacebookLogo className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span>{business.facebook}</span>
+                  </span>
+                )}
+              </div>
+            )}
             <p>Thank you for your visit!</p>
             <p className="text-[9px] text-slate-400">Powered by BillYours</p>
           </div>
@@ -335,19 +553,47 @@ export function BillDetailView({
             <div>
               <h2 className="text-2xl font-black text-slate-900">{business.businessName}</h2>
               {business.address && <p className="text-sm text-slate-600 mt-1">{business.address}</p>}
-              {business.state && <p className="text-xs text-slate-500">{business.state}, India</p>}
+              {business.state && (
+                <p className="text-xs text-slate-500">
+                  State: <strong>{business.state}</strong>, India
+                </p>
+              )}
+              {business.gstin && (
+                <p className="text-xs font-bold text-slate-800 mt-0.5">
+                  GSTIN: <span className="font-mono">{business.gstin}</span>
+                </p>
+              )}
+              {business.fssai && (
+                <p className="text-xs text-slate-700 font-medium mt-0.5">
+                  FSSAI Lic No: <span className="font-mono">{business.fssai}</span>
+                </p>
+              )}
               {business.businessPhone && (
                 <p className="text-xs text-slate-500 mt-0.5">Phone: {business.businessPhone}</p>
               )}
               {business.businessEmail && (
                 <p className="text-xs text-slate-500">Email: {business.businessEmail}</p>
               )}
+              {business.website && (
+                <p className="text-xs text-slate-500">Web: {business.website}</p>
+              )}
             </div>
 
             <div className="text-right space-y-1">
-              <span className="inline-block px-3 py-1 rounded bg-blue-50 text-blue-700 text-xs font-bold tracking-wide">
-                TAX INVOICE / BILL
+              <span
+                className={`inline-block px-3 py-1 rounded text-xs font-bold tracking-wide ${
+                  isComposition
+                    ? "bg-amber-50 text-amber-800 border border-amber-200"
+                    : "bg-blue-50 text-blue-700 border border-blue-200"
+                }`}
+              >
+                {isComposition ? "BILL OF SUPPLY" : "TAX INVOICE"}
               </span>
+              {isComposition && (
+                <p className="text-[10px] text-amber-700 max-w-[200px] leading-tight">
+                  Composition taxable person, not eligible to collect tax on supplies
+                </p>
+              )}
               <p className="font-mono text-base font-bold text-slate-900 mt-2">{bill.billNumber}</p>
               <p className="text-xs text-slate-500">Date: {bill.completedAt}</p>
               <p className="text-xs text-slate-500">
@@ -356,68 +602,210 @@ export function BillDetailView({
             </div>
           </div>
 
-          {/* Customer Info */}
-          <div className="bg-slate-50 p-4 rounded-lg flex justify-between text-xs">
+          {/* Customer & Place of Supply Info */}
+          <div className="bg-slate-50 p-4 rounded-xl grid grid-cols-2 gap-4 text-xs">
             <div>
-              <span className="text-slate-400 uppercase font-semibold text-[10px]">Billed To</span>
+              <span className="text-slate-400 uppercase font-bold text-[10px] tracking-wider">
+                Billed To (Customer)
+              </span>
               <p className="font-bold text-sm text-slate-900 mt-0.5">{bill.customerName}</p>
               {bill.customerPhone && (
-                <p className="text-slate-600 font-mono mt-0.5">{bill.customerPhone}</p>
+                <p className="text-slate-600 font-mono mt-0.5">Phone: {bill.customerPhone}</p>
+              )}
+              {bill.customerGstin && (
+                <p className="text-slate-700 font-semibold mt-0.5">
+                  GSTIN: <span className="font-mono font-bold">{bill.customerGstin}</span>
+                </p>
               )}
             </div>
             <div className="text-right">
-              <span className="text-slate-400 uppercase font-semibold text-[10px]">Payment Details</span>
+              <span className="text-slate-400 uppercase font-bold text-[10px] tracking-wider">
+                Place of Supply & Payment
+              </span>
               <p className="font-bold text-slate-900 mt-0.5">
-                {bill.paymentStatus} ({bill.paymentMethod})
+                Place of Supply: {bill.placeOfSupplyState || business.state || "Home State"}
               </p>
-              <p className="text-slate-500 mt-0.5">Amount: ₹{bill.grandTotal}</p>
+              <p className="text-slate-500 mt-0.5">
+                Transaction:{" "}
+                <span className="font-semibold text-slate-800">
+                  {bill.isInterState ? "Inter-State (IGST)" : "Intra-State (CGST + SGST)"}
+                </span>
+              </p>
+              <p className="text-slate-500 mt-0.5">
+                Payment: <strong>{bill.paymentStatus}</strong> via {bill.paymentMethod}
+              </p>
             </div>
           </div>
 
-          {/* Line items table */}
-          <table className="w-full text-left text-sm border-collapse">
+          {/* Line items table with GST details */}
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
-                <th className="py-2.5">#</th>
-                <th className="py-2.5">Description</th>
-                <th className="py-2.5 text-right">Unit Price</th>
-                <th className="py-2.5 text-right">Quantity</th>
-                <th className="py-2.5 text-right">Subtotal</th>
+              <tr className="border-b-2 border-slate-200 text-[11px] uppercase font-bold text-slate-600 bg-slate-50/50">
+                <th className="py-2.5 px-2">#</th>
+                <th className="py-2.5 px-2">Description</th>
+                <th className="py-2.5 px-2">HSN/SAC</th>
+                <th className="py-2.5 px-2 text-right">Qty</th>
+                <th className="py-2.5 px-2 text-right">Rate (₹)</th>
+                <th className="py-2.5 px-2 text-right">Taxable (₹)</th>
+                <th className="py-2.5 px-2 text-right">GST %</th>
+                <th className="py-2.5 px-2 text-right">Tax (₹)</th>
+                <th className="py-2.5 px-2 text-right">Total (₹)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {items.map((item, idx) => (
-                <tr key={item.id}>
-                  <td className="py-3 text-xs text-slate-400">{idx + 1}</td>
-                  <td className="py-3 font-semibold text-slate-900">{item.name}</td>
-                  <td className="py-3 text-right text-slate-600">₹{item.unitPrice}</td>
-                  <td className="py-3 text-right text-slate-600">{item.quantity}</td>
-                  <td className="py-3 text-right font-bold text-slate-900">₹{item.lineSubtotal}</td>
-                </tr>
-              ))}
+              {items.map((item, idx) => {
+                const isTaxable = item.taxTreatment === "TAXABLE" && Number(item.gstRate || 0) > 0;
+                return (
+                  <tr key={item.id} className="hover:bg-slate-50/40">
+                    <td className="py-2.5 px-2 text-slate-400">{idx + 1}</td>
+                    <td className="py-2.5 px-2 font-bold text-slate-900">{item.name}</td>
+                    <td className="py-2.5 px-2 font-mono text-slate-500">{item.hsnSacCode || "—"}</td>
+                    <td className="py-2.5 px-2 text-right font-medium text-slate-700">{item.quantity}</td>
+                    <td className="py-2.5 px-2 text-right text-slate-700">₹{item.unitPrice}</td>
+                    <td className="py-2.5 px-2 text-right text-slate-700">
+                      ₹{item.taxableAmount || item.lineSubtotal}
+                    </td>
+                    <td className="py-2.5 px-2 text-right">
+                      {isTaxable ? (
+                        <span className="font-bold text-blue-700">{item.gstRate}%</span>
+                      ) : (
+                        <span className="text-slate-400">0%</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-2 text-right text-slate-700">
+                      ₹{item.totalTax || "0.00"}
+                    </td>
+                    <td className="py-2.5 px-2 text-right font-bold text-slate-900">
+                      ₹{item.lineTotal || item.lineSubtotal}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
-          {/* Financial Breakdown */}
-          <div className="flex justify-end pt-4 border-t border-slate-200">
-            <div className="w-64 space-y-2 text-sm">
+          {/* Consolidated Rate-wise GST Summary Table */}
+          {totalTaxNum > 0 && gstSummaryGroups.length > 0 && (
+            <div className="pt-2 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                <TableIcon className="w-3.5 h-3.5 text-blue-600" />
+                <span>GST Tax Summary Breakdown</span>
+              </div>
+              <table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden">
+                <thead className="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-bold">
+                  <tr>
+                    <th className="py-2 px-3 text-left">GST Rate</th>
+                    <th className="py-2 px-3 text-right">Taxable Value</th>
+                    {bill.isInterState ? (
+                      <th className="py-2 px-3 text-right">IGST Amount</th>
+                    ) : (
+                      <>
+                        <th className="py-2 px-3 text-right">CGST Amount</th>
+                        <th className="py-2 px-3 text-right">SGST Amount</th>
+                      </>
+                    )}
+                    <th className="py-2 px-3 text-right">Total Tax Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {gstSummaryGroups.map((grp) => (
+                    <tr key={grp.rate} className="hover:bg-slate-50/50">
+                      <td className="py-2 px-3 font-bold text-slate-900">{grp.rate}%</td>
+                      <td className="py-2 px-3 text-right font-medium text-slate-700">
+                        ₹{grp.taxable.toFixed(2)}
+                      </td>
+                      {bill.isInterState ? (
+                        <td className="py-2 px-3 text-right font-medium text-slate-700">
+                          ₹{grp.igst.toFixed(2)}
+                        </td>
+                      ) : (
+                        <>
+                          <td className="py-2 px-3 text-right font-medium text-slate-700">
+                            ₹{grp.cgst.toFixed(2)}
+                          </td>
+                          <td className="py-2 px-3 text-right font-medium text-slate-700">
+                            ₹{grp.sgst.toFixed(2)}
+                          </td>
+                        </>
+                      )}
+                      <td className="py-2 px-3 text-right font-bold text-blue-700">
+                        ₹{grp.totalTax.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-slate-50 font-extrabold border-t border-slate-200">
+                    <td className="py-2 px-3 text-slate-900">Total</td>
+                    <td className="py-2 px-3 text-right text-slate-900">
+                      ₹{bill.taxableAmount}
+                    </td>
+                    {bill.isInterState ? (
+                      <td className="py-2 px-3 text-right text-slate-900">
+                        ₹{bill.totalIgst || bill.taxAmount}
+                      </td>
+                    ) : (
+                      <>
+                        <td className="py-2 px-3 text-right text-slate-900">
+                          ₹{bill.totalCgst || (totalTaxNum / 2).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-3 text-right text-slate-900">
+                          ₹{bill.totalSgst || (totalTaxNum / 2).toFixed(2)}
+                        </td>
+                      </>
+                    )}
+                    <td className="py-2 px-3 text-right text-blue-700 font-black">
+                      ₹{bill.totalTax || bill.taxAmount}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Financial Breakdown & Summary */}
+          <div className="flex justify-end pt-3 border-t border-slate-200">
+            <div className="w-72 space-y-2 text-xs">
               <div className="flex justify-between text-slate-600">
-                <span>Subtotal:</span>
+                <span>Gross Subtotal:</span>
                 <span>₹{bill.subtotal}</span>
               </div>
               {Number(bill.discountAmount) > 0 && (
-                <div className="flex justify-between text-green-700 font-medium">
+                <div className="flex justify-between text-green-700 font-semibold">
                   <span>Discount:</span>
                   <span>- ₹{bill.discountAmount}</span>
                 </div>
               )}
-              {bill.taxEnabled && Number(bill.taxAmount) > 0 && (
-                <div className="flex justify-between text-slate-700 font-medium">
-                  <span>{bill.taxLabel} ({bill.taxRate}%):</span>
-                  <span>+ ₹{bill.taxAmount}</span>
-                </div>
+              <div className="flex justify-between text-slate-600 font-medium">
+                <span>Taxable Amount:</span>
+                <span>₹{bill.taxableAmount}</span>
+              </div>
+
+              {totalTaxNum > 0 && (
+                <>
+                  {bill.isInterState ? (
+                    <div className="flex justify-between text-slate-700 font-semibold">
+                      <span>IGST:</span>
+                      <span>+ ₹{bill.totalIgst || bill.taxAmount}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between text-slate-700">
+                        <span>CGST:</span>
+                        <span>+ ₹{bill.totalCgst || (totalTaxNum / 2).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-700">
+                        <span>SGST:</span>
+                        <span>+ ₹{bill.totalSgst || (totalTaxNum / 2).toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+                  <div className="flex justify-between text-slate-900 font-bold border-t border-slate-100 pt-1">
+                    <span>Total Tax:</span>
+                    <span>+ ₹{bill.totalTax || bill.taxAmount}</span>
+                  </div>
+                </>
               )}
-              <div className="flex justify-between items-baseline pt-2 border-t border-slate-300 font-extrabold text-base text-slate-900">
+
+              <div className="flex justify-between items-baseline pt-2 border-t-2 border-slate-900 font-extrabold text-sm text-slate-900">
                 <span>Grand Total:</span>
                 <span className="text-xl text-blue-600">₹{bill.grandTotal}</span>
               </div>
@@ -426,13 +814,37 @@ export function BillDetailView({
 
           {/* Notes & Footer */}
           {bill.notes && (
-            <div className="p-3 bg-slate-50 rounded-lg text-xs text-slate-600">
+            <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-600">
               <strong>Notes:</strong> {bill.notes}
             </div>
           )}
 
-          <div className="pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
-            <p>Thank you for your business!</p>
+          {/* Social and Website Footer for A4 */}
+          {(business.website || business.facebook || business.instagram) && (
+            <div className="pt-4 pb-2 border-t border-slate-100 flex items-center justify-center gap-6 flex-wrap text-xs text-slate-700 font-semibold">
+              {business.website && (
+                <span className="flex items-center gap-1.5">
+                  <Globe className="w-4 h-4 text-blue-600 shrink-0" />
+                  {business.website}
+                </span>
+              )}
+              {business.instagram && (
+                <span className="flex items-center gap-1.5">
+                  <InstagramLogo className="w-4 h-4 text-pink-600 shrink-0" />
+                  {business.instagram}
+                </span>
+              )}
+              {business.facebook && (
+                <span className="flex items-center gap-1.5">
+                  <FacebookLogo className="w-4 h-4 text-blue-700 shrink-0" />
+                  {business.facebook}
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className="pt-4 border-t border-slate-100 text-center text-xs text-slate-400">
+            <p>Thank you for doing business with us!</p>
           </div>
         </div>
       )}
@@ -440,57 +852,61 @@ export function BillDetailView({
       {/* Cancellation Modal */}
       {showCancelModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 no-print">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-5 space-y-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-5 space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2 text-red-600 font-bold text-base">
                 <AlertTriangle className="w-5 h-5" />
                 <h3>Cancel Bill #{bill.billNumber}</h3>
               </div>
-              <button onClick={() => setShowCancelModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-600">
-              Cancelling a bill will preserve the historical record and bill number, but excludes its financial totals from your active sales dashboard.
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Are you sure you want to cancel this bill? This cannot be undone. Historical transaction data and customer details are safely preserved, but it will be deducted from sales metrics.
             </p>
 
             {cancelError && (
-              <div className="p-2.5 bg-red-50 text-red-700 text-xs rounded-lg">{cancelError}</div>
+              <div className="p-2.5 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
+                {cancelError}
+              </div>
             )}
 
-            <form onSubmit={handleCancelSubmit} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Cancellation Reason *
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  placeholder="e.g. Customer returned items, wrong quantity entered, or order cancelled."
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
-              </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-700">
+                Reason for cancellation *
+              </label>
+              <textarea
+                required
+                rows={3}
+                placeholder="e.g. Customer requested refund, item out of stock, incorrect price entered..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white"
+              />
+            </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCancelModal(false)}
-                  className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg"
-                >
-                  Keep Bill
-                </button>
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="px-4 py-1.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-xs"
-                >
-                  {isPending ? "Cancelling..." : "Confirm Cancellation"}
-                </button>
-              </div>
-            </form>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+              >
+                Dismiss
+              </button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleCancelBill}
+                className="flex-1 py-2 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-xs transition-colors disabled:opacity-60 cursor-pointer"
+              >
+                {isPending ? "Cancelling..." : "Confirm Cancellation"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,6 +13,8 @@ import {
   Settings,
   LogOut,
   Store,
+  UserCheck,
+  Loader2,
 } from "lucide-react";
 import { logoutAction } from "@/actions/auth-actions";
 
@@ -22,6 +25,11 @@ interface AppNavbarProps {
 
 export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
   const pathname = usePathname();
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNavigatingTo(null);
+  }, [pathname]);
 
   const isBilling = pathname === "/app/billing";
 
@@ -30,6 +38,7 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
     { href: "/app/bills", label: "Bills", icon: History },
     { href: "/app/items", label: "Items", icon: Package },
     { href: "/app/customers", label: "Customers", icon: Users },
+    { href: "/app/staff", label: "Staff", icon: UserCheck },
     { href: "/app/settings", label: "Settings", icon: Settings },
   ];
 
@@ -38,6 +47,7 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
     { href: "/app/dashboard", label: "Dash", icon: LayoutDashboard },
     { href: "/app/bills", label: "Bills", icon: History },
     { href: "/app/items", label: "Items", icon: Package },
+    { href: "/app/staff", label: "Staff", icon: UserCheck },
     { href: "/app/customers", label: "People", icon: Users },
     { href: "/app/settings", label: "Settings", icon: Settings },
   ];
@@ -46,11 +56,24 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
 
   return (
     <>
+      {/* ─── Top Glow Progress Bar when transitioning routes ───────────────── */}
+      {navigatingTo && (
+        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400 overflow-hidden shadow-sm">
+          <div className="h-full bg-white/70 w-1/2 animate-loading-bar rounded-full" />
+        </div>
+      )}
+
       {/* ─── Top Navbar (Laptop, Tablet & Desktop) in Sleek Modern Dark Slate ─ */}
       <header className="hidden md:flex items-center justify-between h-16 px-5 lg:px-7 bg-slate-900 text-slate-100 border-b border-slate-800 sticky top-0 z-40 select-none shrink-0 shadow-sm">
         {/* Left: Modern Brand Mark & Shop Identity */}
         <div className="flex items-center gap-3.5 shrink-0">
-          <Link href="/app/billing" className="flex items-center gap-2.5 group">
+          <Link
+            href="/app/billing"
+            onClick={() => {
+              if (pathname !== "/app/billing") setNavigatingTo("/app/billing");
+            }}
+            className="flex items-center gap-2.5 group"
+          >
             <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
               <ReceiptText className="w-5 h-5" />
             </div>
@@ -73,31 +96,46 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
           {/* New Bill Button */}
           <Link
             href="/app/billing"
+            onClick={() => {
+              if (pathname !== "/app/billing") setNavigatingTo("/app/billing");
+            }}
             className={`inline-flex items-center gap-1.5 lg:gap-2 px-2.5 lg:px-4 py-1.5 lg:py-2 rounded-lg text-xs lg:text-sm font-bold transition-colors ${
               isBilling
                 ? "bg-blue-600 text-white shadow-sm"
                 : "text-slate-300 hover:text-white hover:bg-slate-800"
             }`}
           >
-            <PlusCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+            {navigatingTo === "/app/billing" ? (
+              <Loader2 className="w-3.5 h-3.5 lg:w-4 lg:h-4 animate-spin text-white" />
+            ) : (
+              <PlusCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+            )}
             <span>New Bill</span>
           </Link>
 
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href || (link.href !== "/app/billing" && pathname.startsWith(link.href));
+            const isNavigatingThis = navigatingTo === link.href;
 
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => {
+                  if (pathname !== link.href) setNavigatingTo(link.href);
+                }}
                 className={`inline-flex items-center gap-1.5 lg:gap-2 px-2.5 lg:px-3.5 py-1.5 lg:py-2 rounded-lg text-xs lg:text-sm font-semibold transition-colors ${
                   isActive
                     ? "bg-slate-800 text-white font-bold"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 lg:w-4 lg:h-4 ${isActive ? "text-blue-400" : "text-slate-400"}`} />
+                {isNavigatingThis ? (
+                  <Loader2 className="w-3.5 h-3.5 lg:w-4 lg:h-4 animate-spin text-blue-400" />
+                ) : (
+                  <Icon className={`w-3.5 h-3.5 lg:w-4 lg:h-4 ${isActive ? "text-blue-400" : "text-slate-400"}`} />
+                )}
                 <span>{link.label}</span>
               </Link>
             );
@@ -166,16 +204,25 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
               pathname === link.href ||
               (link.href !== "/app/billing" && pathname.startsWith(link.href));
 
+            const isNavigatingThis = navigatingTo === link.href;
+
             if (link.isPrimary) {
               return (
                 <Link
                   key={link.href}
                   href={link.href}
+                  onClick={() => {
+                    if (pathname !== link.href) setNavigatingTo(link.href);
+                  }}
                   className="flex flex-col items-center justify-center flex-1 relative"
                 >
                   <div className="flex flex-col items-center justify-center -mt-3">
                     <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md active:scale-95 transition-transform">
-                      <Icon className="w-5 h-5" />
+                      {isNavigatingThis ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Icon className="w-5 h-5" />
+                      )}
                     </div>
                     <span className="text-[10px] font-bold text-blue-600 mt-0.5">{link.label}</span>
                   </div>
@@ -187,11 +234,18 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => {
+                  if (pathname !== link.href) setNavigatingTo(link.href);
+                }}
                 className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors ${
                   isActive ? "text-blue-600 font-bold" : "text-slate-400 hover:text-slate-700"
                 }`}
               >
-                <Icon className="w-4.5 h-4.5" />
+                {isNavigatingThis ? (
+                  <Loader2 className="w-4.5 h-4.5 animate-spin text-blue-600" />
+                ) : (
+                  <Icon className="w-4.5 h-4.5" />
+                )}
                 <span className="text-[10px] font-medium mt-0.5">{link.label}</span>
               </Link>
             );

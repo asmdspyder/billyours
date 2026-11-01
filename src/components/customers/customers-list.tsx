@@ -19,9 +19,18 @@ interface CustomerSummary {
 interface CustomersListProps {
   customers: CustomerSummary[];
   currentSearch: string;
+  currentPage?: number;
+  totalPages?: number;
+  totalCount?: number;
 }
 
-export function CustomersList({ customers, currentSearch }: CustomersListProps) {
+export function CustomersList({
+  customers,
+  currentSearch,
+  currentPage = 1,
+  totalPages = 1,
+  totalCount = 0,
+}: CustomersListProps) {
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -190,6 +199,46 @@ export function CustomersList({ customers, currentSearch }: CustomersListProps) 
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-slate-200">
+                <div className="text-xs text-slate-500">
+                  Showing <span className="font-semibold text-slate-700">{(currentPage - 1) * 25 + 1}</span> to{" "}
+                  <span className="font-semibold text-slate-700">{Math.min(currentPage * 25, totalCount)}</span> of{" "}
+                  <span className="font-semibold text-slate-700">{totalCount}</span> customers
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={currentPage <= 1}
+                    onClick={() => {
+                      const prevPage = currentPage - 1;
+                      router.push(
+                        `/app/customers?page=${prevPage}${currentSearch ? `&search=${encodeURIComponent(currentSearch)}` : ""}`
+                      );
+                    }}
+                    className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs text-slate-600 px-1 font-medium">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    disabled={currentPage >= totalPages}
+                    onClick={() => {
+                      const nextPage = currentPage + 1;
+                      router.push(
+                        `/app/customers?page=${nextPage}${currentSearch ? `&search=${encodeURIComponent(currentSearch)}` : ""}`
+                      );
+                    }}
+                    className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

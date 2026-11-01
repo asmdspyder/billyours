@@ -159,14 +159,14 @@ export function SignupForm() {
               Setting up your shop...
             </>
           ) : (
-            "Create Account & Start Free Trial"
+            "Create Account & Start 10-Day Free Trial"
           )}
         </button>
       </form>
 
       <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
         <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-        7-day full access · No credit card needed
+        10-day full access · No credit card needed
       </div>
 
       <p className="text-center text-sm text-slate-500 border-t border-slate-100 pt-4">

@@ -324,9 +324,9 @@ export function ModernDashboardClient({
               <div>
                 <h2 className="font-black text-slate-900 text-sm tracking-tight flex items-center gap-1.5">
                   <CreditCard className="w-4 h-4 text-blue-600" />
-                  Collections by Mode
+                  Collections by Mode (Last 30 Days)
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">Payment method distribution</p>
+                <p className="text-xs text-slate-500 mt-0.5">Payment method distribution over 30 days</p>
               </div>
               <span className="text-[11px] font-bold text-slate-400 font-mono">
                 {totalPaymentCount} bills
@@ -443,9 +443,9 @@ export function ModernDashboardClient({
             <div>
               <h2 className="font-black text-slate-900 text-sm tracking-tight flex items-center gap-1.5">
                 <Award className="w-4 h-4 text-amber-500" />
-                Top Selling Menu Items
+                Top Selling Items & Services (Last 30 Days)
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">Ranked by total revenue generated</p>
+              <p className="text-xs text-slate-500 mt-0.5">Ranked by revenue over the last 30 days</p>
             </div>
             <Link
               href="/app/items"
@@ -459,7 +459,7 @@ export function ModernDashboardClient({
           <div className="space-y-3">
             {topItems.length === 0 ? (
               <div className="py-8 text-center text-xs text-slate-400">
-                No menu item sales recorded yet.
+                No item or service sales recorded yet.
               </div>
             ) : (
               topItems.map((item, idx) => {
