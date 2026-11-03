@@ -128,6 +128,31 @@ export function AccountManagementView({
     });
   };
 
+  const handleExpireSubscription = () => {
+    if (
+      !confirm(
+        `Are you sure you want to expire this account's subscription/trial immediately? The business user will be blocked and will see the admin contact popup.`
+      )
+    ) {
+      return;
+    }
+
+    const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    startTransition(async () => {
+      const res = await updateAccountSubscriptionAction(account.id, {
+        subscriptionStatus: "EXPIRED",
+        trialEndsAt: pastDate,
+        subscriptionEndsAt: pastDate,
+      });
+      if (res.success) {
+        setFeedbackMsg("Account subscription has been marked EXPIRED.");
+        window.location.reload();
+      } else {
+        alert(res.error || "Failed to expire subscription.");
+      }
+    });
+  };
+
   const handleImpersonate = () => {
     if (
       !confirm(
@@ -301,6 +326,21 @@ export function AccountManagementView({
                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors shadow-xs"
               >
                 Activate Yearly (₹2,999/yr)
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <p className="text-[11px] font-bold text-red-600 uppercase tracking-wider">
+              Immediate Expiry (Test & Revoke)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleExpireSubscription}
+                disabled={isPending}
+                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-semibold text-xs rounded-lg transition-colors cursor-pointer"
+              >
+                Mark Expired / End Trial Now
               </button>
             </div>
           </div>

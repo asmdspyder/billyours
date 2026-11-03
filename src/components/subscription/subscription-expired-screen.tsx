@@ -6,13 +6,13 @@ import { logoutAction } from "@/actions/auth-actions";
 
 interface SubscriptionExpiredScreenProps {
   businessName: string;
-  ownerName: string;
+  ownerName?: string;
   accountId: string;
 }
 
 export function SubscriptionExpiredScreen({
   businessName,
-  ownerName,
+  ownerName = "Owner",
   accountId,
 }: SubscriptionExpiredScreenProps) {
   const [isPending, startTransition] = useTransition();
@@ -29,11 +29,11 @@ export function SubscriptionExpiredScreen({
   ];
 
   return (
-    <div className="auth-shell min-h-screen bg-[#faf7f0] flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+      <div className="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
         {/* Lock / Expired Badge */}
-        <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 text-red-600 flex items-center justify-center mx-auto">
-          <ShieldAlert className="w-8 h-8" />
+        <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 text-red-600 flex items-center justify-center mx-auto shadow-inner">
+          <ShieldAlert className="w-8 h-8 animate-pulse" />
         </div>
 
         {/* Heading & Notice */}

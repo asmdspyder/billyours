@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
-import { requireBusinessAccount } from "@/lib/auth";
+import { requireBusinessAccount, checkSubscriptionStatus } from "@/lib/auth";
 import { sql } from "@/db";
 import { BillDetailView } from "@/components/bills/bill-detail-view";
 import { createSharedBillLink } from "@/lib/share-link";
+import { SubscriptionExpiredScreen } from "@/components/subscription/subscription-expired-screen";
 
 interface BillPageProps {
   params: Promise<{ id: string }>;
@@ -15,6 +16,18 @@ export const metadata = {
 
 export default async function BillDetailPage(props: BillPageProps) {
   const session = await requireBusinessAccount();
+  const subStatus = checkSubscriptionStatus(session.account);
+
+  if (subStatus.isExpired && !session.isImpersonating) {
+    return (
+      <SubscriptionExpiredScreen
+        businessName={session.account.businessName}
+        ownerName={session.user.name}
+        accountId={session.account.id}
+      />
+    );
+  }
+
   const accountId = session.account.id;
   const params = await props.params;
   const searchParams = await props.searchParams;

@@ -35,6 +35,7 @@ import {
 } from "@/lib/billing-calculations";
 import { completeBillAction, lookupCustomerPhoneAction } from "@/actions/billing-actions";
 import { AppLoader } from "@/components/ui/app-loader";
+import { SubscriptionExpiredScreen } from "@/components/subscription/subscription-expired-screen";
 
 interface Item {
   id: string;
@@ -71,6 +72,7 @@ interface BillingWorkspaceProps {
   business: {
     id: string;
     businessName: string;
+    ownerName?: string | null;
     invoicePrefix: string;
     defaultTaxRate: string | null;
     defaultTaxLabel: string | null;
@@ -137,6 +139,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
   // Submission state
   const [isPending, startTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showExpiredPopup, setShowExpiredPopup] = useState(false);
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null);
   const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
   const checkoutIdempotencyRef = useRef<string | null>(null);
@@ -419,7 +422,15 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
       });
 
       if (!res.success) {
-        setSubmitError(res.error || "Failed to complete bill. Please check values.");
+        if (
+          res.error?.toLowerCase().includes("expired") ||
+          res.error?.toLowerCase().includes("subscription") ||
+          res.error?.toLowerCase().includes("suspended")
+        ) {
+          setShowExpiredPopup(true);
+        } else {
+          setSubmitError(res.error || "Failed to complete bill. Please check values.");
+        }
       } else if (res.billId) {
         checkoutIdempotencyRef.current = null;
         try {
@@ -1287,6 +1298,14 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
             </form>
           </div>
         </div>
+      )}
+
+      {showExpiredPopup && (
+        <SubscriptionExpiredScreen
+          businessName={business.businessName}
+          ownerName={business.ownerName || undefined}
+          accountId={business.id}
+        />
       )}
     </>
   );

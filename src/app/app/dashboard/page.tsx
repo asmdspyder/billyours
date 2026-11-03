@@ -1,6 +1,7 @@
-import { requireBusinessAccount } from "@/lib/auth";
+import { requireBusinessAccount, checkSubscriptionStatus } from "@/lib/auth";
 import { sql } from "@/db";
 import { ModernDashboardClient } from "@/components/dashboard/modern-dashboard-client";
+import { SubscriptionExpiredScreen } from "@/components/subscription/subscription-expired-screen";
 
 export const metadata = {
   title: "Sales Dashboard — BillYours",
@@ -8,6 +9,18 @@ export const metadata = {
 
 export default async function DashboardPage() {
   const session = await requireBusinessAccount();
+  const subStatus = checkSubscriptionStatus(session.account);
+
+  if (subStatus.isExpired && !session.isImpersonating) {
+    return (
+      <SubscriptionExpiredScreen
+        businessName={session.account.businessName}
+        ownerName={session.user.name}
+        accountId={session.account.id}
+      />
+    );
+  }
+
   const accountId = session.account.id;
   const tz = session.account.timezone || "Asia/Kolkata";
 

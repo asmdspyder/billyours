@@ -1,6 +1,7 @@
-import { requireBusinessAccount } from "@/lib/auth";
+import { requireBusinessAccount, checkSubscriptionStatus } from "@/lib/auth";
 import { sql } from "@/db";
 import { BillsList } from "@/components/bills/bills-list";
+import { SubscriptionExpiredScreen } from "@/components/subscription/subscription-expired-screen";
 
 export const metadata = {
   title: "Bill History — BillYours",
@@ -17,6 +18,18 @@ interface BillsPageProps {
 
 export default async function BillsPage(props: BillsPageProps) {
   const session = await requireBusinessAccount();
+  const subStatus = checkSubscriptionStatus(session.account);
+
+  if (subStatus.isExpired && !session.isImpersonating) {
+    return (
+      <SubscriptionExpiredScreen
+        businessName={session.account.businessName}
+        ownerName={session.user.name}
+        accountId={session.account.id}
+      />
+    );
+  }
+
   const accountId = session.account.id;
   const searchParams = await props.searchParams;
 

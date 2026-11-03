@@ -1,6 +1,7 @@
-import { requireBusinessAccount } from "@/lib/auth";
+import { requireBusinessAccount, checkSubscriptionStatus } from "@/lib/auth";
 import { sql } from "@/db";
 import { BillingWorkspace } from "@/components/billing/billing-workspace";
+import { SubscriptionExpiredScreen } from "@/components/subscription/subscription-expired-screen";
 
 export const metadata = {
   title: "New Bill — BillYours",
@@ -8,6 +9,18 @@ export const metadata = {
 
 export default async function BillingPage() {
   const session = await requireBusinessAccount();
+  const subStatus = checkSubscriptionStatus(session.account);
+
+  if (subStatus.isExpired && !session.isImpersonating) {
+    return (
+      <SubscriptionExpiredScreen
+        businessName={session.account.businessName}
+        ownerName={session.user.name}
+        accountId={session.account.id}
+      />
+    );
+  }
+
   const accountId = session.account.id;
 
   // Fetch active catalog items, staff members, and distinct categories concurrently

@@ -51,12 +51,14 @@ export interface CompleteBillResponse {
 }
 
 export async function completeBillAction(input: CompleteBillInput): Promise<CompleteBillResponse> {
-  const session = await requireActiveSubscription();
-  const account = session.account;
-  const accountId = account.id;
+  let accountId: string = "";
   let payloadHash: string | null = null;
 
   try {
+    const session = await requireActiveSubscription();
+    const account = session.account;
+    accountId = account.id;
+
     if (!input.items || input.items.length === 0) {
       return { success: false, error: "Cannot create an empty bill. Please add at least one item." };
     }

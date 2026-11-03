@@ -1,5 +1,6 @@
 import { requireAccountOwner, checkSubscriptionStatus } from "@/lib/auth";
 import { SettingsForm } from "@/components/settings/settings-form";
+import { SubscriptionExpiredScreen } from "@/components/subscription/subscription-expired-screen";
 
 export const metadata = {
   title: "Settings — BillYours",
@@ -8,6 +9,16 @@ export const metadata = {
 export default async function SettingsPage() {
   const session = await requireAccountOwner();
   const subStatus = checkSubscriptionStatus(session.account);
+
+  if (subStatus.isExpired && !session.isImpersonating) {
+    return (
+      <SubscriptionExpiredScreen
+        businessName={session.account.businessName}
+        ownerName={session.user.name}
+        accountId={session.account.id}
+      />
+    );
+  }
 
   return (
     <div className="overflow-y-auto h-full p-4 md:p-6 max-w-4xl mx-auto space-y-6 pb-10">

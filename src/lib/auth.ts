@@ -32,13 +32,6 @@ export async function requireBusinessAccount(): Promise<
     redirect("/signup");
   }
 
-  if (session.account.status === "SUSPENDED") {
-    throw new AuthorizationError(
-      "Your business account has been suspended by the platform administrator. Please contact support.",
-      "ACCOUNT_SUSPENDED"
-    );
-  }
-
   if (session.account.status === "ARCHIVED") {
     throw new AuthorizationError(
       "This business account has been archived and is no longer accessible.",
@@ -65,7 +58,7 @@ export async function requireAccountOwner(): Promise<
 /**
  * Centralized subscription check.
  * Checks if account has an active trial or paid subscription.
- * When expired, allows read-only access to view and print, but blocks mutations (new bills, item edits, customer edits).
+ * When expired or suspended, blocks app access and presents admin contact details for instant renewal.
  */
 export function checkSubscriptionStatus(account: NonNullable<SessionData["account"]>): {
   isActive: boolean;
@@ -75,6 +68,17 @@ export function checkSubscriptionStatus(account: NonNullable<SessionData["accoun
   message?: string;
 } {
   const now = new Date();
+
+  // If business account has been suspended or paused by platform admin
+  if (account.status === "SUSPENDED") {
+    return {
+      isActive: false,
+      isExpired: true,
+      status: "EXPIRED",
+      daysRemaining: 0,
+      message: "Your business account access has been paused. Please contact our support team to reactivate.",
+    };
+  }
 
   // If paid subscription
   if (account.subscriptionStatus === "ACTIVE") {
