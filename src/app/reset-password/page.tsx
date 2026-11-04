@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Receipt, CheckCircle2, ArrowLeft } from "lucide-react";
+import { AppTypography } from "@/components/app-typography";
 
 export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
@@ -25,7 +26,8 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="auth-shell min-h-screen bg-[#faf7f0] flex items-center justify-center p-4">
+    <AppTypography>
+      <div className="auth-shell min-h-screen bg-[#faf7f0] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-xl space-y-6">
         <div className="text-center space-y-1">
           <Link href="/" className="inline-flex items-center gap-2 mb-2">
@@ -96,6 +98,7 @@ export default function ResetPasswordPage() {
           </Link>
         </div>
       </div>
-    </div>
+      </div>
+    </AppTypography>
   );
 }

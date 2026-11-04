@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { SignupForm } from "@/components/auth/signup-form";
 import Link from "next/link";
 import { Receipt } from "lucide-react";
+import { AppTypography } from "@/components/app-typography";
 
 export const metadata = {
   title: "Start Free — BillYours",
@@ -15,19 +16,21 @@ export default async function SignupPage() {
   }
 
   return (
-    <div className="auth-shell min-h-screen bg-[#faf7f0] flex flex-col">
-      <header className="px-5 py-4">
-        <Link href="/" className="inline-flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
-            <Receipt className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-black text-slate-900 text-base">BillYours</span>
-        </Link>
-      </header>
+    <AppTypography>
+      <div className="auth-shell min-h-screen bg-[#faf7f0] flex flex-col">
+        <header className="px-5 py-4">
+          <Link href="/" className="inline-flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
+              <Receipt className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-black text-slate-900 text-base">BillYours</span>
+          </Link>
+        </header>
 
-      <div className="flex-1 flex items-start sm:items-center justify-center px-5 py-8">
-        <SignupForm />
+        <div className="flex-1 flex items-start sm:items-center justify-center px-5 py-8">
+          <SignupForm />
+        </div>
       </div>
-    </div>
+    </AppTypography>
   );
 }

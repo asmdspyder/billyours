@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { AppTypography } from "@/components/app-typography";
 
 export const metadata = {
   title: "Privacy Policy — BillYours",
@@ -7,7 +8,8 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4">
+    <AppTypography>
+      <div className="min-h-screen bg-slate-50 py-12 px-4">
       <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6 text-sm text-slate-700">
         <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:underline">
           <ArrowLeft className="w-4 h-4" />
@@ -45,6 +47,7 @@ export default function PrivacyPage() {
           </p>
         </section>
       </div>
-    </div>
+      </div>
+    </AppTypography>
   );
 }

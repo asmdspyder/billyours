@@ -3,6 +3,7 @@ import { getBillByShareToken } from "@/lib/share-link";
 import { ReceiptText, CheckCircle2, Star, ExternalLink } from "lucide-react";
 import { PrintReceiptButton } from "@/components/bills/print-receipt-button";
 import type { Metadata } from "next";
+import { AppTypography } from "@/components/app-typography";
 
 function InstagramLogo({ className = "w-3.5 h-3.5" }: { className?: string }) {
   return (
@@ -84,7 +85,8 @@ export default async function PublicBillPage(props: PublicBillPageProps) {
   const isInterState = Boolean(bill.is_inter_state);
 
   return (
-    <div className="min-h-screen bg-[#faf7f0] py-6 px-4 flex flex-col items-center justify-center">
+    <AppTypography>
+      <div className="min-h-screen bg-[#faf7f0] py-6 px-4 flex flex-col items-center justify-center">
       {/* Printable Card */}
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden print-area">
         {/* Banner */}
@@ -290,6 +292,7 @@ export default async function PublicBillPage(props: PublicBillPageProps) {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </AppTypography>
   );
 }

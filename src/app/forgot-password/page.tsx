@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Receipt, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { AppTypography } from "@/components/app-typography";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -15,8 +16,9 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="auth-shell min-h-screen bg-[#faf7f0] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-xl space-y-6">
+    <AppTypography>
+      <div className="auth-shell min-h-screen bg-[#faf7f0] flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-xl space-y-6">
         <div className="text-center space-y-1">
           <Link href="/" className="inline-flex items-center gap-2 mb-2">
             <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black shadow-sm">
@@ -70,7 +72,8 @@ export default function ForgotPasswordPage() {
             <span>Back to Sign In</span>
           </Link>
         </div>
+        </div>
       </div>
-    </div>
+    </AppTypography>
   );
 }

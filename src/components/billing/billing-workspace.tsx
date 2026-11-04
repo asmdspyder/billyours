@@ -482,11 +482,10 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
   const renderItemsPanel = () => (
     <div className="flex flex-col h-full min-h-0 overflow-hidden bg-white md:bg-[#fbfaf7]">
       {/* Search + Custom */}
-      <div className="px-[1rem] py-[0.625rem] md:px-[1.25rem] md:py-[0.625rem] border-b border-[#e8e5dc] space-y-[0.5rem] bg-white shrink-0">
+      <div className="billing-items-toolbar px-[1rem] py-[0.625rem] md:px-[1.25rem] md:py-[0.625rem] border-b border-[#e8e5dc] space-y-[0.5rem] bg-white shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[0.625rem] font-black uppercase tracking-[0.18em] text-[#2563eb]">Catalog</p>
-            <h1 className="mt-[0.125rem] text-[1.125rem] md:text-[1.25rem] font-black tracking-[-0.035em] text-slate-950">Create a new bill</h1>
+            <h1 className="billing-page-title text-[1.125rem] font-semibold tracking-[-0.025em] text-slate-950">Create a new bill</h1>
           </div>
           <div className="rounded-full border border-[#e7e4db] bg-[#faf9f5] px-[0.5rem] py-[0.25rem] text-[0.6875rem] font-bold text-slate-500">
             {filteredItems.length} items
@@ -500,7 +499,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               placeholder="Search by item name, category, or HSN"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-[2.5rem] pl-[2.25rem] pr-[2.25rem] bg-[#f7f7f4] border border-[#e4e1d8] rounded-[0.75rem] text-[0.8125rem] placeholder:text-slate-400 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] focus:bg-white transition-all"
+              className="billing-item-search-input w-full h-[2.5rem] pl-[2.25rem] pr-[2.25rem] bg-white border border-slate-300 rounded-[0.625rem] text-sm placeholder:text-slate-500 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] focus:bg-white transition-all"
             />
             {searchQuery && (
               <button
@@ -515,7 +514,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
           <button
             type="button"
             onClick={() => setShowCustomModal(true)}
-            className="h-[2.5rem] shrink-0 flex items-center justify-center gap-[0.375rem] px-[0.75rem] bg-[#0a0e1a] hover:bg-[#1d2539] text-white font-bold text-[0.75rem] rounded-[0.75rem] transition-all whitespace-nowrap cursor-pointer shadow-[0_0.375rem_1rem_rgba(10,14,26,0.12)] active:scale-[0.98]"
+            className="billing-custom-item-button h-9 shrink-0 flex items-center justify-center gap-1.5 px-3 bg-[#0a0e1a] hover:bg-[#1d2539] text-white rounded-lg transition-colors whitespace-nowrap cursor-pointer shadow-sm active:scale-[0.98]"
           >
             <Plus className="w-[1rem] h-[1rem]" />
             <span>Custom item</span>
@@ -688,16 +687,19 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               </button>
             )}
             {staffList && staffList.length > 0 && (
-              <select
-                value={selectedStaffId}
-                onChange={(e) => setSelectedStaffId(e.target.value)}
-                className="h-[1.75rem] max-w-[7rem] text-[0.625rem] bg-[#f7f7f4] border border-[#e6e3da] rounded-[0.5rem] px-[0.375rem] font-bold text-slate-700 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 cursor-pointer"
-                aria-label="Assign staff"
-              >
-                {staffList.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}{s.isDefault ? " (Default)" : ""}</option>
-                ))}
-              </select>
+              <span className="billing-staff-select relative inline-flex shrink-0">
+                <select
+                  value={selectedStaffId}
+                  onChange={(e) => setSelectedStaffId(e.target.value)}
+                  className="h-7 w-[7rem] appearance-none truncate rounded-lg border border-slate-300 bg-white pl-2.5 pr-7 text-[0.625rem] font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400 focus:border-blue-600 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 cursor-pointer"
+                  aria-label="Assign staff"
+                >
+                  {staffList.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}{s.isDefault ? " (Default)" : ""}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+              </span>
             )}
             {isSearchingCustomer && (
               <span className="text-[0.625rem] text-blue-600 flex items-center gap-[0.25rem] font-semibold">
@@ -713,28 +715,28 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
         </div>
         <div className="grid grid-cols-2 gap-[0.625rem]">
           <div className="relative">
-            <Phone className="w-[0.875rem] h-[0.875rem] absolute left-[0.875rem] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Phone className="w-[0.875rem] h-[0.875rem] absolute left-[0.75rem] top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             <input
               type="tel"
               placeholder="Mobile number"
               value={customerPhone}
               autoComplete="off"
               onChange={(e) => handlePhoneChange(e.target.value)}
-              className="w-full h-[2.75rem] pl-[2.375rem] pr-[1rem] text-[0.8125rem] bg-[#f7f7f4] border border-[#e6e3da] rounded-[0.75rem] focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] focus:bg-white font-semibold"
+              className="billing-customer-input w-full h-10 pl-9 pr-3 bg-white border border-slate-300 rounded-[0.625rem] focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] transition-colors"
             />
             {isSearchingCustomer && (
               <span className="absolute right-[0.625rem] top-1/2 -translate-y-1/2 pointer-events-none"><AppLoader size="sm" /></span>
             )}
           </div>
           <div className="relative">
-            <User className="w-[0.875rem] h-[0.875rem] absolute left-[0.875rem] top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <User className="w-[0.875rem] h-[0.875rem] absolute left-[0.75rem] top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             <input
               type="text"
               placeholder="Customer name"
               value={customerName}
               autoComplete="off"
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full h-[2.75rem] pl-[2.375rem] pr-[1rem] text-[0.8125rem] bg-[#f7f7f4] border border-[#e6e3da] rounded-[0.75rem] focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] focus:bg-white font-semibold"
+              className="billing-customer-input w-full h-10 pl-9 pr-3 bg-white border border-slate-300 rounded-[0.625rem] focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] transition-colors"
             />
           </div>
         </div>

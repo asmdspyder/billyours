@@ -1,7 +1,9 @@
+import { AppTypography } from "@/components/app-typography";
+
 export default function AdminRootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <AppTypography>{children}</AppTypography>;
 }
