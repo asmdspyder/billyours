@@ -665,58 +665,44 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
     <div className="relative flex flex-col h-full min-h-0 overflow-hidden bg-[#f7f6f1] select-none">
       {/* 2. Customer Info (shrink-0) */}
       <div className="shrink-0 bg-white px-[0.75rem] sm:px-[1rem] md:px-[1.25rem] py-[0.625rem] border-b border-[#e7e4db] space-y-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#edf3ff] text-[#2563eb]">
-            <User className="h-3.5 w-3.5" />
-          </span>
-          <span className="min-w-0 text-[0.8125rem] font-semibold text-slate-800">Customer details</span>
-          <span className="text-xs font-medium text-slate-500">Optional</span>
-        </div>
-        <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-          <button
-            type="button"
-            onClick={() => setMobileTab("items")}
-            className="md:hidden h-7 px-2 text-[0.625rem] text-[#2563eb] bg-[#edf3ff] rounded-lg font-semibold cursor-pointer"
-          >
-            Add items
-          </button>
-          {(cart.length > 0 || customerPhone || customerName) && (
-            <button
-              type="button"
-              onClick={() => {
-                if (confirm("Clear entire bill? All items and customer info will be reset.")) clearCart();
-              }}
-              className="h-7 inline-flex items-center gap-1 px-2 text-[0.625rem] text-slate-600 hover:text-red-600 bg-white hover:bg-red-50 border border-slate-300 hover:border-red-200 rounded-lg font-semibold transition-colors cursor-pointer"
-              title="Clear entire bill"
-            >
-              <RotateCcw className="h-3 w-3" /> Clear
-            </button>
-          )}
-          {staffList && staffList.length > 0 && (
-            <span className="billing-staff-select relative inline-flex shrink-0">
-              <select
-                value={selectedStaffId}
-                onChange={(e) => setSelectedStaffId(e.target.value)}
-                className="h-7 w-[6.5rem] md:w-[8rem] appearance-none truncate rounded-lg border border-slate-300 bg-white pl-2 pr-6 text-[0.625rem] font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400 focus:border-blue-600 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 cursor-pointer"
-                aria-label="Assign staff"
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#edf3ff] text-[#2563eb]">
+              <User className="h-3.5 w-3.5" />
+            </span>
+            <span className="whitespace-nowrap text-[0.8125rem] font-semibold text-slate-800">Customer details</span>
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+            {staffList && staffList.length > 0 && (
+              <span className="billing-staff-select relative inline-flex shrink-0">
+                <select
+                  value={selectedStaffId}
+                  onChange={(e) => setSelectedStaffId(e.target.value)}
+                  className="h-7 w-[6.5rem] md:w-[8rem] appearance-none truncate rounded-lg border border-slate-300 bg-white pl-2 pr-6 text-[0.625rem] font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400 focus:border-blue-600 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 cursor-pointer"
+                  aria-label="Assign staff"
+                >
+                  {staffList.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}{staffList.length > 1 && s.isDefault ? " (Default)" : ""}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+              </span>
+            )}
+            {(cart.length > 0 || customerPhone || customerName) && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm("Clear entire bill? All items and customer info will be reset.")) clearCart();
+                }}
+                className="inline-flex h-7 items-center justify-center gap-1 rounded-lg border border-slate-300 bg-white px-2 text-[0.625rem] font-semibold text-slate-600 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 cursor-pointer whitespace-nowrap"
+                title="Clear entire bill"
+                aria-label="Clear entire bill"
               >
-                {staffList.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}{staffList.length > 1 && s.isDefault ? " (Default)" : ""}</option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" aria-hidden="true" />
-            </span>
-          )}
-          {isSearchingCustomer && (
-            <span className="text-[0.625rem] text-blue-600 flex items-center gap-[0.25rem] font-semibold">
-              <AppLoader size="sm" label="Searching" />
-            </span>
-          )}
-          {!isSearchingCustomer && existingCustomerFound && (
-            <span className="text-[0.625rem] text-green-600 flex items-center gap-[0.25rem] font-bold">
-              <CheckCircle2 className="w-[0.75rem] h-[0.75rem]" /> Saved
-            </span>
-          )}
+                <RotateCcw className="h-3 w-3" />
+                <span>Clear</span>
+              </button>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="relative min-w-0">
@@ -727,10 +713,15 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               value={customerPhone}
               autoComplete="off"
               onChange={(e) => handlePhoneChange(e.target.value)}
-              className="billing-customer-input h-9 w-full min-w-0 pl-8 pr-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] transition-colors"
+              className={`billing-customer-input h-9 w-full min-w-0 pl-8 ${isSearchingCustomer || existingCustomerFound ? "pr-9" : "pr-2.5"} bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] transition-colors`}
             />
             {isSearchingCustomer && (
-              <span className="absolute right-[0.625rem] top-1/2 -translate-y-1/2 pointer-events-none"><AppLoader size="sm" /></span>
+              <span className="absolute right-[0.625rem] top-1/2 -translate-y-1/2 pointer-events-none"><AppLoader size="sm" label="Searching" /></span>
+            )}
+            {!isSearchingCustomer && existingCustomerFound && (
+              <span className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center text-green-600" role="status" aria-label="Existing customer found" title="Saved customer">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              </span>
             )}
           </div>
           <div className="relative min-w-0">
@@ -745,7 +736,6 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
             />
           </div>
         </div>
-
       </div>
 
       {/* 3. Items in Bill (Scrollable Area) */}
