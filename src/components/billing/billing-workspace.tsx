@@ -487,7 +487,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
           <div>
             <h1 className="billing-page-title text-[1.125rem] font-semibold tracking-[-0.025em] text-slate-950">Create a new bill</h1>
           </div>
-          <div className="rounded-full border border-[#e7e4db] bg-[#faf9f5] px-[0.5rem] py-[0.25rem] text-[0.6875rem] font-bold text-slate-500">
+          <div className="rounded-full border border-blue-700 bg-blue-600 px-[0.625rem] py-[0.25rem] text-[0.6875rem] font-semibold text-white shadow-sm">
             {filteredItems.length} items
           </div>
         </div>
@@ -592,22 +592,22 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                   key={item.id}
                   type="button"
                   onClick={() => addToCart(item)}
-                  className={`text-left w-full min-w-[12rem] h-[8rem] p-[1rem] rounded-[1rem] border transition-all duration-200 active:scale-[0.98] flex flex-col justify-between relative cursor-pointer overflow-hidden group ${
+                  className={`text-left w-full min-w-[12rem] min-h-[8.5rem] p-[0.875rem] rounded-[1rem] border-2 transition-all duration-200 active:scale-[0.98] flex flex-col justify-between gap-2 relative cursor-pointer group ${
                     inCart
                       ? "bg-[#edf3ff] border-[#2563eb] shadow-[0_8px_24px_rgba(37,99,235,0.10)]"
-                      : "bg-white border-[#e8e5dc] shadow-[0_2px_10px_rgba(10,14,26,0.035)] hover:border-[#9db8ff] hover:shadow-[0_10px_28px_rgba(37,99,235,0.08)] hover:-translate-y-0.5"
+                      : "bg-white border-[#d5d9e2] shadow-[0_2px_10px_rgba(10,14,26,0.035)] hover:border-[#9db8ff] hover:shadow-[0_10px_28px_rgba(37,99,235,0.08)] hover:-translate-y-0.5"
                   }`}
                 >
                   {inCart && (
                     <span
-                      className="absolute right-[0.625rem] top-[0.625rem] z-20 inline-flex h-[1.375rem] items-center gap-[0.25rem] rounded-full border border-[#d7e2ff] bg-white px-[0.4375rem] text-[0.625rem] font-black tabular-nums text-[#2563eb] shadow-[0_0.25rem_0.625rem_rgba(37,99,235,0.12)]"
+                      className="absolute right-[0.625rem] top-[0.625rem] z-20 inline-flex h-[1.5rem] min-w-[1.5rem] items-center justify-center gap-[0.25rem] rounded-full border border-blue-700 bg-blue-600 px-[0.375rem] text-[0.625rem] font-bold tabular-nums text-white shadow-[0_0.25rem_0.625rem_rgba(37,99,235,0.24)]"
                       aria-label={`${inCart.quantity} selected`}
                     >
-                      <span className="h-[0.375rem] w-[0.375rem] rounded-full bg-[#2563eb]" />
+                      <span className="h-[0.375rem] w-[0.375rem] rounded-full bg-white" />
                       {inCart.quantity}
                     </span>
                   )}
-                  <div className="space-y-1">
+                  <div className={`min-w-0 space-y-1 ${inCart ? "pr-9" : ""}`}>
                     {item.category && (
                       <div className="flex items-center gap-1 flex-wrap">
                         <span className="text-[0.625rem] md:text-[0.6875rem] leading-[1rem] font-bold uppercase tracking-[0.08em] text-slate-500 bg-[#f1f0ec] px-[0.5rem] py-[0.25rem] rounded-[0.375rem] truncate max-w-full">
@@ -619,11 +619,15 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                       {item.name}
                     </p>
                   </div>
-                  <div className="mt-2 flex items-baseline justify-between">
-                    <p className="font-black text-[#111827] text-[1rem] md:text-[1.0625rem] leading-none tracking-tight">₹{item.unitPrice.toFixed(2)}</p>
-                    {item.unitLabel ? (
-                      <span className="text-[0.6875rem] leading-none font-semibold text-slate-400 truncate ml-[0.25rem] max-w-[4rem]">/{item.unitLabel}</span>
-                    ) : null}
+                  <div className="flex min-w-0 items-center justify-between gap-2 border-t border-slate-200/80 pt-2">
+                    <div className="flex min-w-0 items-center justify-end gap-1.5">
+                      <p className="shrink-0 rounded-md bg-blue-50 px-2 py-1 font-semibold text-blue-700 text-[0.9375rem] leading-none tabular-nums">
+                        ₹{item.unitPrice.toFixed(2)}
+                      </p>
+                      {item.unitLabel ? (
+                        <span className="max-w-[4rem] truncate text-[0.6875rem] leading-none font-medium text-slate-500">/{item.unitLabel}</span>
+                      ) : null}
+                    </div>
                   </div>
                 </button>
               );
@@ -660,83 +664,84 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
   const renderBillPanel = () => (
     <div className="relative flex flex-col h-full min-h-0 overflow-hidden bg-[#f7f6f1] select-none">
       {/* 2. Customer Info (shrink-0) */}
-      <div className="shrink-0 bg-white px-[1rem] md:px-[1.25rem] py-[0.625rem] border-b border-[#e7e4db] space-y-[0.5rem]">
-        <div className="flex items-center justify-between">
-          <span className="text-[0.75rem] md:text-[0.8125rem] font-black text-slate-800 flex items-center gap-[0.375rem]">
-            <span className="w-[1.5rem] h-[1.5rem] rounded-[0.5rem] bg-[#edf3ff] text-[#2563eb] flex items-center justify-center"><User className="w-[0.875rem] h-[0.875rem]" /></span>
-            Customer details <span className="font-semibold text-slate-400 text-[0.6875rem]">Optional</span>
+      <div className="shrink-0 bg-white px-[0.75rem] sm:px-[1rem] md:px-[1.25rem] py-[0.625rem] border-b border-[#e7e4db] space-y-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#edf3ff] text-[#2563eb]">
+            <User className="h-3.5 w-3.5" />
           </span>
-          <div className="flex items-center gap-[0.375rem]">
+          <span className="min-w-0 text-[0.8125rem] font-semibold text-slate-800">Customer details</span>
+          <span className="text-xs font-medium text-slate-500">Optional</span>
+        </div>
+        <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+          <button
+            type="button"
+            onClick={() => setMobileTab("items")}
+            className="md:hidden h-7 px-2 text-[0.625rem] text-[#2563eb] bg-[#edf3ff] rounded-lg font-semibold cursor-pointer"
+          >
+            Add items
+          </button>
+          {(cart.length > 0 || customerPhone || customerName) && (
             <button
               type="button"
-              onClick={() => setMobileTab("items")}
-              className="md:hidden h-[1.75rem] px-[0.5rem] text-[0.625rem] text-[#2563eb] bg-[#edf3ff] rounded-[0.5rem] font-black cursor-pointer"
+              onClick={() => {
+                if (confirm("Clear entire bill? All items and customer info will be reset.")) clearCart();
+              }}
+              className="h-7 inline-flex items-center gap-1 px-2 text-[0.625rem] text-slate-600 hover:text-red-600 bg-white hover:bg-red-50 border border-slate-300 hover:border-red-200 rounded-lg font-semibold transition-colors cursor-pointer"
+              title="Clear entire bill"
             >
-              Add items
+              <RotateCcw className="h-3 w-3" /> Clear
             </button>
-            {(cart.length > 0 || customerPhone || customerName) && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm("Clear entire bill? All items and customer info will be reset.")) clearCart();
-                }}
-                className="h-[1.75rem] inline-flex items-center gap-[0.25rem] px-[0.5rem] text-[0.625rem] text-slate-500 hover:text-red-600 bg-white hover:bg-red-50 border border-[#e7e4db] hover:border-red-200 rounded-[0.5rem] font-black transition-colors cursor-pointer"
-                title="Clear entire bill"
+          )}
+          {staffList && staffList.length > 0 && (
+            <span className="billing-staff-select relative inline-flex shrink-0">
+              <select
+                value={selectedStaffId}
+                onChange={(e) => setSelectedStaffId(e.target.value)}
+                className="h-7 w-[6.5rem] md:w-[8rem] appearance-none truncate rounded-lg border border-slate-300 bg-white pl-2 pr-6 text-[0.625rem] font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400 focus:border-blue-600 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 cursor-pointer"
+                aria-label="Assign staff"
               >
-                <RotateCcw className="w-[0.75rem] h-[0.75rem]" /> Clear
-              </button>
-            )}
-            {staffList && staffList.length > 0 && (
-              <span className="billing-staff-select relative inline-flex shrink-0">
-                <select
-                  value={selectedStaffId}
-                  onChange={(e) => setSelectedStaffId(e.target.value)}
-                  className="h-7 w-[7rem] appearance-none truncate rounded-lg border border-slate-300 bg-white pl-2.5 pr-7 text-[0.625rem] font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400 focus:border-blue-600 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 cursor-pointer"
-                  aria-label="Assign staff"
-                >
-                  {staffList.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}{s.isDefault ? " (Default)" : ""}</option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" aria-hidden="true" />
-              </span>
-            )}
-            {isSearchingCustomer && (
-              <span className="text-[0.625rem] text-blue-600 flex items-center gap-[0.25rem] font-semibold">
-                <AppLoader size="sm" label="Searching" />
-              </span>
-            )}
-            {!isSearchingCustomer && existingCustomerFound && (
-              <span className="text-[0.625rem] text-green-600 flex items-center gap-[0.25rem] font-bold">
-                <CheckCircle2 className="w-[0.75rem] h-[0.75rem]" /> Saved
-              </span>
-            )}
-          </div>
+                {staffList.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}{staffList.length > 1 && s.isDefault ? " (Default)" : ""}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+            </span>
+          )}
+          {isSearchingCustomer && (
+            <span className="text-[0.625rem] text-blue-600 flex items-center gap-[0.25rem] font-semibold">
+              <AppLoader size="sm" label="Searching" />
+            </span>
+          )}
+          {!isSearchingCustomer && existingCustomerFound && (
+            <span className="text-[0.625rem] text-green-600 flex items-center gap-[0.25rem] font-bold">
+              <CheckCircle2 className="w-[0.75rem] h-[0.75rem]" /> Saved
+            </span>
+          )}
         </div>
-        <div className="grid grid-cols-2 gap-[0.625rem]">
-          <div className="relative">
-            <Phone className="w-[0.875rem] h-[0.875rem] absolute left-[0.75rem] top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+        <div className="grid grid-cols-2 gap-2">
+          <div className="relative min-w-0">
+            <Phone className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500 pointer-events-none" />
             <input
               type="tel"
               placeholder="Mobile number"
               value={customerPhone}
               autoComplete="off"
               onChange={(e) => handlePhoneChange(e.target.value)}
-              className="billing-customer-input w-full h-10 pl-9 pr-3 bg-white border border-slate-300 rounded-[0.625rem] focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] transition-colors"
+              className="billing-customer-input h-9 w-full min-w-0 pl-8 pr-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] transition-colors"
             />
             {isSearchingCustomer && (
               <span className="absolute right-[0.625rem] top-1/2 -translate-y-1/2 pointer-events-none"><AppLoader size="sm" /></span>
             )}
           </div>
-          <div className="relative">
-            <User className="w-[0.875rem] h-[0.875rem] absolute left-[0.75rem] top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          <div className="relative min-w-0">
+            <User className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500 pointer-events-none" />
             <input
               type="text"
               placeholder="Customer name"
               value={customerName}
               autoComplete="off"
               onChange={(e) => setCustomerName(e.target.value)}
-              className="billing-customer-input w-full h-10 pl-9 pr-3 bg-white border border-slate-300 rounded-[0.625rem] focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] transition-colors"
+              className="billing-customer-input h-9 w-full min-w-0 pl-8 pr-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] transition-colors"
             />
           </div>
         </div>

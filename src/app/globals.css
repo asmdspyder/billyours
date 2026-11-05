@@ -159,16 +159,14 @@ body {
 
 .app-typography {
   --app-font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --type-page-heading: 28px;
-  --type-secondary-heading: 24px;
-  --type-section-heading: 18px;
-  --type-card-heading: 16px;
+  --type-page-heading: 22px;
+  --type-secondary-heading: 20px;
+  --type-section-heading: 16px;
+  --type-card-heading: 15px;
   --type-body: 14px;
-  --type-secondary: 13px;
-  --type-form-label: 13px;
-  --type-input: 14px;
-  --type-button: 14px;
-  --type-table: 13px;
+  --type-secondary: 12px;
+  --type-form-label: 12px;
+  --type-table: 12px;
   display: contents;
   font-family: var(--app-font-family);
   font-size: var(--type-body);
@@ -200,6 +198,11 @@ body {
   line-height: 1.25;
 }
 
+.app-typography h1[class*="text-"]:not(.billing-page-title) {
+  font-size: var(--type-page-heading);
+  line-height: 1.25;
+}
+
 .app-typography h2 {
   font-size: var(--type-secondary-heading);
   line-height: 1.3;
@@ -223,20 +226,6 @@ body {
   line-height: 1.4;
 }
 
-.app-typography input:not([type="checkbox"]):not([type="radio"]),
-.app-typography select,
-.app-typography textarea {
-  font-size: var(--type-input);
-  font-weight: 400;
-  line-height: 1.5;
-}
-
-.app-typography button {
-  font-size: var(--type-button);
-  font-weight: 600;
-  line-height: 1.4;
-}
-
 .app-typography table {
   font-size: var(--type-table);
   font-weight: 400;
@@ -247,46 +236,39 @@ body {
   font-weight: 600;
 }
 
-.app-typography :where([class*="text-xs"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[0.625rem]"], [class*="text-[0.6875rem]"], [class*="text-[0.75rem]"], [class*="text-[0.8125rem]"]) {
+.app-typography .text-xs {
   font-size: var(--type-secondary);
   line-height: 1.5;
 }
 
-.app-typography :where([class*="text-sm"], [class*="text-base"], [class*="text-[0.875rem]"], [class*="text-[0.95rem]"]) {
+.app-typography .text-sm {
   font-size: var(--type-body);
   line-height: 1.5;
 }
 
-.app-typography :where([class*="text-lg"], [class*="text-[1.0625rem]"]) {
+.app-typography .text-base {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.app-typography .text-lg {
   font-size: var(--type-card-heading);
   line-height: 1.4;
 }
 
-.app-typography :where([class*="text-xl"]) {
+.app-typography .text-xl {
   font-size: var(--type-section-heading);
   line-height: 1.4;
 }
 
-.app-typography :where([class*="text-2xl"], [class*="text-[1.25rem]"]) {
+.app-typography .text-2xl {
   font-size: var(--type-secondary-heading);
   line-height: 1.3;
 }
 
-.app-typography :where([class*="text-3xl"], [class*="text-4xl"], [class*="text-5xl"], [class*="text-[1.5rem]"]) {
+.app-typography .text-3xl {
   font-size: var(--type-page-heading);
   line-height: 1.25;
-}
-
-.app-typography :where([class*="font-thin"], [class*="font-extralight"], [class*="font-light"], [class*="font-normal"]) {
-  font-weight: 400;
-}
-
-.app-typography :where([class*="font-medium"]) {
-  font-weight: 500;
-}
-
-.app-typography :where([class*="font-semibold"]) {
-  font-weight: 600;
 }
 
 .app-typography :where([class*="font-bold"], [class*="font-extrabold"], [class*="font-black"]) {
@@ -311,10 +293,10 @@ body {
 }
 
 .app-typography .billing-customer-input {
-  height: 2.5rem;
+  height: 2.25rem;
   background-color: #fff;
   border-color: #cbd5e1;
-  font-size: var(--type-body);
+  font-size: 13px;
   font-weight: 400;
 }
 
@@ -365,6 +347,83 @@ body {
   .app-typography .billing-staff-select select {
     width: 10rem;
     font-size: 12px;
+  }
+}
+
+@media (min-width: 640px) {
+  .app-typography [class~="sm:text-sm"] {
+    font-size: var(--type-body);
+  }
+
+  .app-typography [class~="sm:text-base"] {
+    font-size: 16px;
+  }
+
+  .app-typography [class~="sm:text-2xl"] {
+    font-size: var(--type-secondary-heading);
+    line-height: 1.3;
+  }
+
+  .app-typography [class~="sm:text-3xl"] {
+    font-size: var(--type-page-heading);
+    line-height: 1.25;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-typography {
+    --type-page-heading: 24px;
+    --type-secondary-heading: 22px;
+    --type-section-heading: 17px;
+    --type-card-heading: 16px;
+    --type-secondary: 13px;
+    --type-form-label: 13px;
+    --type-table: 13px;
+  }
+
+  .app-typography .text-base {
+    font-size: 16px;
+  }
+
+  .app-typography .text-4xl,
+  .app-typography .text-5xl {
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
+  .app-typography [class~="md:text-sm"] {
+    font-size: var(--type-body);
+  }
+
+  .app-typography [class~="md:text-base"] {
+    font-size: 16px;
+  }
+
+  .app-typography [class~="md:text-xl"] {
+    font-size: var(--type-section-heading);
+  }
+
+  .app-typography [class~="md:text-2xl"] {
+    font-size: var(--type-secondary-heading);
+    line-height: 1.3;
+  }
+
+  .app-typography [class~="md:text-3xl"] {
+    font-size: var(--type-page-heading);
+    line-height: 1.25;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-typography {
+    --type-page-heading: 26px;
+    --type-secondary-heading: 22px;
+    --type-section-heading: 18px;
+    --type-card-heading: 16px;
+  }
+
+  .app-typography .text-3xl {
+    font-size: 28px;
   }
 }
 
