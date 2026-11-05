@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Receipt, AlertCircle, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Receipt, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { loginAction } from "@/actions/auth-actions";
 import { AppLoader } from "@/components/ui/app-loader";
 
@@ -113,15 +113,6 @@ export function LoginForm() {
             Start free trial
           </Link>
         </p>
-        <div className="pt-2 border-t border-slate-100">
-          <Link
-            href="/admin/login"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-700 transition-colors"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Platform Administrator Login</span>
-          </Link>
-        </div>
       </div>
     </div>
   );
