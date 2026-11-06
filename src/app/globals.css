@@ -141,6 +141,16 @@ body {
   box-shadow: var(--shadow-soft);
 }
 
+.app-shell .billing-mobile-review-bar {
+  background-color: #eaf1f8;
+  border-top-color: #cbd5e1;
+}
+
+.app-shell .billing-mobile-review-button {
+  background-color: #fff;
+  border-color: #cbd5e1;
+}
+
 .app-shell table {
   font-variant-numeric: tabular-nums;
 }
@@ -457,6 +467,27 @@ body {
   button,
   .admin-banner {
     display: none !important;
+  }
+
+  .app-shell {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .app-content {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .bill-detail-scroll {
+    height: auto !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
   }
 
   body {

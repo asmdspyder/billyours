@@ -8,7 +8,6 @@ import {
   Copy,
   Check,
   Ban,
-  ArrowLeft,
   Calendar,
   User,
   Phone,
@@ -259,66 +258,58 @@ export function BillDetailView({
   const totalTaxNum = Number(bill.totalTax || bill.taxAmount || 0);
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
+    <div className="bill-detail-scroll no-scrollbar h-full min-h-0 w-full max-w-5xl mx-auto space-y-4 overflow-y-auto overscroll-contain px-3 py-4 pb-4 sm:space-y-6 sm:px-4 md:px-6">
       {/* Action Bar (hidden when printing) */}
       <div className="bg-white p-3 md:p-3.5 rounded-2xl border border-slate-200/90 shadow-xs no-print">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Left Group: Navigation & Format Switcher */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <Link
-              href="/app/bills"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors shrink-0"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Bill History</span>
-            </Link>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="flex items-center justify-between lg:contents">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 lg:hidden">
+              Bill actions
+            </span>
             <Link
               href="/app/billing"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition-colors shrink-0"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-100 lg:py-1.5"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span>New Bill</span>
+              <span className="whitespace-nowrap">New Bill</span>
             </Link>
-
-            <div className="h-5 w-px bg-slate-200 hidden sm:block shrink-0" />
-
-            {/* Format Switcher */}
-            <div className="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/80 text-xs shrink-0">
-              <button
-                type="button"
-                onClick={() => setPrintFormat("thermal")}
-                className={`px-2.5 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
-                  printFormat === "thermal"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Thermal (80mm)
-              </button>
-              <button
-                type="button"
-                onClick={() => setPrintFormat("a4")}
-                className={`px-2.5 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
-                  printFormat === "a4"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Tax Invoice (A4)
-              </button>
-            </div>
           </div>
 
-          {/* Right Group: Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {/* Format Switcher */}
+          <div className="grid w-full grid-cols-2 gap-0.5 rounded-lg border border-slate-200/80 bg-slate-100 p-0.5 text-xs lg:w-auto lg:shrink-0">
+            <button
+              type="button"
+              onClick={() => setPrintFormat("thermal")}
+              className={`rounded-md px-2 py-2 font-bold text-xs transition-colors cursor-pointer sm:px-2.5 lg:py-1.5 ${
+                printFormat === "thermal"
+                  ? "bg-white text-slate-900 shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Thermal (80mm)
+            </button>
+            <button
+              type="button"
+              onClick={() => setPrintFormat("a4")}
+              className={`rounded-md px-2 py-2 font-bold text-xs transition-colors cursor-pointer sm:px-2.5 lg:py-1.5 ${
+                printFormat === "a4"
+                  ? "bg-white text-slate-900 shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Tax Invoice (A4)
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 lg:ml-auto lg:flex lg:items-center lg:justify-end lg:border-0 lg:pt-0">
             {/* Print Button */}
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-blue-700 cursor-pointer lg:w-auto lg:px-3.5 lg:py-1.5"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print</span>
+              <span className="whitespace-nowrap">Print</span>
             </button>
 
             {/* WhatsApp Share */}
@@ -327,10 +318,10 @@ export function BillDetailView({
                 href={whatsAppUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-emerald-700 lg:w-auto lg:py-1.5"
               >
                 <Share2 className="w-3.5 h-3.5" />
-                <span>WhatsApp</span>
+                <span className="whitespace-nowrap">WhatsApp</span>
               </a>
             )}
 
@@ -338,10 +329,10 @@ export function BillDetailView({
             <button
               type="button"
               onClick={copyShareLink}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-3 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 cursor-pointer lg:w-auto lg:py-1.5"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? "Link Copied" : "Copy Link"}</span>
+              <span className="whitespace-nowrap">{copied ? "Link Copied" : "Copy Link"}</span>
             </button>
 
             {/* Cancel Bill Button */}
@@ -349,10 +340,10 @@ export function BillDetailView({
               <button
                 type="button"
                 onClick={() => setShowCancelModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200/60 text-red-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-red-200/60 bg-red-50 px-3 py-2.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100 cursor-pointer lg:w-auto lg:py-1.5 ${!whatsAppUrl ? "col-span-2 w-1/2 justify-self-center lg:col-span-1 lg:w-auto" : ""}`}
               >
                 <Ban className="w-3.5 h-3.5" />
-                <span>Cancel</span>
+                <span className="whitespace-nowrap">Cancel</span>
               </button>
             )}
           </div>
@@ -378,7 +369,7 @@ export function BillDetailView({
       {/* RENDER VIEW: THERMAL RECEIPT OR A4 INVOICE */}
       {printFormat === "thermal" ? (
         /* THERMAL RECEIPT LAYOUT */
-        <div className="thermal-receipt bg-white border border-slate-200 rounded-xl p-6 shadow-sm mx-auto max-w-sm text-slate-900 font-mono text-xs">
+        <div className="thermal-receipt mx-auto w-full max-w-sm rounded-xl border border-slate-200 bg-white p-3 font-mono text-xs text-slate-900 shadow-sm sm:p-6">
           {/* Header */}
           <div className="text-center pb-3 border-b border-dashed border-slate-300 space-y-1">
             <h2 className="font-extrabold text-base tracking-tight">{business.businessName}</h2>
@@ -547,9 +538,9 @@ export function BillDetailView({
         </div>
       ) : (
         /* A4 INVOICE LAYOUT */
-        <div className="a4-invoice bg-white border border-slate-200 rounded-xl p-8 shadow-sm space-y-6">
+        <div className="a4-invoice space-y-4 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:space-y-5 sm:p-5 md:space-y-6 md:p-8">
           {/* Header */}
-          <div className="flex justify-between items-start pb-6 border-b border-slate-200">
+          <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between sm:pb-6">
             <div>
               <h2 className="text-2xl font-black text-slate-900">{business.businessName}</h2>
               {business.address && <p className="text-sm text-slate-600 mt-1">{business.address}</p>}
@@ -579,7 +570,7 @@ export function BillDetailView({
               )}
             </div>
 
-            <div className="text-right space-y-1">
+            <div className="space-y-1 text-left sm:text-right">
               <span
                 className={`inline-block px-3 py-1 rounded text-xs font-bold tracking-wide ${
                   isComposition
@@ -602,8 +593,8 @@ export function BillDetailView({
             </div>
           </div>
 
-          {/* Customer & Place of Supply Info */}
-          <div className="bg-slate-50 p-4 rounded-xl grid grid-cols-2 gap-4 text-xs">
+          {/* Customer & Payment Info */}
+          <div className="grid grid-cols-1 gap-3 rounded-xl bg-slate-50 p-3 text-xs sm:grid-cols-2 sm:gap-4 sm:p-4">
             <div>
               <span className="text-slate-400 uppercase font-bold text-[10px] tracking-wider">
                 Billed To (Customer)
@@ -618,27 +609,15 @@ export function BillDetailView({
                 </p>
               )}
             </div>
-            <div className="text-right">
-              <span className="text-slate-400 uppercase font-bold text-[10px] tracking-wider">
-                Place of Supply & Payment
-              </span>
-              <p className="font-bold text-slate-900 mt-0.5">
-                Place of Supply: {bill.placeOfSupplyState || business.state || "Home State"}
-              </p>
-              <p className="text-slate-500 mt-0.5">
-                Transaction:{" "}
-                <span className="font-semibold text-slate-800">
-                  {bill.isInterState ? "Inter-State (IGST)" : "Intra-State (CGST + SGST)"}
-                </span>
-              </p>
-              <p className="text-slate-500 mt-0.5">
-                Payment: <strong>{bill.paymentStatus}</strong> via {bill.paymentMethod}
+            <div className="sm:text-right">
+              <p className="font-bold text-slate-900">
+                {bill.paymentStatus === "PAID" ? "Paid" : bill.paymentStatus} via {bill.paymentMethod}
               </p>
             </div>
           </div>
 
           {/* Line items table with GST details */}
-          <div className="w-full overflow-x-auto print:overflow-visible">
+          <div className="no-scrollbar w-full overflow-x-auto print:overflow-visible">
           <table className="min-w-[680px] print:min-w-0 w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b-2 border-slate-200 text-[11px] uppercase font-bold text-slate-600 bg-slate-50/50">
@@ -767,7 +746,7 @@ export function BillDetailView({
 
           {/* Financial Breakdown & Summary */}
           <div className="flex justify-end pt-3 border-t border-slate-200">
-            <div className="w-72 space-y-2 text-xs">
+            <div className="w-full max-w-72 space-y-2 text-xs">
               <div className="flex justify-between text-slate-600">
                 <span>Gross Subtotal:</span>
                 <span>₹{bill.subtotal}</span>

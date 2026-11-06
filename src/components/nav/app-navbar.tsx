@@ -40,7 +40,7 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 hidden h-[60px] shrink-0 items-center gap-2 border-b border-slate-200/80 bg-white/95 px-3 text-slate-900 backdrop-blur-md md:flex lg:px-4 xl:px-5">
+      <header className="sticky top-0 z-40 hidden h-[60px] shrink-0 items-center gap-2 border-b border-slate-200/80 bg-white/95 px-3 text-slate-900 backdrop-blur-md md:flex lg:gap-6 lg:px-4 xl:px-5">
         <Link href="/app/billing" aria-label="BillYours home" className="flex shrink-0 items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-blue-600 text-white shadow-sm">
             <ReceiptText className="h-[17px] w-[17px]" aria-hidden="true" />
@@ -55,7 +55,7 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
           <span className="truncate" title={businessName}>{businessName}</span>
         </span>
 
-        <nav aria-label="Primary" className="flex min-w-0 flex-1 items-center justify-start gap-1 overflow-x-auto overscroll-x-contain px-1 no-scrollbar">
+        <nav aria-label="Primary" className="flex min-w-0 flex-1 items-center justify-start gap-1 overflow-x-auto overscroll-x-contain px-1 no-scrollbar 2xl:justify-center">
           {NAV_LINKS.map((link) => {
             const Icon = link.icon;
             const active = isActive(link.href);
@@ -81,8 +81,8 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
           })}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-1.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-sm font-bold text-blue-700" title={ownerName}>
+        <div className="flex shrink-0 items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-blue-600 bg-blue-50 text-sm font-bold text-blue-700" title={ownerName}>
             {ownerInitial}
           </div>
           <span className="hidden max-w-[150px] truncate text-xs font-semibold text-slate-700 2xl:inline" title={ownerName}>

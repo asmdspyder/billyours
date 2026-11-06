@@ -12,7 +12,6 @@ import {
   Phone,
   Tag,
   X,
-  MoreHorizontal,
   ArrowRight,
   Banknote,
   QrCode,
@@ -449,7 +448,6 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
     CASH: <Banknote className="w-[0.8125rem] h-[0.8125rem]" />,
     UPI: <QrCode className="w-[0.8125rem] h-[0.8125rem]" />,
     CARD: <CreditCard className="w-[0.8125rem] h-[0.8125rem]" />,
-    OTHER: <MoreHorizontal className="w-[0.8125rem] h-[0.8125rem]" />,
   };
 
   const cartCount = cart.reduce((acc, it) => acc + it.quantity, 0);
@@ -638,21 +636,26 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
 
       {/* Mobile Sticky Bar */}
       {cartCount > 0 && (
-        <div className="md:hidden shrink-0 bg-white border-t border-slate-200 p-2.5 shadow-lg z-30">
+        <div className="billing-mobile-review-bar md:hidden z-30 shrink-0 border-t border-slate-300 px-2.5 py-2 shadow-[0_-3px_12px_rgba(15,23,42,0.06)]">
           <button
             type="button"
             onClick={() => setMobileTab("bill")}
-            className="w-full py-2.5 px-3.5 rounded-xl font-black text-white text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/25 flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer"
+            className="billing-mobile-review-button flex min-h-10 w-full items-center justify-between gap-2 rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-blue-200 active:bg-slate-50 cursor-pointer"
           >
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-md bg-blue-500/80 text-white font-bold text-xs">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="inline-flex min-h-6 shrink-0 items-center justify-center gap-1 rounded-full bg-blue-50 px-2 text-[0.625rem] font-semibold leading-none tabular-nums text-blue-700 ring-1 ring-inset ring-blue-100">
                 {cartCount} {cartCount === 1 ? "item" : "items"}
               </span>
-              <span className="text-white/95 font-bold text-xs sm:text-sm">₹{totals.grandTotal}</span>
+              <span className="flex shrink-0 items-baseline gap-1 font-semibold tabular-nums text-slate-900">
+                <span className="text-[0.625rem] text-slate-500">₹</span>
+                <span>{totals.grandTotal}</span>
+              </span>
             </div>
-            <div className="flex items-center gap-1.5 font-bold">
-              <span>Review Item List & Bill</span>
-              <ArrowRight className="w-4 h-4" />
+            <div className="flex shrink-0 items-center gap-1.5 font-semibold text-blue-700">
+              <span>Review bill</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50">
+                <ArrowRight className="h-3.5 w-3.5" />
+              </span>
             </div>
           </button>
         </div>
@@ -738,8 +741,17 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
         </div>
       </div>
 
+      {cart.length > 0 && (
+        <div className="shrink-0 flex items-center justify-between border-b border-[#e7e4db] bg-white px-[0.75rem] py-1 md:px-[1rem]">
+          <span className="text-[0.6875rem] font-semibold text-slate-700">Items in bill</span>
+          <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[0.625rem] font-semibold tabular-nums text-white shadow-sm">
+            {cartCount} {cartCount === 1 ? "item" : "items"}
+          </span>
+        </div>
+      )}
+
       {/* 3. Items in Bill (Scrollable Area) */}
-      <div className="flex-1 min-h-[6rem] overflow-y-auto px-[0.75rem] py-[0.625rem] md:px-[1rem] md:py-[0.75rem] space-y-[0.625rem] thin-scroll bg-[#f7f6f1]">
+      <div className="flex-1 min-h-[6rem] overflow-y-auto px-[0.75rem] py-[0.625rem] md:px-[1rem] md:py-[0.75rem] space-y-[0.625rem] thin-scroll bg-[#efeee8]">
         {cart.length === 0 ? (
           <div className="mx-auto flex h-full max-h-[16rem] w-full flex-col items-center justify-center rounded-[1rem] border border-dashed border-[#ddd9ce] bg-white/55 px-[1rem] text-center">
             <div className="mb-[0.75rem] w-[3rem] h-[3rem] rounded-[0.875rem] bg-[#edf3ff] flex items-center justify-center text-[#2563eb] shadow-[0_0.5rem_1.25rem_rgba(37,99,235,0.08)]">
@@ -749,7 +761,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
             <p className="mt-[0.25rem] max-w-[14rem] text-[0.75rem] font-semibold leading-[1.4] text-slate-400">Choose products from the catalog to start a new order.</p>
           </div>
         ) : (
-          <div className="space-y-[0.625rem]">
+          <div className="space-y-1.5">
             {totals.items.map((processed, idx) => {
               const line = cart[idx];
               if (!line) return null;
@@ -759,75 +771,74 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               return (
                 <div
                   key={line.tempId}
-                  className={`flex min-h-[3.875rem] items-center justify-between gap-[0.625rem] px-[0.75rem] py-[0.5rem] rounded-[0.875rem] border transition-all duration-200 ${
+                  className={`grid min-h-[3.25rem] grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-1.5 rounded-[0.75rem] border px-2 py-1.5 transition-colors duration-200 ${
                     isRecent
-                      ? "bg-[#edf3ff] border-[#2563eb] ring-[0.0625rem] ring-[#2563eb]/20"
-                      : "bg-white hover:border-[#cbd8f4] border-[#e7e4db] shadow-[0_0.25rem_0.875rem_rgba(15,23,42,0.035)]"
+                      ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500/15"
+                      : "border-slate-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.05)] hover:border-slate-300"
                   }`}
                 >
-                  {/* Item info with GST badge */}
-                  <div className="flex-1 min-w-0 pr-[0.25rem]">
-                    <p className="font-black text-slate-950 text-[0.8125rem] md:text-[0.875rem] truncate leading-[1.25]">{line.name}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-slate-500 text-[11px] font-semibold">
+                  <div className="min-w-0">
+                    <p className="truncate text-[0.75rem] font-semibold leading-4 text-slate-900">{line.name}</p>
+                    <div className="mt-0.5 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap">
+                      <span className="shrink-0 text-[0.625rem] font-medium tabular-nums text-slate-600">
                         ₹{line.unitPrice.toFixed(2)}
                       </span>
                       {isTaxable ? (
-                        <span className="inline-flex items-center px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 text-[10px] font-extrabold border border-blue-200">
+                        <span className="inline-flex shrink-0 items-center rounded border border-blue-100 bg-blue-50 px-1 py-px text-[0.5625rem] font-semibold text-blue-700">
                           {line.gstRate}% {line.priceType === "INCLUSIVE" ? "Incl" : "Excl"}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 text-[10px]">
+                        <span className="inline-flex shrink-0 items-center rounded bg-slate-100 px-1 py-px text-[0.5625rem] font-medium text-slate-500">
                           0%
                         </span>
                       )}
                       {line.hsnSacCode && (
-                        <span className="text-[10px] font-mono text-slate-400">#{line.hsnSacCode}</span>
+                        <span className="truncate text-[0.5625rem] text-slate-400">#{line.hsnSacCode}</span>
                       )}
                     </div>
                   </div>
 
-                  {/* Quantity controls */}
-                  <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-1 py-0.5 rounded-lg shrink-0">
+                  <div className="flex h-7 shrink-0 items-center gap-1">
                     <button
                       type="button"
                       onClick={() => updateQuantity(line.tempId, -1)}
-                      className="w-5 h-5 rounded bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-2xs"
-                      title="Decrease"
+                      className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 bg-slate-50 text-slate-700 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 active:scale-95 cursor-pointer"
+                      title="Decrease quantity"
+                      aria-label={`Decrease ${line.name} quantity`}
                     >
-                      <Minus className="w-2.5 h-2.5" />
+                      <Minus className="h-3 w-3" strokeWidth={2.5} />
                     </button>
-                    <span className="w-5 text-center font-black text-slate-900 text-xs">
+                    <span className="min-w-[1rem] text-center text-xs font-semibold tabular-nums text-slate-900">
                       {line.quantity}
                     </span>
                     <button
                       type="button"
                       onClick={() => updateQuantity(line.tempId, 1)}
-                      className="w-5 h-5 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all active:scale-90 shadow-2xs cursor-pointer"
-                      title="Increase"
+                      className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm transition-colors hover:bg-blue-700 active:scale-95 cursor-pointer"
+                      title="Increase quantity"
+                      aria-label={`Increase ${line.name} quantity`}
                     >
-                      <Plus className="w-2.5 h-2.5" />
+                      <Plus className="h-3 w-3" strokeWidth={2.5} />
                     </button>
                   </div>
 
-                  {/* Line Total */}
-                  <div className="w-16 text-right shrink-0">
-                    <div className="font-black text-slate-900 text-xs">₹{processed.lineTotal}</div>
+                  <div className="w-[3.5rem] shrink-0 text-right">
+                    <div className="text-xs font-semibold tabular-nums text-slate-900">₹{processed.lineTotal}</div>
                     {isTaxable && (
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-[0.5625rem] tabular-nums text-slate-400">
                         Tax: ₹{processed.totalTax}
                       </div>
                     )}
                   </div>
 
-                  {/* Remove button */}
                   <button
                     type="button"
                     onClick={() => removeFromCart(line.tempId)}
-                    className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors shrink-0 cursor-pointer"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 cursor-pointer"
                     title="Remove item"
+                    aria-label={`Remove ${line.name}`}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
               );
@@ -836,153 +847,153 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
         )}
       </div>
 
-      {/* 4. Discount Bar (shrink-0, Pinned at Bottom) */}
-      <div className="shrink-0 bg-white px-[1rem] md:px-[1.25rem] py-[0.5rem] border-t border-[#e7e4db] space-y-[0.25rem]">
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-[0.6875rem] font-black text-slate-700 flex items-center gap-[0.375rem] shrink-0">
-            <Tag className="w-3 h-3 text-blue-600" /> Overall Discount
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => {
-                setDiscountType(null);
-                setDiscountValue("0");
-              }}
-              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
-                discountType === null
-                  ? "bg-[#edf3ff] text-[#2563eb]"
-                  : "bg-[#f4f3ef] text-slate-500 hover:bg-[#eceae3]"
-              }`}
-            >
-              None
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setDiscountType("FIXED");
-                if (discountValue === "0") setDiscountValue("10");
-              }}
-              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
-                discountType === "FIXED"
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              ₹ Flat
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setDiscountType("PERCENTAGE");
-                if (discountValue === "0") setDiscountValue("5");
-              }}
-              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
-                discountType === "PERCENTAGE"
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              % Off
-            </button>
-            {discountType && (
-              <input
-                type="number"
-                min="0"
-                step="any"
-                value={discountValue}
-                onChange={(e) => setDiscountValue(e.target.value)}
-                className="w-[3.75rem] h-[1.875rem] px-[0.375rem] text-right text-[0.75rem] font-black bg-[#f7f7f4] border border-[#e6e3da] rounded-[0.5rem] focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:outline-none"
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Dynamic GST Tax Summary Pill */}
-        <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
-          <div className="flex items-center gap-1.5">
-            <Percent className="w-3 h-3 text-blue-600" />
-            <span className="text-[0.6875rem] font-black text-slate-700">Total GST</span>
-            {totals.gstSummary.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setShowTaxBreakdownModal(!showTaxBreakdownModal)}
-                className="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline cursor-pointer"
-              >
-                (View breakdown)
-              </button>
-            )}
-          </div>
-          <span className="font-extrabold text-slate-900 text-xs">
-            +₹{totals.totalTax}
-          </span>
-        </div>
-
-        {/* Expandable Rate-wise Breakdown if active */}
-        {showTaxBreakdownModal && totals.gstSummary.length > 0 && (
-          <div className="p-2 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-[11px]">
-            <div className="grid grid-cols-4 font-bold text-slate-500 text-[10px] pb-1 border-b border-slate-200">
-              <span>Rate</span>
-              <span className="text-right">Taxable</span>
-              <span className="text-right">{totals.isInterState ? "IGST" : "CGST+SGST"}</span>
-              <span className="text-right">Tax</span>
-            </div>
-            {totals.gstSummary.map((grp) => (
-              <div key={grp.gstRate} className="grid grid-cols-4 font-semibold text-slate-800">
-                <span>{grp.gstRate}%</span>
-                <span className="text-right">₹{grp.taxableAmount}</span>
-                <span className="text-right">
-                  {totals.isInterState
-                    ? `₹${grp.igstAmount}`
-                    : `₹${(Number(grp.cgstAmount) + Number(grp.sgstAmount)).toFixed(2)}`}
-                </span>
-                <span className="text-right font-bold text-blue-700">₹{grp.totalTax}</span>
+      {/* Checkout options */}
+      <div className="shrink-0 space-y-1 border-t border-slate-200 bg-[#f8fafc] px-3 py-1.5">
+        <div className="rounded-md border border-slate-200 bg-white px-2 py-1">
+          <div className="flex min-h-7 items-center justify-between gap-2">
+            <span className="flex shrink-0 items-center gap-1.5 text-[0.6875rem] font-semibold text-slate-700">
+              <Tag className="h-3.5 w-3.5 text-blue-600" /> Discount
+            </span>
+            <div className="flex min-w-0 items-center gap-1">
+              <div className="flex shrink-0 items-center rounded-md bg-slate-100 p-0.5">
+                <button
+                  type="button"
+                  aria-pressed={discountType === null}
+                  onClick={() => {
+                    setDiscountType(null);
+                    setDiscountValue("0");
+                  }}
+                  className={`h-6 rounded px-1.5 text-[0.5625rem] font-semibold transition-colors cursor-pointer ${
+                    discountType === null ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  None
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={discountType === "FIXED"}
+                  onClick={() => {
+                    setDiscountType("FIXED");
+                    if (discountValue === "0") setDiscountValue("10");
+                  }}
+                  className={`h-6 rounded px-1.5 text-[0.5625rem] font-semibold transition-colors cursor-pointer ${
+                    discountType === "FIXED" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  ₹ Flat
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={discountType === "PERCENTAGE"}
+                  onClick={() => {
+                    setDiscountType("PERCENTAGE");
+                    if (discountValue === "0") setDiscountValue("5");
+                  }}
+                  className={`h-6 rounded px-1.5 text-[0.5625rem] font-semibold transition-colors cursor-pointer ${
+                    discountType === "PERCENTAGE" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  % Off
+                </button>
               </div>
+              {discountType && (
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={discountValue}
+                  aria-label={discountType === "FIXED" ? "Discount amount in rupees" : "Discount percentage"}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  className="h-7 w-12 rounded-md border border-slate-200 bg-slate-50 px-1.5 text-right text-[0.6875rem] font-semibold tabular-nums text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/15"
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="mt-0.5 flex min-h-6 items-center justify-between border-t border-slate-100 pt-0.5">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <Percent className="h-3 w-3 shrink-0 text-slate-400" />
+              <span className="text-[0.625rem] font-medium text-slate-600">GST</span>
+              {totals.gstSummary.length > 0 && (
+                <button
+                  type="button"
+                  aria-expanded={showTaxBreakdownModal}
+                  onClick={() => setShowTaxBreakdownModal(!showTaxBreakdownModal)}
+                  className="text-[0.5625rem] font-semibold text-blue-700 hover:text-blue-800 cursor-pointer"
+                >
+                  {showTaxBreakdownModal ? "Hide details" : "View details"}
+                </button>
+              )}
+            </div>
+            <span className="text-[0.6875rem] font-semibold tabular-nums text-slate-800">₹{totals.totalTax}</span>
+          </div>
+
+          {showTaxBreakdownModal && totals.gstSummary.length > 0 && (
+            <div className="mt-1 max-h-20 space-y-1 overflow-y-auto rounded-md bg-slate-50 px-2 py-1.5 text-[0.5625rem]">
+              <div className="grid grid-cols-4 border-b border-slate-200 pb-1 font-semibold text-slate-500">
+                <span>Rate</span>
+                <span className="text-right">Taxable</span>
+                <span className="text-right">{totals.isInterState ? "IGST" : "CGST+SGST"}</span>
+                <span className="text-right">Tax</span>
+              </div>
+              {totals.gstSummary.map((grp) => (
+                <div key={grp.gstRate} className="grid grid-cols-4 font-medium tabular-nums text-slate-700">
+                  <span>{grp.gstRate}%</span>
+                  <span className="text-right">₹{grp.taxableAmount}</span>
+                  <span className="text-right">
+                    {totals.isInterState
+                      ? `₹${grp.igstAmount}`
+                      : `₹${(Number(grp.cgstAmount) + Number(grp.sgstAmount)).toFixed(2)}`}
+                  </span>
+                  <span className="text-right font-semibold text-blue-700">₹{grp.totalTax}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1">
+          <span className="w-14 shrink-0 text-[0.625rem] font-semibold text-slate-600">Payment</span>
+          <div className="grid flex-1 grid-cols-3 gap-1">
+            {(["CASH", "UPI", "CARD"] as const).map((method) => (
+              <button
+                key={method}
+                type="button"
+                aria-pressed={paymentMethod === method}
+                onClick={() => setPaymentMethod(method)}
+                className={`flex h-7 min-w-0 items-center justify-center gap-1 rounded-md border px-0.5 text-[0.5625rem] font-semibold transition-colors cursor-pointer ${
+                  paymentMethod === method
+                    ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                {paymentIcons[method]}
+                <span className="truncate">{method}</span>
+              </button>
             ))}
           </div>
-        )}
-      </div>
-
-      {/* 5. Payment Mode Bar (shrink-0) */}
-      <div className="shrink-0 bg-white px-[1rem] md:px-[1.25rem] py-[0.375rem] border-t border-[#e7e4db] flex items-center gap-[0.625rem]">
-        <span className="w-[4.75rem] shrink-0 text-[0.6875rem] font-black text-slate-700">Payment</span>
-        <div className="grid flex-1 grid-cols-4 gap-[0.25rem]">
-          {(["CASH", "UPI", "CARD", "OTHER"] as const).map((method) => (
-            <button
-              key={method}
-              type="button"
-              onClick={() => setPaymentMethod(method)}
-              className={`h-[1.875rem] px-[0.125rem] flex items-center justify-center gap-[0.25rem] rounded-[0.5rem] text-[0.625rem] sm:text-[0.6875rem] font-black border transition-colors cursor-pointer ${
-                paymentMethod === method
-                  ? "bg-blue-50 border-blue-500 text-blue-700"
-                  : "bg-[#f8f8f5] border-[#e7e4db] text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              {paymentIcons[method]}
-              <span>{method}</span>
-            </button>
-          ))}
         </div>
       </div>
 
-      {/* 6. Pinned Bottom Checkout Footer - ALWAYS VISIBLE */}
-      <div className="shrink-0 bg-white border-t border-[#dedbd1] px-[1rem] md:px-[1.25rem] py-[0.375rem] shadow-[0_-0.375rem_1.25rem_rgba(15,23,42,0.045)]">
+      {/* Pinned checkout footer */}
+      <div className="shrink-0 border-t border-slate-200 bg-white px-3 py-1.5">
         {submitError && (
-          <div className="mb-[0.375rem] px-[0.625rem] py-[0.5rem] bg-red-50 border border-red-200 text-red-700 text-[0.75rem] rounded-[0.625rem] flex items-center justify-between">
+          <div className="mb-2 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-[0.6875rem] text-red-700">
             <span>{submitError}</span>
             <button type="button" onClick={() => setSubmitError(null)}>
-              <X className="w-[0.875rem] h-[0.875rem]" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
 
-        <div className="flex items-center gap-[0.75rem]">
-          <div className="min-w-[7.5rem]">
-            <span className="text-[0.5625rem] text-slate-400 font-black uppercase tracking-[0.14em] block leading-none mb-[0.25rem]">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 shrink-0">
+            <span className="mb-0.5 block text-[0.5625rem] font-semibold uppercase leading-none tracking-[0.1em] text-slate-500">
               Total payable
             </span>
-            <span className="text-[1.375rem] md:text-[1.5rem] font-black text-slate-950 leading-none tracking-tight">
-              ₹{totals.grandTotal}
+            <span className="flex items-baseline gap-1 text-[1.25rem] font-bold leading-tight tracking-tight tabular-nums text-slate-950">
+              <span className="text-[1rem] font-semibold text-slate-600">₹</span>
+              <span>{totals.grandTotal}</span>
             </span>
           </div>
 
@@ -990,10 +1001,10 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
             type="button"
             disabled={isPending || cart.length === 0}
             onClick={handleCompleteBill}
-            className={`h-[2.625rem] flex-1 rounded-[0.75rem] font-black text-[0.75rem] md:text-[0.8125rem] flex items-center justify-center gap-[0.5rem] transition-all active:scale-[0.98] cursor-pointer ${
+            className={`flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[0.6875rem] font-semibold transition-colors cursor-pointer ${
               isPending || cart.length === 0
-                ? "bg-[#e5e3dc] text-slate-400 cursor-not-allowed"
-                : "bg-[#2563eb] text-white hover:bg-[#1d4ed8] shadow-[0_0.625rem_1.25rem_rgba(37,99,235,0.20)]"
+                ? "cursor-not-allowed bg-slate-200 text-slate-500"
+                : "bg-blue-600 text-white shadow-sm hover:bg-blue-700 active:bg-blue-800"
             }`}
           >
             {isPending ? (
@@ -1003,7 +1014,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               </>
             ) : (
               <>
-                <ReceiptText className="w-4 h-4" />
+                <ReceiptText className="h-3.5 w-3.5 shrink-0" />
                 <span>Complete Bill</span>
               </>
             )}
@@ -1055,8 +1066,8 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
             <ReceiptText className="w-3.5 h-3.5" />
             Bill
             {cartCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center">
-                {cartCount > 9 ? "9+" : cartCount}
+              <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 px-1 text-[0.625rem] font-semibold leading-none tabular-nums text-white">
+                {cartCount}
               </span>
             )}
           </button>
