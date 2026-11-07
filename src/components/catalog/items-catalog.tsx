@@ -19,6 +19,7 @@ import {
 import { createItemAction, updateItemAction, archiveItemAction } from "@/actions/catalog-actions";
 import { CategoryFilter } from "@/components/ui/category-filter";
 import { DataTable } from "@/components/ui/data-table";
+import { AppFeedbackDialog } from "@/components/ui/app-feedback-dialog";
 import {
   calculateItemGstPreview,
   STANDARD_GST_RATES,
@@ -571,6 +572,7 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const categories = useMemo(() => {
@@ -654,7 +656,7 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
       if (res.success) {
         setItems((prev) => prev.filter((it) => it.id !== itemId));
       } else {
-        alert(res.error || "Failed to archive item.");
+        setFeedbackMessage(res.error || "Failed to archive item.");
       }
     });
   };
@@ -686,6 +688,7 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
 
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
+      <AppFeedbackDialog message={feedbackMessage} onClose={() => setFeedbackMessage(null)} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>

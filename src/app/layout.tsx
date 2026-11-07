@@ -24,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${brandFont.variable} min-h-screen bg-slate-50 text-slate-900 antialiased`}>
+      <body className={`${brandFont.variable} min-h-[100dvh] bg-slate-50 text-slate-900 antialiased`}>
         {children}
       </body>
     </html>

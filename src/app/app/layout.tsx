@@ -28,7 +28,7 @@ export default async function AppLayout({
 
   return (
     <AppTypography>
-      <div className="app-shell h-screen h-[100dvh] flex flex-col overflow-hidden">
+      <div className="app-shell h-[100dvh] flex flex-col overflow-hidden">
         {session.isImpersonating && session.adminUser && (
           <AdminBanner
             businessName={session.account.businessName}

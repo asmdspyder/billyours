@@ -15,6 +15,8 @@ interface DataTableProps {
   columns: DataTableColumn[];
   rows: DataTableRow[];
   minWidth?: string;
+  headerClassName?: string;
+  headerTextClassName?: string;
 }
 
 const alignmentClasses = {
@@ -27,16 +29,19 @@ export function DataTable({
   columns,
   rows,
   minWidth = "min-w-full",
+  headerClassName = "bg-gradient-to-b from-[#f1f5fb] to-[#e7edf6]",
+  headerTextClassName = "text-slate-700",
 }: DataTableProps) {
   return (
     <div className="no-scrollbar w-full overflow-x-auto">
-      <table className={`w-full ${minWidth} text-sm`}>
-        <thead className="border-b border-slate-200 bg-slate-50">
+      <table className={`w-full border-separate border-spacing-0 ${minWidth} text-sm`}>
+        <thead className={headerClassName}>
           <tr>
             {columns.map((column) => (
               <th
                 key={column.label}
-                className={`px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-slate-600 ${
+                scope="col"
+                className={`border-y border-t-2 border-t-blue-500 border-b-slate-200 px-4 py-4 text-sm font-bold normal-case tracking-[0.02em] first:rounded-tl-xl last:rounded-tr-xl [&+th]:border-l [&+th]:border-l-slate-200/80 ${headerTextClassName} ${
                   alignmentClasses[column.align || "left"]
                 } ${column.className || ""}`}
               >

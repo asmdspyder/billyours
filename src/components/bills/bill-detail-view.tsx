@@ -24,6 +24,7 @@ import {
 import { getBillShareUrl } from "@/lib/base-url";
 import { cancelBillAction } from "@/actions/billing-actions";
 import { WhatsAppBillShare } from "@/components/bills/whatsapp-bill-share";
+import { AppFeedbackDialog } from "@/components/ui/app-feedback-dialog";
 
 export function InstagramLogo({ className = "w-3.5 h-3.5" }: { className?: string }) {
   return (
@@ -155,6 +156,7 @@ export function BillDetailView({
     initialFormat === "a4" ? "a4" : "thermal"
   );
   const [copied, setCopied] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelError, setCancelError] = useState<string | null>(null);
@@ -178,7 +180,7 @@ export function BillDetailView({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      alert(`Share Link:\n${shareUrl}`);
+      setFeedbackMessage(`Share Link:\n${shareUrl}`);
     }
   };
 
@@ -894,6 +896,12 @@ export function BillDetailView({
           </div>
         </div>
       )}
+      <AppFeedbackDialog
+        message={feedbackMessage}
+        title="Share link"
+        variant="info"
+        onClose={() => setFeedbackMessage(null)}
+      />
     </div>
   );
 }

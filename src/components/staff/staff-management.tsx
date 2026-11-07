@@ -28,6 +28,7 @@ import {
   getStaffBillsAction,
 } from "@/actions/staff-actions";
 import { AppLoader } from "@/components/ui/app-loader";
+import { AppFeedbackDialog } from "@/components/ui/app-feedback-dialog";
 
 interface StaffManagementProps {
   initialStaff: StaffMemberRecord[];
@@ -55,6 +56,7 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
     bills: StaffBillRecord[];
   } | null>(null);
   const [loadingBills, setLoadingBills] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   // Open Add Modal
   const openAddModal = () => {
@@ -121,7 +123,7 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
   // Handle Delete
   const handleDelete = (staff: StaffMemberRecord) => {
     if (staffList.length <= 1) {
-      alert("At least one staff member is required for billing operations.");
+      setFeedbackMessage("At least one staff member is required for billing operations.");
       return;
     }
     if (
@@ -137,7 +139,7 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
       if (res.success) {
         setStaffList((prev) => prev.filter((s) => s.id !== staff.id));
       } else {
-        alert(res.error || "Failed to remove staff member.");
+        setFeedbackMessage(res.error || "Failed to remove staff member.");
       }
     });
   };
@@ -151,7 +153,7 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
     if (res.success && res.bills) {
       setActiveStaffBills({ staffName: res.staffName || staff.name, bills: res.bills });
     } else {
-      alert(res.error || "Could not retrieve staff bills.");
+      setFeedbackMessage(res.error || "Could not retrieve staff bills.");
       setActiveStaffBills(null);
     }
   };
@@ -172,6 +174,7 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
 
   return (
     <div className="h-full flex flex-col overflow-y-auto p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+      <AppFeedbackDialog message={feedbackMessage} onClose={() => setFeedbackMessage(null)} />
       {/* Top Banner & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 md:p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>

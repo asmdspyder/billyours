@@ -22,6 +22,7 @@ import {
   updateAccountStatusAction,
   updateAccountSubscriptionAction,
 } from "@/actions/admin-actions";
+import { AppFeedbackDialog } from "@/components/ui/app-feedback-dialog";
 
 interface AccountDetails {
   id: string;
@@ -69,6 +70,7 @@ export function AccountManagementView({
 }: AccountManagementViewProps) {
   const [isPending, startTransition] = useTransition();
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleStatusChange = (newStatus: "ACTIVE" | "SUSPENDED" | "ARCHIVED") => {
     if (
@@ -85,7 +87,7 @@ export function AccountManagementView({
         setFeedbackMsg(`Account status updated to ${newStatus}.`);
         window.location.reload();
       } else {
-        alert(res.error || "Failed to update status.");
+        setErrorMsg(res.error || "Failed to update status.");
       }
     });
   };
@@ -104,7 +106,7 @@ export function AccountManagementView({
         setFeedbackMsg(`Trial extended by ${days} days.`);
         window.location.reload();
       } else {
-        alert(res.error || "Failed to extend trial.");
+        setErrorMsg(res.error || "Failed to extend trial.");
       }
     });
   };
@@ -123,7 +125,7 @@ export function AccountManagementView({
         setFeedbackMsg(`Activated ${plan} plan for 1 ${plan === "MONTHLY" ? "month" : "year"}.`);
         window.location.reload();
       } else {
-        alert(res.error || "Failed to activate subscription.");
+        setErrorMsg(res.error || "Failed to activate subscription.");
       }
     });
   };
@@ -148,7 +150,7 @@ export function AccountManagementView({
         setFeedbackMsg("Account subscription has been marked EXPIRED.");
         window.location.reload();
       } else {
-        alert(res.error || "Failed to expire subscription.");
+        setErrorMsg(res.error || "Failed to expire subscription.");
       }
     });
   };
@@ -169,6 +171,7 @@ export function AccountManagementView({
 
   return (
     <div className="space-y-6">
+      <AppFeedbackDialog message={errorMsg} onClose={() => setErrorMsg(null)} />
       {/* Back button */}
       <div>
         <Link
