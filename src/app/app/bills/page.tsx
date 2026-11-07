@@ -46,52 +46,62 @@ export default async function BillsPage(props: BillsPageProps) {
   const bills = search
     ? await sql`
         SELECT
-          id,
-          bill_number,
-          customer_id,
-          customer_name_snapshot,
-          customer_phone_snapshot,
-          subtotal,
-          discount_amount,
-          tax_amount,
-          grand_total,
-          payment_status,
-          payment_method,
-          status,
-          completed_at,
-          created_at,
+          b.id,
+          b.bill_number,
+          b.customer_id,
+          CASE
+            WHEN b.customer_name_snapshot IN ('Customer', 'Walk-in Customer')
+              THEN COALESCE(c.name, b.customer_name_snapshot)
+            ELSE COALESCE(b.customer_name_snapshot, c.name)
+          END AS customer_name_snapshot,
+          COALESCE(b.customer_phone_snapshot, c.phone) AS customer_phone_snapshot,
+          b.subtotal,
+          b.discount_amount,
+          b.tax_amount,
+          b.grand_total,
+          b.payment_status,
+          b.payment_method,
+          b.status,
+          b.completed_at,
+          b.created_at,
           count(*) OVER()::int as filtered_total_count
-        FROM bills
-        WHERE account_id = ${accountId}
-          AND (bill_number ILIKE ${searchPattern} OR customer_name_snapshot ILIKE ${searchPattern} OR customer_phone_snapshot ILIKE ${searchPattern})
-          AND (${payment === "ALL"} OR payment_method = ${payment})
-          AND (${status === "ALL"} OR status = ${status})
-        ORDER BY completed_at DESC, id DESC
+        FROM bills b
+        LEFT JOIN customers c ON c.id = b.customer_id AND c.account_id = b.account_id
+        WHERE b.account_id = ${accountId}
+          AND (b.bill_number ILIKE ${searchPattern} OR b.customer_name_snapshot ILIKE ${searchPattern} OR b.customer_phone_snapshot ILIKE ${searchPattern})
+          AND (${payment === "ALL"} OR b.payment_method = ${payment})
+          AND (${status === "ALL"} OR b.status = ${status})
+        ORDER BY b.completed_at DESC, b.id DESC
         LIMIT ${pageSize}
         OFFSET ${offset};
       `
     : await sql`
         SELECT
-          id,
-          bill_number,
-          customer_id,
-          customer_name_snapshot,
-          customer_phone_snapshot,
-          subtotal,
-          discount_amount,
-          tax_amount,
-          grand_total,
-          payment_status,
-          payment_method,
-          status,
-          completed_at,
-          created_at,
+          b.id,
+          b.bill_number,
+          b.customer_id,
+          CASE
+            WHEN b.customer_name_snapshot IN ('Customer', 'Walk-in Customer')
+              THEN COALESCE(c.name, b.customer_name_snapshot)
+            ELSE COALESCE(b.customer_name_snapshot, c.name)
+          END AS customer_name_snapshot,
+          COALESCE(b.customer_phone_snapshot, c.phone) AS customer_phone_snapshot,
+          b.subtotal,
+          b.discount_amount,
+          b.tax_amount,
+          b.grand_total,
+          b.payment_status,
+          b.payment_method,
+          b.status,
+          b.completed_at,
+          b.created_at,
           count(*) OVER()::int as filtered_total_count
-        FROM bills
-        WHERE account_id = ${accountId}
-          AND (${payment === "ALL"} OR payment_method = ${payment})
-          AND (${status === "ALL"} OR status = ${status})
-        ORDER BY completed_at DESC, id DESC
+        FROM bills b
+        LEFT JOIN customers c ON c.id = b.customer_id AND c.account_id = b.account_id
+        WHERE b.account_id = ${accountId}
+          AND (${payment === "ALL"} OR b.payment_method = ${payment})
+          AND (${status === "ALL"} OR b.status = ${status})
+        ORDER BY b.completed_at DESC, b.id DESC
         LIMIT ${pageSize}
         OFFSET ${offset};
       `;
@@ -121,7 +131,7 @@ export default async function BillsPage(props: BillsPageProps) {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
-    <div className="overflow-y-auto h-full p-4 md:p-6 max-w-6xl mx-auto space-y-4 pb-8">
+    <div className="no-scrollbar overflow-y-auto h-full p-4 md:p-6 max-w-6xl mx-auto space-y-4 pb-8">
       <BillsList
         bills={bills.map((b) => ({
           id: b.id,
@@ -144,6 +154,8 @@ export default async function BillsPage(props: BillsPageProps) {
         currentSearch={search}
         currentPayment={payment}
         currentStatus={status}
+        businessName={session.account.businessName}
+        googleReviewLink={session.account.googleReviewLink}
       />
     </div>
   );

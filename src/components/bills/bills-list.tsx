@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { deleteBillAction } from "@/actions/billing-actions";
 import { AppLoader } from "@/components/ui/app-loader";
+import { DataTable } from "@/components/ui/data-table";
+import { WhatsAppBillShare } from "@/components/bills/whatsapp-bill-share";
 
 interface BillSummary {
   id: string;
@@ -37,6 +39,8 @@ interface BillsListProps {
   currentSearch: string;
   currentPayment: string;
   currentStatus: string;
+  businessName: string;
+  googleReviewLink?: string | null;
 }
 
 export function BillsList({
@@ -47,6 +51,8 @@ export function BillsList({
   currentSearch,
   currentPayment,
   currentStatus,
+  businessName,
+  googleReviewLink,
 }: BillsListProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -109,12 +115,6 @@ export function BillsList({
             View, print, reprint, or share past bills and receipts ({totalCount} total).
           </p>
         </div>
-        <Link
-          href="/app/billing"
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm self-start sm:self-auto"
-        >
-          <span>+ Create New Bill</span>
-        </Link>
       </div>
 
       {/* Filter and Search Controls */}
@@ -181,188 +181,176 @@ export function BillsList({
           </div>
         ) : (
           <>
-            {/* Mobile Card List: Fits 100% width with zero horizontal scrolling */}
-            <div className="sm:hidden divide-y divide-slate-100">
+            <div className="grid gap-3 bg-slate-50/70 p-3 sm:grid-cols-2 sm:p-4 lg:hidden">
               {bills.map((b) => (
                 <div
                   key={b.id}
-                  className="p-4 hover:bg-slate-50 transition-colors"
+                  className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition-colors hover:border-slate-300"
                 >
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-start justify-between gap-3">
                     <Link
-                      href={`/app/bills/${b.id}`}
-                      className="font-mono font-bold text-blue-600 text-xs hover:underline"
+                      href={`/app/bills/${b.id}?from=history`}
+                      className="break-all font-mono text-xs font-bold text-blue-700 hover:underline"
                     >
                       {b.billNumber}
                     </Link>
-                    <span className="text-sm font-extrabold text-slate-900">
+                    <span className="shrink-0 text-sm font-extrabold text-slate-900">
                       ₹{b.grandTotal}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-slate-600 mb-2.5">
-                    <div>
-                      <span className="font-medium text-slate-900">{b.customerName}</span>
-                      {b.customerPhone && (
-                        <span className="text-[11px] text-slate-400 font-mono ml-1.5">
-                          ({b.customerPhone})
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
-                        {b.paymentMethod}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          b.status === "COMPLETED"
-                            ? "bg-green-50 text-green-700"
-                            : "bg-red-50 text-red-600 border border-red-200"
-                        }`}
-                      >
-                        {b.status}
-                      </span>
-                    </div>
+                  <div className="mt-3 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Customer</p>
+                    <p className="break-words text-sm font-semibold text-slate-900">{b.customerName}</p>
+                    {b.customerPhone && (
+                      <p className="mt-0.5 break-all font-mono text-[11px] text-slate-500">{b.customerPhone}</p>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-50">
-                    <span>{b.completedAt}</span>
-                    <div className="flex items-center gap-1.5">
-                      <Link
-                        href={`/app/bills/${b.id}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-700">
+                      {b.paymentMethod}
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                        b.status === "COMPLETED"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "border border-red-200 bg-red-50 text-red-600"
+                      }`}
+                    >
+                      {b.status}
+                    </span>
+                    <span className="ml-auto text-right text-[11px] text-slate-500">{b.completedAt}</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
+                    <Link
+                      href={`/app/bills/${b.id}?from=history`}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      View bill
+                    </Link>
+                    <Link
+                      href={`/app/bills/${b.id}?print=1`}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                    >
+                      <Printer className="h-3.5 w-3.5" />
+                      Print
+                    </Link>
+                    <WhatsAppBillShare
+                      billId={b.id}
+                      billNumber={b.billNumber}
+                      customerName={b.customerName}
+                      customerPhone={b.customerPhone}
+                      businessName={businessName}
+                      grandTotal={b.grandTotal}
+                      googleReviewLink={googleReviewLink}
+                      compact
+                      label="WhatsApp"
+                      className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-2 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                    />
+                    {b.status === "COMPLETED" && (
+                      <button
+                        type="button"
+                        disabled={deletingId === b.id}
+                        onClick={() => handleDeleteBill(b.id, b.billNumber)}
+                        className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200/70 bg-red-50 px-2.5 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
+                        title="Delete / cancel bill"
                       >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>View</span>
-                      </Link>
-                      <Link
-                        href={`/app/bills/${b.id}?print=1`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
-                      >
-                        <Printer className="w-3.5 h-3.5" />
-                        <span>Print</span>
-                      </Link>
-                      {b.status === "COMPLETED" && (
-                        <button
-                          type="button"
-                          disabled={deletingId === b.id}
-                          onClick={() => handleDeleteBill(b.id, b.billNumber)}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/60 rounded transition-colors cursor-pointer disabled:opacity-50"
-                          title="Delete / cancel bill"
-                        >
-                          {deletingId === b.id ? (
-                            <AppLoader size="sm" />
-                          ) : (
-                            <Trash2 className="w-3 h-3" />
-                          )}
-                          <span>Delete</span>
-                        </button>
-                      )}
-                    </div>
+                        {deletingId === b.id ? <AppLoader size="sm" /> : <Trash2 className="h-3.5 w-3.5" />}
+                        Cancel bill
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Desktop & Tablet Table (sm+) */}
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">Bill Number</th>
-                    <th className="px-4 py-3">Date & Time</th>
-                    <th className="px-4 py-3">Customer</th>
-                    <th className="px-4 py-3 text-right">Grand Total</th>
-                    <th className="px-4 py-3 text-center">Payment Mode</th>
-                    <th className="px-4 py-3 text-center">Status</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {bills.map((b) => (
-                    <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/app/bills/${b.id}`}
-                          className="font-mono font-bold text-blue-600 hover:underline"
+            <div className="hidden lg:block">
+              <DataTable
+                minWidth="min-w-[1040px]"
+                columns={[
+                  { label: "Bill number" },
+                  { label: "Date & time" },
+                  { label: "Customer" },
+                  { label: "Grand total", align: "right" },
+                  { label: "Payment", align: "center" },
+                  { label: "Status", align: "center" },
+                  { label: "Actions", align: "right", className: "min-w-[260px]" },
+                ]}
+                rows={bills.map((b) => ({
+                  key: b.id,
+                  cells: [
+                    <Link key="number" href={`/app/bills/${b.id}?from=history`} className="font-mono font-bold text-blue-700 hover:underline">
+                      {b.billNumber}
+                    </Link>,
+                    <span key="date" className="whitespace-nowrap text-xs text-slate-500">{b.completedAt}</span>,
+                    <div key="customer" className="min-w-0">
+                      <p className="font-medium text-slate-900">{b.customerName}</p>
+                      {b.customerPhone && <p className="font-mono text-[11px] text-slate-500">{b.customerPhone}</p>}
+                    </div>,
+                    <span key="total" className="font-bold text-slate-900">₹{b.grandTotal}</span>,
+                    <span key="payment" className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700">{b.paymentMethod}</span>,
+                    <span
+                      key="status"
+                      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                        b.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700" : "border border-red-200 bg-red-50 text-red-600"
+                      }`}
+                    >
+                      {b.status}
+                    </span>,
+                    <div key="actions" className="grid min-w-[250px] grid-cols-2 gap-1.5">
+                      <Link
+                        href={`/app/bills/${b.id}?from=history`}
+                        className="inline-flex items-center justify-center gap-1 rounded-lg bg-slate-100 px-2 py-1.5 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-200"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        View
+                      </Link>
+                      <Link
+                        href={`/app/bills/${b.id}?print=1`}
+                        className="inline-flex items-center justify-center gap-1 rounded-lg bg-blue-50 px-2 py-1.5 text-[11px] font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                      >
+                        <Printer className="h-3.5 w-3.5" />
+                        Print
+                      </Link>
+                      <WhatsAppBillShare
+                        billId={b.id}
+                        billNumber={b.billNumber}
+                        customerName={b.customerName}
+                        customerPhone={b.customerPhone}
+                        businessName={businessName}
+                        grandTotal={b.grandTotal}
+                        googleReviewLink={googleReviewLink}
+                        compact
+                        label="Share"
+                        className="inline-flex items-center justify-center gap-1 rounded-lg bg-emerald-50 px-2 py-1.5 text-[11px] font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                      />
+                      {b.status === "COMPLETED" && (
+                        <button
+                          type="button"
+                          disabled={deletingId === b.id}
+                          onClick={() => handleDeleteBill(b.id, b.billNumber)}
+                          className="inline-flex items-center justify-center gap-1 rounded-lg border border-red-200/70 bg-red-50 px-2 py-1.5 text-[11px] font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
                         >
-                          {b.billNumber}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
-                        {b.completedAt}
-                      </td>
-                      <td className="px-4 py-3 text-slate-900 font-medium">
-                        <div>{b.customerName}</div>
-                        {b.customerPhone && (
-                          <div className="text-[11px] text-slate-400 font-mono">{b.customerPhone}</div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-slate-900">
-                        ₹{b.grandTotal}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
-                          {b.paymentMethod}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                            b.status === "COMPLETED"
-                              ? "bg-slate-100 text-slate-700"
-                              : "bg-red-50 text-red-600 border border-red-200"
-                          }`}
-                        >
-                          {b.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
-                        <Link
-                          href={`/app/bills/${b.id}`}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>View</span>
-                        </Link>
-                        <Link
-                          href={`/app/bills/${b.id}?print=1`}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-900 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
-                        >
-                          <Printer className="w-3.5 h-3.5" />
-                          <span>Print</span>
-                        </Link>
-                        {b.status === "COMPLETED" && (
-                          <button
-                            type="button"
-                            disabled={deletingId === b.id}
-                            onClick={() => handleDeleteBill(b.id, b.billNumber)}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/60 rounded transition-colors cursor-pointer disabled:opacity-50"
-                            title="Delete / cancel bill"
-                          >
-                            {deletingId === b.id ? (
-                              <AppLoader size="sm" />
-                            ) : (
-                              <Trash2 className="w-3 h-3" />
-                            )}
-                            <span>Delete</span>
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          {deletingId === b.id ? <AppLoader size="sm" /> : <Trash2 className="h-3.5 w-3.5" />}
+                          Cancel
+                        </button>
+                      )}
+                    </div>,
+                  ],
+                }))}
+              />
             </div>
           </>
         )}
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
+          <div className="flex flex-col gap-3 border-t border-slate-200 p-3 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:p-4">
             <div>
               Page <span className="font-semibold text-slate-900">{currentPage}</span> of{" "}
               <span className="font-semibold text-slate-900">{totalPages}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center justify-between gap-2 sm:w-auto">
               <button
                 disabled={currentPage <= 1}
                 onClick={() => handlePageChange(currentPage - 1)}

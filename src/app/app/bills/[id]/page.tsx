@@ -7,7 +7,7 @@ import { SubscriptionExpiredScreen } from "@/components/subscription/subscriptio
 
 interface BillPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ print?: string; format?: string; token?: string }>;
+  searchParams: Promise<{ print?: string; format?: string; token?: string; from?: string }>;
 }
 
 export const metadata = {
@@ -42,6 +42,8 @@ export default async function BillDetailPage(props: BillPageProps) {
       b.customer_id,
       b.customer_name_snapshot,
       b.customer_phone_snapshot,
+      c.name as linked_customer_name,
+      c.phone as linked_customer_phone,
       b.staff_id,
       b.staff_name_snapshot,
       b.subtotal,
@@ -90,7 +92,7 @@ export default async function BillDetailPage(props: BillPageProps) {
     FROM bills b
     JOIN business_accounts ba ON b.account_id = ba.id
     LEFT JOIN users u ON b.created_by_user_id = u.id
-    LEFT JOIN customers c ON b.customer_id = c.id
+    LEFT JOIN customers c ON b.customer_id = c.id AND c.account_id = b.account_id
     WHERE b.id = ${billId}
       AND b.account_id = ${accountId}
     LIMIT 1;
@@ -157,8 +159,12 @@ export default async function BillDetailPage(props: BillPageProps) {
       bill={{
         id: bill.id,
         billNumber: bill.bill_number,
-        customerName: bill.customer_name_snapshot || "Walk-in Customer",
-        customerPhone: bill.customer_phone_snapshot,
+        customerName:
+          bill.customer_name_snapshot &&
+          !["Customer", "Walk-in Customer"].includes(bill.customer_name_snapshot)
+            ? bill.customer_name_snapshot
+            : bill.linked_customer_name || bill.customer_name_snapshot || "Walk-in Customer",
+        customerPhone: bill.customer_phone_snapshot || bill.linked_customer_phone,
         customerGstin: bill.customer_gstin || null,
         customerState: bill.customer_state || null,
         placeOfSupplyState: bill.place_of_supply_state || bill.customer_state || bill.business_state || session.account.state || "Delhi",
@@ -222,8 +228,9 @@ export default async function BillDetailPage(props: BillPageProps) {
         lineTotal: it.line_total !== null && it.line_total !== undefined ? Number(it.line_total).toFixed(2) : Number(it.line_subtotal).toFixed(2),
       }))}
       shareToken={shareToken}
-      initialAutoPrint={searchParams.print === "true"}
+      initialAutoPrint={searchParams.print === "true" || searchParams.print === "1"}
       initialFormat={searchParams.format || session.account.receiptPreference || "thermal"}
+      showHistoryBack={searchParams.from === "history"}
     />
   );
 }

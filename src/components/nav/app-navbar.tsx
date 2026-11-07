@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   ReceiptText,
   PlusCircle,
@@ -13,6 +14,7 @@ import {
   LogOut,
   Store,
   UserCheck,
+  LoaderCircle,
 } from "lucide-react";
 import { logoutAction } from "@/actions/auth-actions";
 
@@ -33,15 +35,46 @@ const NAV_LINKS = [
 
 export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
   const pathname = usePathname();
+  const [pendingNavigation, setPendingNavigation] = useState<{
+    href: string;
+    from: string;
+  } | null>(null);
   const ownerInitial = ownerName ? ownerName.charAt(0).toUpperCase() : "O";
+
+  useEffect(() => {
+    if (!pendingNavigation) return;
+    if (pathname !== pendingNavigation.from) {
+      setPendingNavigation(null);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setPendingNavigation(null), 12000);
+    return () => window.clearTimeout(timeout);
+  }, [pathname, pendingNavigation]);
+
+  const markNavigationPending = (href: string) => {
+    if (pathname !== href) {
+      setPendingNavigation({ href, from: pathname });
+    }
+  };
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/app/billing" && pathname.startsWith(href));
 
   return (
     <>
+      {pendingNavigation && (
+        <div
+          className="fixed inset-x-0 top-0 z-[60] h-1 overflow-hidden bg-blue-100"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading page"
+        >
+          <div className="h-full w-1/3 animate-loading-bar rounded-full bg-blue-600" />
+        </div>
+      )}
       <header className="sticky top-0 z-40 hidden h-[60px] shrink-0 items-center gap-2 border-b border-slate-200/80 bg-white/95 px-3 text-slate-900 backdrop-blur-md md:flex lg:gap-6 lg:px-4 xl:px-5">
-        <Link href="/app/billing" aria-label="BillYours home" className="flex shrink-0 items-center gap-2">
+        <Link href="/app/billing" onClick={() => markNavigationPending("/app/billing")} aria-label="BillYours home" className="flex shrink-0 items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-blue-600 text-white shadow-sm">
             <ReceiptText className="h-[17px] w-[17px]" aria-hidden="true" />
           </span>
@@ -64,7 +97,9 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => markNavigationPending(link.href)}
                 aria-current={active ? "page" : undefined}
+                aria-busy={pendingNavigation?.href === link.href}
                 aria-label={link.label}
                 title={link.label}
                 className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors xl:px-2.5 2xl:px-3 ${
@@ -73,7 +108,11 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <Icon className={`h-4 w-4 shrink-0 ${active ? "text-white" : "text-slate-500"}`} aria-hidden="true" />
+                {pendingNavigation?.href === link.href ? (
+                  <LoaderCircle className={`h-4 w-4 shrink-0 animate-spin ${active ? "text-white" : "text-blue-600"}`} aria-hidden="true" />
+                ) : (
+                  <Icon className={`h-4 w-4 shrink-0 ${active ? "text-white" : "text-slate-500"}`} aria-hidden="true" />
+                )}
                 <span className="hidden md:inline xl:hidden">{link.shortLabel}</span>
                 <span className="hidden xl:inline">{link.label}</span>
               </Link>
@@ -102,7 +141,7 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
       </header>
 
       <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b border-slate-200/80 bg-white/95 px-3 text-slate-900 backdrop-blur-md md:hidden">
-        <Link href="/app/billing" aria-label="BillYours home" className="flex shrink-0 items-center gap-1.5">
+        <Link href="/app/billing" onClick={() => markNavigationPending("/app/billing")} aria-label="BillYours home" className="flex shrink-0 items-center gap-1.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-blue-600 text-white shadow-sm">
             <ReceiptText className="h-4 w-4" aria-hidden="true" />
           </span>
@@ -140,7 +179,9 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => markNavigationPending(link.href)}
                 aria-current={active ? "page" : undefined}
+                aria-busy={pendingNavigation?.href === link.href}
                 aria-label={link.label}
                 title={link.label}
                 className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-[9px] font-semibold transition-colors ${
@@ -150,7 +191,11 @@ export function AppNavbar({ businessName, ownerName }: AppNavbarProps) {
                 <span className={`flex h-7 w-8 items-center justify-center rounded-lg ${
                   active || isNewBill ? "bg-blue-600 text-white" : "text-slate-500"
                 }`}>
-                  <Icon className="h-[17px] w-[17px]" aria-hidden="true" />
+                  {pendingNavigation?.href === link.href ? (
+                    <LoaderCircle className="h-[17px] w-[17px] animate-spin text-current" aria-hidden="true" />
+                  ) : (
+                    <Icon className="h-[17px] w-[17px]" aria-hidden="true" />
+                  )}
                 </span>
                 <span className="max-w-full truncate leading-none">{link.shortLabel}</span>
               </Link>

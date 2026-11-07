@@ -293,8 +293,13 @@ body {
 
 .app-typography .billing-item-search-input {
   background-color: #fff;
-  border-color: #cbd5e1;
+  border-width: 2px;
+  border-color: #94a3b8;
   font-size: var(--type-body);
+}
+
+.app-typography .billing-item-search-input:focus {
+  border-color: #2563eb;
 }
 
 .app-typography .billing-item-search-input::placeholder {
@@ -483,11 +488,18 @@ body {
   }
 
   .bill-detail-scroll {
+    display: block !important;
     height: auto !important;
     min-height: 0 !important;
     max-width: none !important;
     overflow: visible !important;
     padding: 0 !important;
+  }
+
+  .bill-detail-content {
+    height: auto !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
   }
 
   body {

@@ -6,7 +6,7 @@ import { requireActiveSubscription, requireBusinessAccount } from "@/lib/auth";
 import { calculateBillTotals } from "@/lib/billing-calculations";
 import { allocateNextBillNumber } from "@/lib/bill-sequence";
 import { normalizePhone } from "@/lib/phone-utils";
-import { createSharedBillLink } from "@/lib/share-link";
+import { createSharedBillLink, generateSecureToken, hashToken } from "@/lib/share-link";
 import { revalidatePath } from "next/cache";
 
 export interface CompleteBillInput {
@@ -273,8 +273,8 @@ export async function completeBillAction(input: CompleteBillInput): Promise<Comp
     const billId = "bil_" + crypto.randomBytes(8).toString("hex");
     const seqId = "seq_" + crypto.randomBytes(8).toString("hex");
     const linkId = "shl_" + crypto.randomBytes(8).toString("hex");
-    const shareToken = crypto.randomBytes(32).toString("hex");
-    const tokenHash = crypto.createHash("sha256").update(shareToken).digest("hex");
+    const shareToken = generateSecureToken();
+    const tokenHash = hashToken(shareToken);
     const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
 
     const currentYear = new Date().getFullYear();
@@ -552,5 +552,92 @@ export async function lookupCustomerPhoneAction(phone: string): Promise<{
     return { found: false };
   } catch (err) {
     return { found: false };
+  }
+}
+
+export async function prepareBillWhatsAppShareAction(
+  billId: string,
+  customerName: string,
+  customerPhone: string
+): Promise<{ success: boolean; error?: string; customerName?: string; customerPhone?: string; shareToken?: string }> {
+  try {
+    const session = await requireActiveSubscription();
+    const accountId = session.account.id;
+    const name = customerName.trim();
+    const normalizedPhone = normalizePhone(customerPhone);
+    const whatsappNumber = normalizedPhone?.replace(/\D/g, "") || "";
+
+    if (!name || name.length > 255) {
+      return { success: false, error: "Enter a customer name (up to 255 characters)." };
+    }
+    if (!normalizedPhone || !/^[1-9]\d{6,14}$/.test(whatsappNumber)) {
+      return { success: false, error: "Enter a valid phone number with its country code." };
+    }
+
+    const customerId = "cst_" + crypto.randomBytes(8).toString("hex");
+    const linkId = "shl_" + crypto.randomBytes(8).toString("hex");
+    const shareToken = generateSecureToken();
+    const tokenHash = hashToken(shareToken);
+    const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+
+    const result = await sql`
+      WITH bill_scope AS (
+        SELECT id FROM bills
+        WHERE id = ${billId} AND account_id = ${accountId}
+      ),
+      customer_upsert AS (
+        INSERT INTO customers (
+          id, account_id, name, phone, normalized_phone, created_at, updated_at
+        )
+        SELECT
+          ${customerId}, ${accountId}, ${name}, ${normalizedPhone}, ${normalizedPhone}, NOW(), NOW()
+        FROM bill_scope
+        ON CONFLICT (account_id, normalized_phone)
+          WHERE archived_at IS NULL AND normalized_phone IS NOT NULL
+        DO UPDATE SET
+          name = EXCLUDED.name,
+          phone = EXCLUDED.phone,
+          updated_at = NOW()
+        RETURNING id, name, phone
+      ),
+      updated_bill AS (
+        UPDATE bills b
+        SET
+          customer_id = c.id,
+          customer_name_snapshot = c.name,
+          customer_phone_snapshot = c.phone,
+          updated_at = NOW()
+        FROM customer_upsert c
+        WHERE b.id = ${billId} AND b.account_id = ${accountId}
+        RETURNING b.id
+      ),
+      inserted_link AS (
+        INSERT INTO shared_bill_links (id, bill_id, token_hash, expires_at, created_at)
+        SELECT ${linkId}, b.id, ${tokenHash}, ${expiresAt}::timestamptz, NOW()
+        FROM updated_bill b
+        RETURNING bill_id
+      )
+      SELECT c.name, c.phone
+      FROM customer_upsert c
+      JOIN inserted_link l ON TRUE;
+    `;
+
+    if (result.length === 0) {
+      return { success: false, error: "Bill not found or unavailable for sharing." };
+    }
+
+    revalidatePath(`/app/bills/${billId}`);
+    revalidatePath("/app/bills");
+    revalidatePath("/app/customers");
+
+    return {
+      success: true,
+      customerName: result[0].name,
+      customerPhone: result[0].phone,
+      shareToken,
+    };
+  } catch (err: any) {
+    console.error("Prepare bill WhatsApp share error:", err);
+    return { success: false, error: err.message || "Failed to prepare bill sharing." };
   }
 }

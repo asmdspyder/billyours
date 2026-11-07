@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Users, Search, Plus, Phone, Eye, X, AlertCircle } from "lucide-react";
 import { createCustomerAction } from "@/actions/customer-actions";
+import { DataTable } from "@/components/ui/data-table";
 
 interface CustomerSummary {
   id: string;
@@ -113,21 +114,21 @@ export function CustomersList({
         ) : (
           <>
             {/* Mobile Card List: Fits 100% width with zero horizontal scrolling */}
-            <div className="sm:hidden divide-y divide-slate-100">
+            <div className="grid gap-3 bg-slate-50/70 p-3 sm:grid-cols-2 sm:p-4 lg:hidden">
               {customers.map((c) => (
                 <Link
                   key={c.id}
                   href={`/app/customers/${c.id}`}
-                  className="block p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                  className="block min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition-colors hover:border-slate-300 active:bg-slate-50"
                 >
-                  <div className="flex items-start justify-between gap-3 mb-1.5">
-                    <div>
-                      <div className="font-bold text-sm text-slate-900 hover:text-blue-600">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="break-words font-bold text-sm text-slate-900 hover:text-blue-600">
                         {c.name}
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono mt-0.5">
                         <Phone className="w-3 h-3 text-slate-400" />
-                        <span>{c.phone}</span>
+                        <span className="break-all">{c.phone}</span>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
@@ -139,9 +140,9 @@ export function CustomersList({
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-50 mt-2">
-                    <span>Last visit: {c.lastVisit}</span>
-                    <span className="text-blue-600 font-semibold flex items-center gap-1">
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5 text-[11px] text-slate-500">
+                    <span className="min-w-0 truncate">Last visit: {c.lastVisit}</span>
+                    <span className="flex shrink-0 items-center gap-1 font-semibold text-blue-600">
                       <span>History</span>
                       <Eye className="w-3 h-3" />
                     </span>
@@ -150,65 +151,51 @@ export function CustomersList({
               ))}
             </div>
 
-            {/* Desktop & Tablet Table (sm+) */}
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-semibold text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">Customer Name</th>
-                    <th className="px-4 py-3">Mobile Number</th>
-                    <th className="px-4 py-3 text-center">Bills</th>
-                    <th className="px-4 py-3 text-right">Total Spent</th>
-                    <th className="px-4 py-3">Last Visit</th>
-                    <th className="px-4 py-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {customers.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="px-4 py-3 font-semibold text-slate-900">
-                        <Link href={`/app/customers/${c.id}`} className="hover:text-blue-600">
-                          {c.name}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 font-mono text-xs">
-                        {c.phone}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
-                          {c.totalBills}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-slate-900">
-                        ₹{c.totalSpent}
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
-                        {c.lastVisit}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/app/customers/${c.id}`}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded text-xs font-medium transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>History</span>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="hidden lg:block">
+              <DataTable
+                minWidth="min-w-[850px]"
+                columns={[
+                  { label: "Customer" },
+                  { label: "Mobile" },
+                  { label: "Bills", align: "center" },
+                  { label: "Total spent", align: "right" },
+                  { label: "Last visit" },
+                  { label: "History", align: "right" },
+                ]}
+                rows={customers.map((c) => ({
+                  key: c.id,
+                  cells: [
+                    <Link key="name" href={`/app/customers/${c.id}`} className="font-semibold text-slate-900 hover:text-blue-600">
+                      {c.name}
+                    </Link>,
+                    <span key="phone" className="font-mono text-xs text-slate-600">{c.phone}</span>,
+                    <span key="bills" className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                      {c.totalBills}
+                    </span>,
+                    <span key="spent" className="font-bold text-slate-900">₹{c.totalSpent}</span>,
+                    <span key="visit" className="whitespace-nowrap text-xs text-slate-500">{c.lastVisit}</span>,
+                    <Link
+                      key="history"
+                      href={`/app/customers/${c.id}`}
+                      className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      History
+                    </Link>,
+                  ],
+                }))}
+              />
             </div>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-slate-200">
-                <div className="text-xs text-slate-500">
+              <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+                <div className="text-center text-xs text-slate-500 sm:text-left">
                   Showing <span className="font-semibold text-slate-700">{(currentPage - 1) * 25 + 1}</span> to{" "}
                   <span className="font-semibold text-slate-700">{Math.min(currentPage * 25, totalCount)}</span> of{" "}
                   <span className="font-semibold text-slate-700">{totalCount}</span> customers
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex w-full items-center justify-between gap-2 sm:w-auto">
                   <button
                     disabled={currentPage <= 1}
                     onClick={() => {

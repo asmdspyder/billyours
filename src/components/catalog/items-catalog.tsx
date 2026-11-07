@@ -17,6 +17,8 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { createItemAction, updateItemAction, archiveItemAction } from "@/actions/catalog-actions";
+import { CategoryFilter } from "@/components/ui/category-filter";
+import { DataTable } from "@/components/ui/data-table";
 import {
   calculateItemGstPreview,
   STANDARD_GST_RATES,
@@ -751,55 +753,13 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
         </div>
       </div>
 
-      {/* Dedicated Categories Bar with sleek horizontal scroll */}
-      {categories.length > 0 && (
-        <div className="bg-white p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
-          <div className="flex items-center gap-2 overflow-x-auto thin-scroll pb-1 pt-0.5 scroll-smooth">
-            <button
-              onClick={() => handleCategorySelect(null)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                selectedCategory === null
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900"
-              }`}
-            >
-              <span>All</span>
-              <span
-                className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
-                  selectedCategory === null ? "bg-blue-700/60 text-white" : "bg-slate-200 text-slate-600"
-                }`}
-              >
-                {pagination ? pagination.totalCount : items.length}
-              </span>
-            </button>
-            {categories.map((c) => {
-              const isSelected = selectedCategory === c;
-              return (
-                <button
-                  key={c}
-                  onClick={() => handleCategorySelect(isSelected ? null : c)}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-blue-600 text-white font-bold shadow-sm"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900"
-                  }`}
-                >
-                  <span>{c}</span>
-                  {categoryCounts[c] !== undefined && !pagination && (
-                    <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
-                        isSelected ? "bg-blue-700/60 text-white" : "bg-slate-200 text-slate-600"
-                      }`}
-                    >
-                      {categoryCounts[c] || 0}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <CategoryFilter
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelect={handleCategorySelect}
+        allCount={pagination ? pagination.totalCount : items.length}
+        categoryCounts={pagination ? undefined : categoryCounts}
+      />
 
       {/* Items Table */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -825,14 +785,14 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
         ) : (
           <>
             {/* Mobile Card List: Fits 100% width with zero horizontal scrolling */}
-            <div className="sm:hidden divide-y divide-slate-100">
+            <div className="grid gap-3 bg-slate-50/70 p-3 sm:grid-cols-2 sm:p-4 lg:hidden">
               {filtered.map((item) => (
                 <div
                   key={item.id}
-                  className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3"
+                  className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition-colors hover:border-slate-300"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold text-slate-900 text-sm truncate">{item.name}</p>
+                    <p className="break-words font-bold text-slate-900 text-sm">{item.name}</p>
                     <div className="flex flex-wrap items-center gap-1.5 mt-1">
                       {item.category && (
                         <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-semibold rounded-md">
@@ -886,112 +846,83 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
               ))}
             </div>
 
-            {/* Desktop & Tablet Table (sm+) */}
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide">
-                      Product Name
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide">
-                      Category
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide">
-                      GST Rate / Type
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide hidden md:table-cell">
-                      HSN / SAC
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide hidden sm:table-cell">
-                      Unit
-                    </th>
-                    <th className="px-5 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wide">
-                      Price (₹)
-                    </th>
-                    <th className="px-5 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wide">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filtered.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="px-5 py-3.5 font-semibold text-slate-900">{item.name}</td>
-                      <td className="px-4 py-3.5">
-                        {item.category ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg">
-                            {item.category}
-                          </span>
-                        ) : (
-                          <span className="text-slate-300 text-xs">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        {item.taxTreatment === "TAXABLE" && item.gstRate > 0 ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/80">
-                            <span>{item.gstRate}%</span>
-                            <span
-                              className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${
-                                item.priceType === "INCLUSIVE"
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-blue-200 text-blue-800"
-                              }`}
-                            >
-                              {item.priceType === "INCLUSIVE" ? "Incl" : "Excl"}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-medium rounded-lg">
-                            {item.taxTreatment === "TAXABLE" ? "0% GST" : item.taxTreatment}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3.5 font-mono text-xs text-slate-500 hidden md:table-cell">
-                        {item.hsnSacCode || "—"}
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-500 text-xs hidden sm:table-cell">{item.unitLabel || "—"}</td>
-                      <td className="px-5 py-3.5 text-right font-bold text-slate-900">
-                        ₹{item.unitPrice.toFixed(2)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => {
-                              setErrorMsg(null);
-                              setEditingItem(item);
-                            }}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                            title="Edit"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleArchive(item.id, item.name)}
-                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                            title="Archive"
-                          >
-                            <Archive className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="hidden lg:block">
+              <DataTable
+                minWidth="min-w-[900px]"
+                columns={[
+                  { label: "Product" },
+                  { label: "Category" },
+                  { label: "GST" },
+                  { label: "HSN / SAC", className: "hidden xl:table-cell" },
+                  { label: "Unit", className: "hidden xl:table-cell" },
+                  { label: "Price", align: "right" },
+                  { label: "Actions", align: "right" },
+                ]}
+                rows={filtered.map((item) => ({
+                  key: item.id,
+                  cells: [
+                    <span key="name" className="font-semibold text-slate-900">{item.name}</span>,
+                    item.category ? (
+                      <span key="category" className="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                        {item.category}
+                      </span>
+                    ) : <span key="category" className="text-slate-300">—</span>,
+                    item.taxTreatment === "TAXABLE" && item.gstRate > 0 ? (
+                      <span key="gst" className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200/80 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                        {item.gstRate}%
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-extrabold ${
+                          item.priceType === "INCLUSIVE" ? "bg-blue-600 text-white" : "bg-blue-200 text-blue-800"
+                        }`}>
+                          {item.priceType === "INCLUSIVE" ? "Incl" : "Excl"}
+                        </span>
+                      </span>
+                    ) : (
+                      <span key="gst" className="inline-flex rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                        {item.taxTreatment === "TAXABLE" ? "0% GST" : item.taxTreatment}
+                      </span>
+                    ),
+                    <span key="hsn" className="font-mono text-xs text-slate-500">{item.hsnSacCode || "—"}</span>,
+                    <span key="unit" className="text-xs text-slate-500">{item.unitLabel || "—"}</span>,
+                    <span key="price" className="font-bold text-slate-900">₹{item.unitPrice.toFixed(2)}</span>,
+                    <div key="actions" className="flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setErrorMsg(null);
+                          setEditingItem(item);
+                        }}
+                        className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                        title="Edit"
+                        aria-label={`Edit ${item.name}`}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleArchive(item.id, item.name)}
+                        className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                        title="Archive"
+                        aria-label={`Archive ${item.name}`}
+                      >
+                        <Archive className="h-4 w-4" />
+                      </button>
+                    </div>,
+                  ],
+                }))}
+              />
             </div>
           </>
         )}
 
         {/* Pagination Controls */}
         {pagination && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3.5 bg-white border-t border-slate-200">
-            <div className="text-xs text-slate-500">
+          <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-3 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div className="text-center text-xs text-slate-500 sm:text-left">
               Showing <span className="font-semibold text-slate-700">{(pagination.page - 1) * pagination.pageSize + 1}</span> to{" "}
               <span className="font-semibold text-slate-700">{Math.min(pagination.page * pagination.pageSize, pagination.totalCount)}</span> of{" "}
               <span className="font-semibold text-slate-700">{pagination.totalCount}</span> items
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center justify-between gap-2 sm:w-auto">
               <button
                 disabled={pagination.page <= 1}
                 onClick={() => {

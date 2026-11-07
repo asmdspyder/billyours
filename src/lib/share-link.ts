@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { sql } from "@/db";
 
 export function generateSecureToken(): string {
-  return crypto.randomBytes(32).toString("hex");
+  return crypto.randomBytes(16).toString("base64url");
 }
 
 export function hashToken(token: string): string {
@@ -25,7 +25,11 @@ export async function createSharedBillLink(billId: string, expiresInDays = 90): 
 }
 
 export async function getBillByShareToken(token: string) {
-  if (!token || typeof token !== "string" || token.length < 32) {
+  if (
+    !token ||
+    typeof token !== "string" ||
+    !/^(?:[A-Fa-f0-9]{64}|[A-Za-z0-9_-]{22})$/.test(token)
+  ) {
     return null;
   }
 
@@ -53,7 +57,6 @@ export async function getBillByShareToken(token: string) {
       b.tax_inclusive,
       b.taxable_amount,
       b.tax_amount,
-      b.place_of_supply_state,
       b.is_inter_state,
       b.total_cgst,
       b.total_sgst,

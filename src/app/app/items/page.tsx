@@ -85,7 +85,7 @@ export default async function ItemsPage(props: ItemsPageProps) {
   const categories = categoriesResult.map((r: any) => r.category).filter(Boolean) as string[];
 
   return (
-    <div className="overflow-y-auto h-full">
+    <div className="no-scrollbar overflow-y-auto h-full">
       <ItemsCatalog
         business={session.account}
         initialItems={itemsResult.map((it) => ({
@@ -115,4 +115,3 @@ export default async function ItemsPage(props: ItemsPageProps) {
     </div>
   );
 }
-

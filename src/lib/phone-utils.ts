@@ -7,6 +7,10 @@ export function normalizePhone(rawPhone?: string | null): string | null {
   const trimmed = rawPhone.trim();
   if (!trimmed) return null;
 
+  if (trimmed.startsWith("00")) {
+    return normalizePhone(`+${trimmed.slice(2)}`);
+  }
+
   // Remove spaces, hyphens, parentheses, dots
   let digits = trimmed.replace(/[\s\-\(\)\.]/g, "");
 
@@ -57,5 +61,6 @@ export function getWhatsAppNumber(phone?: string | null): string | null {
   if (!normalized) return null;
 
   // wa.me requires international format without + or spaces or special characters
-  return normalized.replace(/\+/g, "");
+  const number = normalized.replace(/\D/g, "");
+  return /^[1-9]\d{6,14}$/.test(number) ? number : null;
 }

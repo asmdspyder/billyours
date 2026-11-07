@@ -26,12 +26,12 @@ export function buildWhatsAppShareUrl(params: WhatsAppMessageParams): string | n
     finalLink = `${getBaseUrl()}${finalLink.startsWith("/") ? "" : "/"}${finalLink}`;
   }
 
-  const linkText = finalLink ? `\n\n📄 View or download your bill here: ${finalLink}` : "";
+  const linkText = finalLink ? `\n\n📄 Bill #${params.billNumber}: ${finalLink}` : "";
   const reviewText = params.googleReviewLink?.trim()
     ? `\n\n⭐ We'd love your feedback! Please rate us on Google:\n${params.googleReviewLink.trim()}`
     : "";
 
-  const message = `Hi ${greetingName}, thank you for your purchase${business}!\nYour bill #${params.billNumber} for ₹${total} is ready.${linkText}${reviewText}\n\nHave a great day!`;
+  const message = `Hi ${greetingName}, thank you for your purchase${business}!\nYour bill for ₹${total} is ready.${linkText}${reviewText}\n\nHave a great day!`;
 
   return `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
 }

@@ -138,12 +138,6 @@ export default async function PublicBillPage(props: PublicBillPageProps) {
               {bill.customer_name_snapshot || "Customer"}
             </span>
           </div>
-          {bill.place_of_supply_state && (
-            <div className="flex justify-between items-center">
-              <span className="text-slate-500">Place of Supply:</span>
-              <span className="text-slate-700">{bill.place_of_supply_state}</span>
-            </div>
-          )}
           <div className="flex justify-between items-center">
             <span className="text-slate-500">Payment Status:</span>
             <span className="inline-flex items-center gap-1 font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full text-[11px]">

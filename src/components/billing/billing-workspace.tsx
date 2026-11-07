@@ -34,6 +34,7 @@ import {
 } from "@/lib/billing-calculations";
 import { completeBillAction, lookupCustomerPhoneAction } from "@/actions/billing-actions";
 import { AppLoader } from "@/components/ui/app-loader";
+import { CategoryFilter } from "@/components/ui/category-filter";
 import { SubscriptionExpiredScreen } from "@/components/subscription/subscription-expired-screen";
 
 interface Item {
@@ -497,7 +498,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               placeholder="Search by item name, category, or HSN"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="billing-item-search-input w-full h-[2.5rem] pl-[2.25rem] pr-[2.25rem] bg-white border border-slate-300 rounded-[0.625rem] text-sm placeholder:text-slate-500 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] focus:bg-white transition-all"
+              className="billing-item-search-input w-full h-[2.5rem] pl-[2.25rem] pr-[2.25rem] bg-white border-2 border-slate-400 rounded-[0.625rem] text-sm placeholder:text-slate-500 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] focus:bg-white transition-all"
             />
             {searchQuery && (
               <button
@@ -519,55 +520,13 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
           </button>
         </div>
 
-        {/* Category horizontal scrolling bar */}
-        {categories.length > 0 && (
-          <div className="flex items-center gap-[0.375rem] overflow-x-auto no-scrollbar scroll-smooth border-t border-[#f0eee7] pt-[0.5rem]">
-            <button
-              type="button"
-              onClick={() => setSelectedCategory(null)}
-              className={`inline-flex h-[2rem] items-center gap-[0.375rem] px-[0.75rem] rounded-full text-[0.75rem] font-bold whitespace-nowrap transition-all cursor-pointer border ${
-                selectedCategory === null
-                  ? "bg-[#0a0e1a] text-white border-[#0a0e1a] shadow-[0_0.25rem_0.75rem_rgba(10,14,26,0.12)]"
-                  : "bg-white text-slate-600 border-[#e5e2d9] hover:border-[#b9c9f0] hover:text-[#2563eb]"
-              }`}
-            >
-              <span>All</span>
-              <span
-                className={`min-w-[1.25rem] text-center text-[0.625rem] leading-[1.125rem] rounded-full font-black tabular-nums ${
-                  selectedCategory === null ? "bg-white/15 text-white" : "bg-[#f0efea] text-slate-500"
-                }`}
-              >
-                {initialItems.length}
-              </span>
-            </button>
-
-            {categories.map((cat) => {
-              const count = categoryCounts[cat] || 0;
-              const isSelected = selectedCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedCategory(isSelected ? null : cat)}
-                  className={`inline-flex h-[2rem] items-center gap-[0.375rem] px-[0.75rem] rounded-full text-[0.75rem] font-bold whitespace-nowrap transition-all cursor-pointer border ${
-                    isSelected
-                      ? "bg-[#0a0e1a] text-white border-[#0a0e1a] shadow-[0_0.25rem_0.75rem_rgba(10,14,26,0.12)]"
-                      : "bg-white text-slate-600 border-[#e5e2d9] hover:border-[#b9c9f0] hover:text-[#2563eb]"
-                  }`}
-                >
-                  <span>{cat}</span>
-                  <span
-                    className={`min-w-[1.25rem] text-center text-[0.625rem] leading-[1.125rem] rounded-full font-black tabular-nums ${
-                      isSelected ? "bg-white/15 text-white" : "bg-[#f0efea] text-slate-500"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <CategoryFilter
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelect={setSelectedCategory}
+          allCount={initialItems.length}
+          categoryCounts={categoryCounts}
+        />
       </div>
 
       {/* Item Grid (scrollable) */}
@@ -608,7 +567,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                   <div className={`min-w-0 space-y-1 ${inCart ? "pr-9" : ""}`}>
                     {item.category && (
                       <div className="flex items-center gap-1 flex-wrap">
-                        <span className="text-[0.625rem] md:text-[0.6875rem] leading-[1rem] font-bold uppercase tracking-[0.08em] text-slate-500 bg-[#f1f0ec] px-[0.5rem] py-[0.25rem] rounded-[0.375rem] truncate max-w-full">
+                        <span className="max-w-full truncate rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-[0.625rem] font-bold uppercase leading-[1rem] tracking-[0.08em] text-violet-800 md:text-[0.6875rem]">
                           {item.category}
                         </span>
                       </div>
@@ -681,7 +640,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                 <select
                   value={selectedStaffId}
                   onChange={(e) => setSelectedStaffId(e.target.value)}
-                  className="h-7 w-[6.5rem] md:w-[8rem] appearance-none truncate rounded-lg border border-slate-300 bg-white pl-2 pr-6 text-[0.625rem] font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400 focus:border-blue-600 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 cursor-pointer"
+                  className="h-7 w-[clamp(8rem,38vw,12rem)] appearance-none rounded-lg border border-slate-300 bg-white pl-2 pr-6 text-[0.625rem] font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400 focus:border-blue-600 focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 cursor-pointer sm:w-44 md:w-48"
                   aria-label="Assign staff"
                 >
                   {staffList.map((s) => (
@@ -719,7 +678,13 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
               className={`billing-customer-input h-9 w-full min-w-0 pl-8 ${isSearchingCustomer || existingCustomerFound ? "pr-9" : "pr-2.5"} bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-[0.1875rem] focus:ring-blue-500/15 focus:border-[#2563eb] transition-colors`}
             />
             {isSearchingCustomer && (
-              <span className="absolute right-[0.625rem] top-1/2 -translate-y-1/2 pointer-events-none"><AppLoader size="sm" label="Searching" /></span>
+              <span
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-blue-600"
+                role="status"
+                aria-label="Searching for customer"
+              >
+                <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-100 border-t-blue-600" />
+              </span>
             )}
             {!isSearchingCustomer && existingCustomerFound && (
               <span className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center text-green-600" role="status" aria-label="Existing customer found" title="Saved customer">
@@ -1025,7 +990,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
   );
 
   return (
-    <>
+    <div className="relative h-full min-h-0">
       {/* ─── Tablet & Desktop Layout (md+): Side-by-side ───────────────────── */}
       <div className="hidden md:grid md:grid-cols-12 gap-3 p-3 lg:p-4 h-full min-h-0 overflow-hidden bg-[#f2f0e8]">
         {/* Left: Items (md: 6 cols, lg: 7 cols) */}
@@ -1077,6 +1042,32 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
           {mobileTab === "items" ? renderItemsPanel() : renderBillPanel()}
         </div>
       </div>
+
+      {isPending && (
+        <div
+          className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950/25 p-4 backdrop-blur-sm"
+          role="status"
+          aria-live="assertive"
+          aria-label="Completing bill"
+        >
+          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.28)]">
+            <div className="h-1.5 overflow-hidden bg-blue-100">
+              <div className="h-full w-1/3 animate-loading-bar rounded-full bg-blue-600" />
+            </div>
+            <div className="flex items-center gap-4 p-5 sm:p-6">
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                <ReceiptText className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-slate-900 sm:text-base">Completing your bill</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                  Saving the bill and updating your records…
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Custom Item Modal with Complete GST Options ────────────────────────── */}
       {showCustomModal && (
@@ -1315,6 +1306,6 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
           accountId={business.id}
         />
       )}
-    </>
+    </div>
   );
 }

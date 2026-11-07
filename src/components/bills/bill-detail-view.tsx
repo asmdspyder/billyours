@@ -4,10 +4,10 @@ import { useState, useEffect, useTransition, useMemo } from "react";
 import Link from "next/link";
 import {
   Printer,
-  Share2,
   Copy,
   Check,
   Ban,
+  ArrowLeft,
   Calendar,
   User,
   Phone,
@@ -21,9 +21,9 @@ import {
   Table as TableIcon,
   Globe,
 } from "lucide-react";
-import { buildWhatsAppShareUrl } from "@/lib/whatsapp";
 import { getBillShareUrl } from "@/lib/base-url";
 import { cancelBillAction } from "@/actions/billing-actions";
+import { WhatsAppBillShare } from "@/components/bills/whatsapp-bill-share";
 
 export function InstagramLogo({ className = "w-3.5 h-3.5" }: { className?: string }) {
   return (
@@ -139,6 +139,7 @@ interface BillDetailViewProps {
   shareToken: string;
   initialAutoPrint?: boolean;
   initialFormat?: string;
+  showHistoryBack?: boolean;
 }
 
 export function BillDetailView({
@@ -148,6 +149,7 @@ export function BillDetailView({
   shareToken,
   initialAutoPrint,
   initialFormat = "thermal",
+  showHistoryBack = false,
 }: BillDetailViewProps) {
   const [printFormat, setPrintFormat] = useState<"thermal" | "a4">(
     initialFormat === "a4" ? "a4" : "thermal"
@@ -170,18 +172,6 @@ export function BillDetailView({
 
   // Construct WhatsApp & Share URLs
   const shareUrl = getBillShareUrl(shareToken);
-  const whatsAppUrl = bill.customerPhone
-    ? buildWhatsAppShareUrl({
-        phone: bill.customerPhone,
-        customerName: bill.customerName,
-        businessName: business.businessName,
-        billNumber: bill.billNumber,
-        grandTotal: bill.grandTotal,
-        shareToken,
-        googleReviewLink: business.googleReviewLink,
-      })
-    : null;
-
   const copyShareLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -258,21 +248,32 @@ export function BillDetailView({
   const totalTaxNum = Number(bill.totalTax || bill.taxAmount || 0);
 
   return (
-    <div className="bill-detail-scroll no-scrollbar h-full min-h-0 w-full max-w-5xl mx-auto space-y-4 overflow-y-auto overscroll-contain px-3 py-4 pb-4 sm:space-y-6 sm:px-4 md:px-6">
+    <div className="bill-detail-scroll no-scrollbar flex h-full min-h-0 w-full max-w-5xl mx-auto flex-col overflow-hidden px-3 py-4 sm:px-4 md:px-6">
       {/* Action Bar (hidden when printing) */}
-      <div className="bg-white p-3 md:p-3.5 rounded-2xl border border-slate-200/90 shadow-xs no-print">
+      <div className="mb-4 shrink-0 bg-white p-3 md:p-3.5 rounded-2xl border border-slate-200/90 shadow-xs no-print">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="flex items-center justify-between lg:contents">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 lg:hidden">
               Bill actions
             </span>
-            <Link
-              href="/app/billing"
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-100 lg:py-1.5"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span className="whitespace-nowrap">New Bill</span>
-            </Link>
+            <div className="flex items-center gap-2">
+              {showHistoryBack && (
+                <Link
+                  href="/app/bills"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200 lg:py-1.5"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span className="whitespace-nowrap">Back to bills</span>
+                </Link>
+              )}
+              <Link
+                href="/app/billing"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-100 lg:py-1.5"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span className="whitespace-nowrap">New Bill</span>
+              </Link>
+            </div>
           </div>
 
           {/* Format Switcher */}
@@ -313,17 +314,15 @@ export function BillDetailView({
             </button>
 
             {/* WhatsApp Share */}
-            {whatsAppUrl && (
-              <a
-                href={whatsAppUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-emerald-700 lg:w-auto lg:py-1.5"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                <span className="whitespace-nowrap">WhatsApp</span>
-              </a>
-            )}
+            <WhatsAppBillShare
+              billId={bill.id}
+              billNumber={bill.billNumber}
+              customerName={bill.customerName}
+              customerPhone={bill.customerPhone}
+              businessName={business.businessName}
+              grandTotal={bill.grandTotal}
+              googleReviewLink={business.googleReviewLink}
+            />
 
             {/* Copy Public Link */}
             <button
@@ -340,7 +339,7 @@ export function BillDetailView({
               <button
                 type="button"
                 onClick={() => setShowCancelModal(true)}
-                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-red-200/60 bg-red-50 px-3 py-2.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100 cursor-pointer lg:w-auto lg:py-1.5 ${!whatsAppUrl ? "col-span-2 w-1/2 justify-self-center lg:col-span-1 lg:w-auto" : ""}`}
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-red-200/60 bg-red-50 px-3 py-2.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100 cursor-pointer lg:w-auto lg:py-1.5"
               >
                 <Ban className="w-3.5 h-3.5" />
                 <span className="whitespace-nowrap">Cancel</span>
@@ -350,24 +349,25 @@ export function BillDetailView({
         </div>
       </div>
 
-      {/* Cancellation Warning Banner */}
-      {bill.status === "CANCELLED" && (
-        <div className="bg-red-50 border border-red-200 p-4 rounded-xl text-red-800 space-y-1">
-          <div className="flex items-center gap-2 font-bold text-sm">
-            <AlertTriangle className="w-4 h-4 text-red-600" />
-            <span>This bill was CANCELLED on {bill.cancelledAt || "N/A"}</span>
+      <div className="bill-detail-content no-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pb-4 sm:space-y-6">
+        {/* Cancellation Warning Banner */}
+        {bill.status === "CANCELLED" && (
+          <div className="bg-red-50 border border-red-200 p-4 rounded-xl text-red-800 space-y-1">
+            <div className="flex items-center gap-2 font-bold text-sm">
+              <AlertTriangle className="w-4 h-4 text-red-600" />
+              <span>This bill was CANCELLED on {bill.cancelledAt || "N/A"}</span>
+            </div>
+            <p className="text-xs text-red-700">
+              <strong>Reason:</strong> {bill.cancellationReason || "No reason recorded"}
+            </p>
+            <p className="text-[11px] text-red-600">
+              Historical transaction data and snapshots are preserved for auditing, but this bill is excluded from active sales.
+            </p>
           </div>
-          <p className="text-xs text-red-700">
-            <strong>Reason:</strong> {bill.cancellationReason || "No reason recorded"}
-          </p>
-          <p className="text-[11px] text-red-600">
-            Historical transaction data and snapshots are preserved for auditing, but this bill is excluded from active sales.
-          </p>
-        </div>
-      )}
+        )}
 
-      {/* RENDER VIEW: THERMAL RECEIPT OR A4 INVOICE */}
-      {printFormat === "thermal" ? (
+        {/* RENDER VIEW: THERMAL RECEIPT OR A4 INVOICE */}
+        {printFormat === "thermal" ? (
         /* THERMAL RECEIPT LAYOUT */
         <div className="thermal-receipt mx-auto w-full max-w-sm rounded-xl border border-slate-200 bg-white p-3 font-mono text-xs text-slate-900 shadow-sm sm:p-6">
           {/* Header */}
@@ -830,7 +830,8 @@ export function BillDetailView({
             <p>Thank you for doing business with us!</p>
           </div>
         </div>
-      )}
+        )}
+      </div>
 
       {/* Cancellation Modal */}
       {showCancelModal && (
