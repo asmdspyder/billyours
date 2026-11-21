@@ -1092,7 +1092,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Special repair, Installation"
+                  placeholder="Enter a description or note"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white font-medium"
@@ -1140,7 +1140,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                     type="text"
                     value={customUnit}
                     onChange={(e) => setCustomUnit(e.target.value)}
-                    placeholder="e.g. hrs, visit, kg (optional)"
+                    placeholder="Enter unit label (optional)"
                     className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1152,7 +1152,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                     type="text"
                     value={customHsn}
                     onChange={(e) => setCustomHsn(e.target.value)}
-                    placeholder="e.g. 9983"
+                    placeholder="Enter code (optional)"
                     className="w-full px-3.5 py-2 text-xs font-mono uppercase bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1221,7 +1221,7 @@ export function BillingWorkspace({ business, initialItems, categories, staffList
                             min="0"
                             max="100"
                             step="0.01"
-                            placeholder="e.g. 7.5"
+                            placeholder="Enter value"
                             value={customCustomRateStr}
                             onChange={(e) => setCustomCustomRateStr(e.target.value)}
                             className="w-24 px-2.5 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg"

@@ -38,7 +38,7 @@ export default async function ItemsPage(props: ItemsPageProps) {
   const offset = (page - 1) * pageSize;
   const searchPattern = `%${search}%`;
 
-  const [categoriesResult, countResult, itemsResult] = await Promise.all([
+  const [categoriesResult, countResult, allCountResult, categoryCountsResult, itemsResult] = await Promise.all([
     sql`
       SELECT DISTINCT category
       FROM items
@@ -53,7 +53,23 @@ export default async function ItemsPage(props: ItemsPageProps) {
       WHERE account_id = ${accountId}
         AND archived_at IS NULL
         AND (${search === ""} OR name ILIKE ${searchPattern} OR category ILIKE ${searchPattern} OR hsn_sac_code ILIKE ${searchPattern})
-        AND (${selectedCategory === ""} OR category = ${selectedCategory});
+        AND (${selectedCategory === ""} OR BTRIM(category) ILIKE BTRIM(${selectedCategory}));
+    `,
+    sql`
+      SELECT COUNT(*)::int as total
+      FROM items
+      WHERE account_id = ${accountId}
+        AND archived_at IS NULL;
+    `,
+    sql`
+      SELECT BTRIM(category) AS category, COUNT(*)::int AS count
+      FROM items
+      WHERE account_id = ${accountId}
+        AND archived_at IS NULL
+        AND category IS NOT NULL
+        AND BTRIM(category) <> ''
+      GROUP BY BTRIM(category)
+      ORDER BY BTRIM(category) ASC;
     `,
     sql`
       SELECT
@@ -73,7 +89,7 @@ export default async function ItemsPage(props: ItemsPageProps) {
       WHERE account_id = ${accountId}
         AND archived_at IS NULL
         AND (${search === ""} OR name ILIKE ${searchPattern} OR category ILIKE ${searchPattern} OR hsn_sac_code ILIKE ${searchPattern})
-        AND (${selectedCategory === ""} OR category = ${selectedCategory})
+        AND (${selectedCategory === ""} OR BTRIM(category) ILIKE BTRIM(${selectedCategory}))
       ORDER BY is_active DESC, name ASC
       LIMIT ${pageSize}
       OFFSET ${offset};
@@ -82,7 +98,13 @@ export default async function ItemsPage(props: ItemsPageProps) {
 
   const totalCount = countResult[0]?.total || 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const categories = categoriesResult.map((r: any) => r.category).filter(Boolean) as string[];
+  const allCount = allCountResult[0]?.total || 0;
+  const categories = categoriesResult.map((r: any) => r.category?.trim()).filter(Boolean) as string[];
+  const categoryCounts: Record<string, number> = {};
+  categoryCountsResult.forEach((row: any) => {
+    const category = row.category?.trim();
+    if (category) categoryCounts[category] = Number(row.count);
+  });
 
   return (
     <div className="no-scrollbar overflow-y-auto h-full">
@@ -108,6 +130,8 @@ export default async function ItemsPage(props: ItemsPageProps) {
           pageSize,
           totalPages,
           totalCount,
+          allCount,
+          categoryCounts,
           currentSearch: search,
           currentCategory: selectedCategory,
         }}

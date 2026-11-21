@@ -167,6 +167,85 @@ body {
   cursor: not-allowed;
 }
 
+.app-modal input:not([type="checkbox"]):not([type="radio"]),
+.app-modal select,
+.app-modal textarea,
+.settings-form input:not([type="checkbox"]):not([type="radio"]),
+.settings-form select,
+.settings-form textarea {
+  min-height: 44px;
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  color: #0f172a !important;
+}
+
+.app-modal input:not([type="checkbox"]):not([type="radio"]):focus,
+.app-modal select:focus,
+.app-modal textarea:focus,
+.settings-form input:not([type="checkbox"]):not([type="radio"]):focus,
+.settings-form select:focus,
+.settings-form textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+  outline: none;
+}
+
+.app-modal label,
+.settings-form label {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.app-modal textarea,
+.settings-form textarea {
+  min-height: 84px;
+}
+
+.app-modal input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #2563eb;
+}
+
+.app-typography [data-app-search-input] {
+  border: 1px solid #cbd5e1 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.app-typography [data-app-search-input]:hover {
+  border-color: #94a3b8 !important;
+}
+
+.app-typography [data-app-search-input]:focus,
+.app-typography [data-app-search-input]:focus-visible {
+  border-color: #2563eb !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.14) !important;
+}
+
+.app-typography [data-app-search-input]::-webkit-input-placeholder {
+  color: #64748b !important;
+}
+
+.app-typography [data-app-search-input]::placeholder {
+  color: #64748b !important;
+}
+
+.app-typography [data-app-search-input]:-webkit-autofill,
+.app-typography [data-app-search-input]:-webkit-autofill:hover,
+.app-typography [data-app-search-input]:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0f172a !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset, 0 0 0 2px rgba(37, 99, 235, 0.14) !important;
+}
+
 .app-typography {
   --app-font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --type-page-heading: 22px;
@@ -244,6 +323,16 @@ body {
 
 .app-typography th {
   font-weight: 600;
+}
+
+.app-typography table th,
+.app-typography table td {
+  vertical-align: middle;
+}
+
+.app-typography .data-table th,
+.app-typography .data-table td {
+  height: 48px;
 }
 
 .app-typography .text-xs {

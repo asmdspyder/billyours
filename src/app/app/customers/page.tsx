@@ -84,7 +84,7 @@ export default async function CustomersPage(props: CustomersPageProps) {
   `;
 
   return (
-    <div className="no-scrollbar overflow-y-auto h-full p-4 md:p-6 max-w-6xl mx-auto space-y-4 pb-8">
+    <div className="no-scrollbar mx-auto h-full w-full max-w-[1360px] space-y-4 overflow-y-auto px-3 py-4 sm:px-5 md:px-6 lg:px-8 xl:px-10 pb-8">
       <CustomersList
         customers={customers.map((c) => ({
           id: c.id,

@@ -39,8 +39,11 @@ export function CategoryFilter({
           <span className={countClass(selectedCategory === null)}>{allCount}</span>
         </button>
         {categories.map((category) => {
-          const selected = selectedCategory === category;
-          const count = categoryCounts?.[category];
+          const normalizedCategory = category.trim().toLowerCase();
+          const selected = selectedCategory?.trim().toLowerCase() === normalizedCategory;
+          const count = categoryCounts
+            ? Object.entries(categoryCounts).find(([name]) => name.trim().toLowerCase() === normalizedCategory)?.[1]
+            : undefined;
           return (
             <button
               key={category}

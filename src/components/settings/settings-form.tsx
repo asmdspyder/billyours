@@ -81,9 +81,9 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
   };
 
   return (
-    <div className="space-y-6">
+    <div className="settings-form grid gap-5 lg:grid-cols-12">
       {/* 1. Business Profile Section */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div className="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-5 md:p-6">
         <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
           <Store className="w-5 h-5 text-blue-600" />
           <h2 className="font-bold text-base text-slate-900">Business Profile & Bill Print Details</h2>
@@ -132,7 +132,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 type="tel"
                 name="phone"
                 defaultValue={account.businessPhone || ""}
-                placeholder="+91 98765 43210"
+                placeholder="Enter business phone number"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
@@ -146,7 +146,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 type="email"
                 name="email"
                 defaultValue={account.businessEmail || ""}
-                placeholder="contact@business.com"
+                placeholder="Enter business email address"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
@@ -160,7 +160,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 type="text"
                 name="address"
                 defaultValue={account.address || ""}
-                placeholder="Shop number, Street, Area, City"
+                placeholder="Enter complete business address"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -224,7 +224,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 name="gstin"
                 maxLength={15}
                 defaultValue={account.gstin || ""}
-                placeholder="e.g. 29ABCDE1234F1Z5"
+                placeholder="Enter GSTIN"
                 className="w-full px-3 py-2 text-sm font-mono uppercase bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
@@ -239,7 +239,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 name="fssai"
                 maxLength={20}
                 defaultValue={account.fssai || ""}
-                placeholder="e.g. 11223344556677"
+                placeholder="Enter license number"
                 className="w-full px-3 py-2 text-sm font-mono bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-[11px] text-slate-400 mt-1">Food safety license — printed on bill if provided</p>
@@ -254,7 +254,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 name="pan"
                 maxLength={10}
                 defaultValue={account.pan || ""}
-                placeholder="e.g. ABCDE1234F"
+                placeholder="Enter PAN"
                 className="w-full px-3 py-2 text-sm font-mono uppercase bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -267,7 +267,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 type="text"
                 name="website"
                 defaultValue={account.website || ""}
-                placeholder="e.g. www.chaibites.in"
+                placeholder="Enter website URL"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
@@ -281,7 +281,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 type="text"
                 name="facebook"
                 defaultValue={account.facebook || ""}
-                placeholder="e.g. @chaibites or fb.com/chaibites"
+                placeholder="Enter Facebook profile or page"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
@@ -295,7 +295,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 type="text"
                 name="instagram"
                 defaultValue={account.instagram || ""}
-                placeholder="e.g. @chaibites.official"
+                placeholder="Enter Instagram profile"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-[11px] text-slate-400 mt-1">Printed on bill if provided</p>
@@ -309,7 +309,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
                 type="url"
                 name="googleReviewLink"
                 defaultValue={account.googleReviewLink || ""}
-                placeholder="e.g. https://g.page/r/chaibites-review/review"
+                placeholder="Enter Google review URL"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-[11px] text-slate-400 mt-1">
@@ -331,7 +331,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
       </div>
 
       {/* 2. Billing & Receipt Preferences */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div className="lg:col-span-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-5 md:p-6">
         <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
           <Receipt className="w-5 h-5 text-blue-600" />
           <h2 className="font-bold text-base text-slate-900">Billing & Receipt Preferences</h2>
@@ -416,7 +416,7 @@ export function SettingsForm({ account, user, subscriptionInfo }: SettingsFormPr
       </div>
 
       {/* 3. Account & Subscription Info */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+      <div className="lg:col-span-12 bg-white p-5 md:p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
         <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
           <ShieldCheck className="w-5 h-5 text-blue-600" />
           <h2 className="font-bold text-base text-slate-900">Subscription & Account</h2>

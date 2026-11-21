@@ -17,7 +17,6 @@ import {
   IndianRupee,
   Shield,
   Star,
-  Search,
 } from "lucide-react";
 import {
   StaffMemberRecord,
@@ -28,6 +27,8 @@ import {
   getStaffBillsAction,
 } from "@/actions/staff-actions";
 import { AppLoader } from "@/components/ui/app-loader";
+import { AppModal } from "@/components/ui/app-modal";
+import { AppSearch } from "@/components/ui/app-search";
 import { AppFeedbackDialog } from "@/components/ui/app-feedback-dialog";
 
 interface StaffManagementProps {
@@ -173,7 +174,7 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
   const totalBillsCreated = staffList.reduce((acc, s) => acc + s.totalBills, 0);
 
   return (
-    <div className="h-full flex flex-col overflow-y-auto p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="mx-auto h-full w-full max-w-[1360px] flex flex-col space-y-6 overflow-y-auto px-3 py-4 sm:px-5 md:px-6 lg:px-8 xl:px-10 pb-8">
       <AppFeedbackDialog message={feedbackMessage} onClose={() => setFeedbackMessage(null)} />
       {/* Top Banner & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 md:p-6 rounded-2xl border border-slate-200/80 shadow-xs">
@@ -227,24 +228,13 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-2.5">
-        <Search className="w-4 h-4 text-slate-400 shrink-0 ml-1" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search staff by name, email, or phone number..."
-          className="w-full text-xs md:text-sm bg-transparent outline-none placeholder:text-slate-400 text-slate-800"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery("")}
-            className="text-xs text-slate-400 hover:text-slate-600 px-2 py-0.5 rounded cursor-pointer"
-          >
-            Clear
-          </button>
-        )}
-      </div>
+      <AppSearch
+        value={searchQuery}
+        onChange={setSearchQuery}
+        onSearch={() => undefined}
+        placeholder="Search staff name, email, or mobile number"
+        ariaLabel="Search staff"
+      />
 
       {/* Staff Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -396,31 +386,19 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
 
       {/* Add / Edit Staff Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-600" />
-                <h3 className="font-black text-base text-slate-900">
-                  {editingStaff ? "Edit Staff Details" : "Add New Staff Member"}
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {formError && (
+        <AppModal
+          title={editingStaff ? "Edit Staff Details" : "Add New Staff Member"}
+          subtitle="Manage billing attribution and team access"
+          onClose={() => setIsAddModalOpen(false)}
+        >
+          {formError && (
               <div className="p-3 bg-red-50 text-red-700 rounded-xl text-xs font-medium flex items-center gap-2 border border-red-100">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{formError}</span>
               </div>
             )}
 
-            <form onSubmit={handleSaveStaff} className="space-y-4 text-xs md:text-sm">
+            <form onSubmit={handleSaveStaff} className="app-modal space-y-5 text-sm">
               <div className="space-y-1">
                 <label className="block font-bold text-slate-700">
                   Staff / Biller Name <span className="text-red-500">*</span>
@@ -430,7 +408,7 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
                   required
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g. Rahul Sharma or Priya Verma"
+                  placeholder="Enter staff member name"
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                 />
               </div>
@@ -441,7 +419,7 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
                   type="tel"
                   value={formPhone}
                   onChange={(e) => setFormPhone(e.target.value)}
-                  placeholder="e.g. 9876543210"
+                  placeholder="Enter mobile number"
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                 />
               </div>
@@ -452,7 +430,7 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
                   type="email"
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  placeholder="e.g. rahul@example.com"
+                  placeholder="Enter email address"
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                 />
               </div>
@@ -493,14 +471,13 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </AppModal>
       )}
 
       {/* Staff Associated Bills Drawer / Modal */}
       {activeStaffBills && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 space-y-4 max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-[90] flex h-[100dvh] w-screen items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl sm:max-w-2xl sm:rounded-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
                 <div className="flex items-center gap-2">
@@ -539,38 +516,38 @@ export function StaffManagement({ initialStaff }: StaffManagementProps) {
             ) : (
               <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                 <div className="border border-slate-200 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-xs">
+                  <table className="w-full table-fixed text-left text-xs">
                     <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] border-b border-slate-200">
                       <tr>
-                        <th className="py-2.5 px-3">Bill #</th>
-                        <th className="py-2.5 px-3">Date</th>
-                        <th className="py-2.5 px-3">Customer</th>
-                        <th className="py-2.5 px-3">Payment</th>
-                        <th className="py-2.5 px-3 text-right">Amount</th>
-                        <th className="py-2.5 px-3 text-center">View</th>
+                        <th className="w-[18%] px-4 py-3 align-middle">Bill #</th>
+                        <th className="w-[16%] px-4 py-3 align-middle">Date</th>
+                        <th className="w-[26%] px-4 py-3 align-middle">Customer</th>
+                        <th className="w-[16%] px-4 py-3 align-middle">Payment</th>
+                        <th className="w-[16%] px-4 py-3 text-right align-middle">Amount</th>
+                        <th className="w-[8%] px-4 py-3 text-center align-middle">View</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {activeStaffBills.bills.map((b) => (
                         <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
+                          <td className="h-12 px-4 py-3 align-middle font-mono font-bold text-slate-900">
                             {b.billNumber}
                           </td>
-                          <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                          <td className="h-12 px-4 py-3 align-middle text-slate-600 whitespace-nowrap">
                             {b.completedAt}
                           </td>
-                          <td className="py-2.5 px-3 font-medium text-slate-800">
+                          <td className="h-12 px-4 py-3 align-middle font-medium text-slate-800">
                             {b.customerName}
                           </td>
-                          <td className="py-2.5 px-3">
+                          <td className="h-12 px-4 py-3 align-middle">
                             <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
                               {b.paymentMethod}
                             </span>
                           </td>
-                          <td className="py-2.5 px-3 text-right font-extrabold text-slate-900">
+                          <td className="h-12 px-4 py-3 align-middle text-right font-extrabold text-slate-900">
                             ₹{b.grandTotal}
                           </td>
-                          <td className="py-2.5 px-3 text-center">
+                          <td className="h-12 px-4 py-3 align-middle text-center">
                             <Link
                               href={`/app/bills/${b.id}`}
                               target="_blank"

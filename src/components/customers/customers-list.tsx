@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Users, Search, Plus, Phone, Eye, X, AlertCircle } from "lucide-react";
+import { Users, Plus, Phone, Eye, X, AlertCircle, Search } from "lucide-react";
 import { createCustomerAction } from "@/actions/customer-actions";
 import { DataTable } from "@/components/ui/data-table";
+import { AppModal } from "@/components/ui/app-modal";
 
 interface CustomerSummary {
   id: string;
@@ -34,14 +35,27 @@ export function CustomersList({
 }: CustomersListProps) {
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [searchValue, setSearchValue] = useState(currentSearch);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    setSearchValue(currentSearch);
+  }, [currentSearch]);
+
+  useEffect(() => {
+    if (searchValue === currentSearch) return;
+    const timeout = window.setTimeout(() => {
+      startTransition(() => handleSearch(searchValue));
+    }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [searchValue, currentSearch]);
+
   const handleSearch = (term: string) => {
     if (term.trim()) {
-      router.push(`/app/customers?search=${encodeURIComponent(term.trim())}`);
+      router.replace(`/app/customers?search=${encodeURIComponent(term.trim())}`);
     } else {
-      router.push("/app/customers");
+      router.replace("/app/customers");
     }
   };
 
@@ -85,24 +99,48 @@ export function CustomersList({
       </div>
 
       {/* Search Input */}
-      <div className="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm">
-        <div className="relative w-full">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+      <div className="w-full rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            startTransition(() => handleSearch(searchValue));
+          }}
+          className="relative"
+        >
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by customer name or phone number..."
-            defaultValue={currentSearch}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearch((e.target as HTMLInputElement).value);
-            }}
-            onBlur={(e) => handleSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchValue}
+            onChange={(event) => setSearchValue(event.target.value)}
+            placeholder="Search customer name or mobile number"
+            aria-label="Search customers"
+            className="h-10 w-full appearance-none rounded-lg border border-slate-300 bg-white pl-9 pr-20 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
           />
-        </div>
+          {searchValue && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchValue("");
+                startTransition(() => handleSearch(""));
+              }}
+              aria-label="Clear search"
+              className="absolute right-11 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            type="submit"
+            aria-label="Search"
+            className="absolute right-1 top-1/2 flex h-8 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-700"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+        </form>
       </div>
 
       {/* Customers Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         {customers.length === 0 ? (
           <div className="text-center py-12 px-4">
             <Users className="w-10 h-10 text-slate-300 mx-auto mb-2" />
@@ -153,7 +191,7 @@ export function CustomersList({
 
             <div className="hidden lg:block">
               <DataTable
-                minWidth="min-w-[850px]"
+                minWidth="min-w-[1040px]"
                 columns={[
                   { label: "Customer" },
                   { label: "Mobile" },
@@ -177,7 +215,7 @@ export function CustomersList({
                     <Link
                       key="history"
                       href={`/app/customers/${c.id}`}
-                      className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                      className="ml-auto inline-flex h-8 items-center justify-end gap-1 rounded-lg px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
                     >
                       <Eye className="h-3.5 w-3.5" />
                       History
@@ -232,30 +270,22 @@ export function CustomersList({
 
       {/* Add Customer Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-5 space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-base">Add New Customer</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {errorMsg && (
+        <AppModal title="Add New Customer" subtitle="Create a customer profile for future bills" onClose={() => setShowAddModal(false)}>
+          {errorMsg && (
               <div className="p-2.5 bg-red-50 text-red-700 text-xs rounded-lg flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
-            <form onSubmit={handleCreateCustomer} className="space-y-3">
+            <form onSubmit={handleCreateCustomer} className="app-modal space-y-5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Customer Name *</label>
                 <input
                   type="text"
                   name="name"
                   required
-                  placeholder="e.g. Rahul Sharma"
+                  placeholder="Enter customer name"
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -265,7 +295,7 @@ export function CustomersList({
                 <input
                   type="tel"
                   name="phone"
-                  placeholder="e.g. 9876543210"
+                  placeholder="Enter mobile number"
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -275,7 +305,7 @@ export function CustomersList({
                 <input
                   type="email"
                   name="email"
-                  placeholder="e.g. customer@example.com"
+                  placeholder="Enter email address"
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -285,7 +315,7 @@ export function CustomersList({
                 <textarea
                   name="notes"
                   rows={2}
-                  placeholder="Special preferences, allergies, or notes..."
+                  placeholder="Enter preferences or additional notes"
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -307,8 +337,7 @@ export function CustomersList({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </AppModal>
       )}
     </div>
   );

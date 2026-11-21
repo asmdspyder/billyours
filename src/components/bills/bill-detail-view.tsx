@@ -869,7 +869,7 @@ export function BillDetailView({
               <textarea
                 required
                 rows={3}
-                placeholder="e.g. Customer requested refund, item out of stock, incorrect price entered..."
+                placeholder="Enter cancellation reason"
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white"

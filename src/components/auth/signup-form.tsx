@@ -58,7 +58,7 @@ export function SignupForm() {
             type="text"
             name="businessName"
             required
-            placeholder="e.g. Ramesh Kirana or Royal Hair Salon"
+            placeholder="Enter business name"
             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
           />
         </div>
@@ -72,7 +72,7 @@ export function SignupForm() {
             type="text"
             name="ownerName"
             required
-            placeholder="e.g. Ramesh Kumar"
+            placeholder="Enter your name"
             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
           />
         </div>

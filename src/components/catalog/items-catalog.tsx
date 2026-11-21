@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useMemo, useTransition, useRef } from "react";
+import { useState, useMemo, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Package,
   Plus,
-  Search,
   Edit2,
   Archive,
   CheckCircle2,
@@ -20,6 +19,9 @@ import { createItemAction, updateItemAction, archiveItemAction } from "@/actions
 import { CategoryFilter } from "@/components/ui/category-filter";
 import { DataTable } from "@/components/ui/data-table";
 import { AppFeedbackDialog } from "@/components/ui/app-feedback-dialog";
+import { AppLoader } from "@/components/ui/app-loader";
+import { AppSearch } from "@/components/ui/app-search";
+import { AppModal } from "@/components/ui/app-modal";
 import {
   calculateItemGstPreview,
   STANDARD_GST_RATES,
@@ -56,6 +58,8 @@ interface ItemsCatalogProps {
     pageSize: number;
     totalPages: number;
     totalCount: number;
+    allCount: number;
+    categoryCounts: Record<string, number>;
     currentSearch: string;
     currentCategory: string;
   };
@@ -99,7 +103,7 @@ function CategoryCombobox({
           }}
           onFocus={() => setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 150)}
-          placeholder="e.g. Beverages, Electronics (or type new)"
+          placeholder="Enter or create a category"
           autoComplete="off"
           className="w-full px-4 py-2.5 pr-9 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
         />
@@ -242,7 +246,7 @@ function ItemForm({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Wireless Mouse or Consultation"
+              placeholder="Enter item or service name"
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium"
             />
           </div>
@@ -272,7 +276,7 @@ function ItemForm({
               name="unitLabel"
               value={unitLabel}
               onChange={(e) => setUnitLabel(e.target.value)}
-              placeholder="e.g. kg, visit, hrs (optional)"
+              placeholder="Enter unit label (optional)"
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
             />
           </div>
@@ -294,7 +298,7 @@ function ItemForm({
               name="hsnSacCode"
               value={hsnSacCode}
               onChange={(e) => setHsnSacCode(e.target.value)}
-              placeholder="e.g. 8471 or 9983"
+              placeholder="Enter code (optional)"
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all uppercase"
             />
           </div>
@@ -435,7 +439,7 @@ function ItemForm({
                           min="0"
                           max="100"
                           step="0.01"
-                          placeholder="e.g. 7.5"
+                          placeholder="Enter value"
                           value={customRateStr}
                           onChange={(e) => setCustomRateStr(e.target.value)}
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -569,11 +573,22 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
   const [search, setSearch] = useState(pagination?.currentSearch || "");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(pagination?.currentCategory || null);
 
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
+
+  useEffect(() => {
+    setSearch(pagination?.currentSearch || "");
+    setSelectedCategory(pagination?.currentCategory || null);
+    setCategoryLoading(false);
+  }, [pagination?.currentSearch, pagination?.currentCategory]);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [categoryLoading, setCategoryLoading] = useState(false);
 
   const categories = useMemo(() => {
     if (serverCategories && serverCategories.length > 0) return serverCategories;
@@ -591,16 +606,19 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
   }, [items]);
 
   const filtered = useMemo(() => {
-    if (pagination) return items; // When server pagination is active, items are already filtered by the server
     return items.filter((it) => {
+      const normalizedSearch = search.trim().toLowerCase();
       const matchSearch =
-        it.name.toLowerCase().includes(search.toLowerCase()) ||
-        (it.category && it.category.toLowerCase().includes(search.toLowerCase())) ||
-        (it.hsnSacCode && it.hsnSacCode.toLowerCase().includes(search.toLowerCase()));
-      const matchCat = selectedCategory ? it.category === selectedCategory : true;
+        !normalizedSearch ||
+        it.name.toLowerCase().includes(normalizedSearch) ||
+        (it.category && it.category.toLowerCase().includes(normalizedSearch)) ||
+        (it.hsnSacCode && it.hsnSacCode.toLowerCase().includes(normalizedSearch));
+      const matchCat = selectedCategory
+        ? it.category?.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
+        : true;
       return matchSearch && matchCat;
     });
-  }, [items, search, selectedCategory, pagination]);
+  }, [items, search, selectedCategory]);
 
   const handleCategorySelect = (c: string | null) => {
     setSelectedCategory(c);
@@ -609,7 +627,10 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
       if (search.trim()) params.set("search", search.trim());
       if (c) params.set("category", c);
       params.set("page", "1");
-      router.push(`/app/items?${params.toString()}`);
+      setCategoryLoading(true);
+      startTransition(() => {
+        router.replace(`/app/items?${params.toString()}`);
+      });
     }
   };
 
@@ -662,32 +683,19 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
   };
 
   const Modal = ({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) => (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-xs">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto">
-        <div className="flex justify-between items-center px-5 py-3.5 border-b border-slate-100 sticky top-0 bg-white z-10">
-          <h3 className="font-bold text-slate-900 text-base">{title}</h3>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+    <AppModal title={title} subtitle="Add or update catalog details" onClose={onClose} size="lg">
+      {errorMsg && (
+        <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-700">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{errorMsg}</span>
         </div>
-        <div className="p-5">
-          {errorMsg && (
-            <div className="mb-4 p-3.5 bg-red-50 text-red-700 text-sm rounded-xl flex items-center gap-2.5 border border-red-100">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-          {children}
-        </div>
-      </div>
-    </div>
+      )}
+      {children}
+    </AppModal>
   );
 
   return (
-    <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
+    <div className="mx-auto w-full max-w-[1360px] space-y-5 p-4 sm:p-5 md:px-6 md:py-6 lg:px-8 xl:px-10">
       <AppFeedbackDialog message={feedbackMessage} onClose={() => setFeedbackMessage(null)} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -711,45 +719,22 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
 
       {/* Search and Item Count Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (pagination) {
+        <div className="w-full max-w-md flex-1">
+          <AppSearch
+            value={search}
+            onChange={setSearch}
+            onSearch={(value) => {
+              if (!pagination) return;
               const params = new URLSearchParams();
-              if (search.trim()) params.set("search", search.trim());
+              if (value.trim()) params.set("search", value.trim());
               if (selectedCategory) params.set("category", selectedCategory);
               params.set("page", "1");
               router.push(`/app/items?${params.toString()}`);
-            }
-          }}
-          className="relative flex-1 max-w-md"
-        >
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search by name, category, or HSN code..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-2xs"
+            }}
+            placeholder="Search items, categories, or codes"
+            ariaLabel="Search items"
           />
-          {search && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                if (pagination) {
-                  const params = new URLSearchParams();
-                  if (selectedCategory) params.set("category", selectedCategory);
-                  params.set("page", "1");
-                  router.push(`/app/items?${params.toString()}`);
-                }
-              }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </form>
+        </div>
         <div className="text-xs font-semibold text-slate-500">
           Showing <span className="text-slate-900 font-bold">{pagination ? items.length : filtered.length}</span> of{" "}
           <span className="text-slate-900 font-bold">{pagination ? pagination.totalCount : items.length}</span> items
@@ -760,12 +745,20 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
         categories={categories}
         selectedCategory={selectedCategory}
         onSelect={handleCategorySelect}
-        allCount={pagination ? pagination.totalCount : items.length}
-        categoryCounts={pagination ? undefined : categoryCounts}
+        allCount={pagination ? pagination.allCount : items.length}
+        categoryCounts={pagination ? pagination.categoryCounts : categoryCounts}
       />
 
       {/* Items Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        {categoryLoading && (
+          <div className="absolute inset-0 z-20 flex min-h-52 items-center justify-center bg-white/80 backdrop-blur-[2px]">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-600 shadow-lg">
+              <AppLoader size="sm" />
+              Loading items...
+            </div>
+          </div>
+        )}
         {filtered.length === 0 ? (
           <div className="text-center py-16 px-4">
             <Package className="w-10 h-10 text-slate-200 mx-auto mb-3" />
@@ -851,7 +844,7 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
 
             <div className="hidden lg:block">
               <DataTable
-                minWidth="min-w-[900px]"
+                minWidth="min-w-[1040px]"
                 columns={[
                   { label: "Product" },
                   { label: "Category" },
@@ -887,7 +880,7 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
                     <span key="hsn" className="font-mono text-xs text-slate-500">{item.hsnSacCode || "—"}</span>,
                     <span key="unit" className="text-xs text-slate-500">{item.unitLabel || "—"}</span>,
                     <span key="price" className="font-bold text-slate-900">₹{item.unitPrice.toFixed(2)}</span>,
-                    <div key="actions" className="flex items-center justify-end gap-1">
+                    <div key="actions" className="ml-auto flex h-8 items-center justify-end gap-1">
                       <button
                         type="button"
                         onClick={() => {

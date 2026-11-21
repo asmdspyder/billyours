@@ -60,7 +60,7 @@ export default function AdminNewAccountPage() {
                 type="text"
                 name="businessName"
                 required
-                placeholder="e.g. Metro Fashion Shop"
+                placeholder="Enter business name"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -71,7 +71,7 @@ export default function AdminNewAccountPage() {
                 type="text"
                 name="ownerName"
                 required
-                placeholder="e.g. Suresh Patel"
+                placeholder="Enter owner name"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -82,7 +82,7 @@ export default function AdminNewAccountPage() {
                 type="email"
                 name="email"
                 required
-                placeholder="owner@business.com"
+                placeholder="Enter owner email address"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

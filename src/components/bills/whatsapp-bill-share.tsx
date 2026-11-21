@@ -225,7 +225,7 @@ export function WhatsAppBillShare({
                     setPhone(event.target.value);
                     setError(null);
                   }}
-                  placeholder="Include country code, e.g. +91 or +44"
+                  placeholder="Enter mobile number with country code"
                   className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
                 <p aria-live="polite" className="mt-1 min-h-4 text-[11px] text-slate-500">

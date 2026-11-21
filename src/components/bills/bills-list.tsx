@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  Search,
   Printer,
   Eye,
   Trash2,
@@ -12,6 +11,7 @@ import {
   ChevronRight,
   ReceiptText,
   ChevronDown,
+  Search,
   LoaderCircle,
   X,
   SlidersHorizontal,
@@ -40,6 +40,7 @@ interface MultiSelectFilterProps {
   selectedValues: string[];
   options: { value: string; label: string }[];
   onChange: (values: string[]) => void;
+  onApply?: () => void;
   variant?: "dropdown" | "list";
 }
 
@@ -48,6 +49,7 @@ function MultiSelectFilter({
   selectedValues,
   options,
   onChange,
+  onApply,
   variant = "dropdown",
 }: MultiSelectFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -164,9 +166,18 @@ function MultiSelectFilter({
             <button
               type="button"
               onClick={() => onChange([])}
-              className="mt-1 w-full border-t border-slate-100 px-2.5 pt-2 text-left text-[11px] font-semibold text-blue-700 hover:text-blue-800"
+              className="mt-1 w-full border-t border-slate-100 px-2.5 pt-2 text-left text-[11px] font-semibold text-slate-500 hover:text-slate-700"
             >
               Clear selection
+            </button>
+          )}
+          {onApply && (
+            <button
+              type="button"
+              onClick={onApply}
+              className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+            >
+              Apply filters
             </button>
           )}
         </div>
@@ -278,7 +289,7 @@ export function BillsList({
     params.delete("page");
     queryParamsRef.current = params.toString();
     startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
+      router.replace(`${pathname}?${params.toString()}`);
     });
   };
 
@@ -291,20 +302,44 @@ export function BillsList({
     });
   };
 
-  const clearFilters = () => {
+  const applyFilters = () => {
     const params = new URLSearchParams(queryParamsRef.current);
-    ["search", "payment", "status", "startDate", "endDate", "page"].forEach((key) => params.delete(key));
+    const filterValues: Record<string, string | string[]> = {
+      payment: paymentFilters,
+      status: statusFilters,
+      startDate,
+      endDate,
+      search: searchValue,
+    };
+
+    Object.entries(filterValues).forEach(([key, value]) => {
+      if (Array.isArray(value) ? value.length > 0 : value.trim().length > 0) {
+        params.set(key, Array.isArray(value) ? value.join(",") : value.trim());
+      } else {
+        params.delete(key);
+      }
+    });
+    params.delete("page");
     queryParamsRef.current = params.toString();
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
+    setMobileFiltersOpen(false);
+  };
+
+  const clearFilters = () => {
     setSearchValue("");
     setPaymentFilters([]);
     setStatusFilters([]);
     setStartDate("");
     setEndDate("");
-    startTransition(() => router.push(`${pathname}?${params.toString()}`));
   };
 
   const hasFilters = Boolean(
     currentSearch || currentPayment.length || currentStatus.length || currentStartDate || currentEndDate
+  );
+  const hasDraftFilters = Boolean(
+    searchValue || paymentFilters.length || statusFilters.length || startDate || endDate
   );
   const activeFilterCount =
     currentPayment.length +
@@ -323,10 +358,8 @@ export function BillsList({
           { value: "CARD", label: "Card" },
         ]}
         variant={variant}
-        onChange={(values) => {
-          setPaymentFilters(values);
-          handleFilterChange("payment", values);
-        }}
+        onApply={variant === "dropdown" ? applyFilters : undefined}
+        onChange={(values) => setPaymentFilters(values)}
       />
       <MultiSelectFilter
         label="Bill status"
@@ -336,10 +369,8 @@ export function BillsList({
           { value: "CANCELLED", label: "Cancelled" },
         ]}
         variant={variant}
-        onChange={(values) => {
-          setStatusFilters(values);
-          handleFilterChange("status", values);
-        }}
+        onApply={variant === "dropdown" ? applyFilters : undefined}
+        onChange={(values) => setStatusFilters(values)}
       />
       <label className="block min-w-0">
         <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">From date</span>
@@ -349,10 +380,7 @@ export function BillsList({
             type="date"
             value={startDate}
             max={endDate || undefined}
-            onChange={(event) => {
-              setStartDate(event.target.value);
-              handleFilterChange("startDate", event.target.value);
-            }}
+            onChange={(event) => setStartDate(event.target.value)}
             className="h-10 w-full min-w-0 rounded-xl border border-slate-200 bg-[#fbfcfe] pl-9 pr-2 text-xs font-medium text-slate-700 outline-none transition hover:border-blue-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
             aria-label="Start date"
           />
@@ -366,10 +394,7 @@ export function BillsList({
             type="date"
             value={endDate}
             min={startDate || undefined}
-            onChange={(event) => {
-              setEndDate(event.target.value);
-              handleFilterChange("endDate", event.target.value);
-            }}
+            onChange={(event) => setEndDate(event.target.value)}
             className="h-10 w-full min-w-0 rounded-xl border border-slate-200 bg-[#fbfcfe] pl-9 pr-2 text-xs font-medium text-slate-700 outline-none transition hover:border-blue-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
             aria-label="End date"
           />
@@ -378,36 +403,54 @@ export function BillsList({
     </>
   );
 
+  useEffect(() => {
+    if (searchValue === currentSearch) return;
+    const timeout = window.setTimeout(() => {
+      handleFilterChange("search", searchValue);
+    }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [searchValue, currentSearch]);
+
   const renderSearch = () => (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        handleFilterChange("search", searchValue);
-      }}
-      className="relative min-w-0"
-    >
-      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-      <input
-        type="text"
-        placeholder="Bill no. or customer"
-        value={searchValue}
-        onChange={(event) => setSearchValue(event.target.value)}
-        className="h-10 w-full min-w-0 rounded-xl border border-slate-200 bg-[#fbfcfe] pl-9 pr-10 text-xs text-slate-900 placeholder:text-slate-500 outline-none transition hover:border-blue-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
-        aria-label="Search bills by bill number, customer, or phone"
-      />
-      <button
-        type="submit"
-        aria-label="Search bills"
-        disabled={isFiltering}
-        className="absolute right-1 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-500 transition hover:bg-blue-50 hover:text-blue-700 disabled:opacity-70"
+    <div className="w-full rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleFilterChange("search", searchValue);
+        }}
+        className="relative"
       >
-        {isFiltering ? (
-          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-        ) : (
-          <Search className="h-4 w-4" aria-hidden="true" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <input
+          type="text"
+          value={searchValue}
+          onChange={(event) => setSearchValue(event.target.value)}
+          placeholder="Search bill number, customer, or phone"
+          aria-label="Search bills by bill number, customer, or phone"
+          className="h-10 w-full appearance-none rounded-lg border border-slate-300 bg-white pl-9 pr-20 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+        />
+        {searchValue && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearchValue("");
+              handleFilterChange("search", "");
+            }}
+            aria-label="Clear search"
+            className="absolute right-11 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          >
+            <X className="h-4 w-4" />
+          </button>
         )}
-      </button>
-    </form>
+        <button
+          type="submit"
+          aria-label="Search"
+          className="absolute right-1 top-1/2 flex h-8 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-700"
+        >
+          {isFiltering ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+        </button>
+      </form>
+    </div>
   );
 
   return (
@@ -424,7 +467,7 @@ export function BillsList({
       </div>
 
       {/* Filter and Search Controls */}
-      <div className="w-full min-w-0 rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:p-2.5">
+      <div className="w-full min-w-0">
         <div className="flex min-w-0 items-center gap-2">
           <div className="min-w-0 flex-1">{renderSearch()}</div>
           <button
@@ -484,7 +527,7 @@ export function BillsList({
           <div className="flex gap-2 border-t border-slate-200 bg-white p-4">
             <button
               type="button"
-              disabled={!hasFilters}
+              disabled={!hasFilters && !hasDraftFilters}
               onClick={clearFilters}
               className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-40"
             >
@@ -492,10 +535,11 @@ export function BillsList({
             </button>
             <button
               type="button"
-              onClick={() => setMobileFiltersOpen(false)}
-              className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              onClick={applyFilters}
+              disabled={isFiltering}
+              className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Done
+              {isFiltering ? "Applying..." : "Apply filters"}
             </button>
           </div>
         </aside>
@@ -634,7 +678,7 @@ export function BillsList({
                     >
                       {b.status}
                     </span>,
-                    <div key="actions" className="grid min-w-[250px] grid-cols-2 gap-1.5">
+                    <div key="actions" className="ml-auto grid w-full max-w-[260px] grid-cols-2 gap-1.5">
                       <Link
                         href={`/app/bills/${b.id}?from=history`}
                         className="inline-flex items-center justify-center gap-1 rounded-lg bg-slate-100 px-2 py-1.5 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-200"
