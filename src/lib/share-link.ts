@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { sql } from "@/db";
 
 export function generateSecureToken(): string {
-  return crypto.randomBytes(16).toString("base64url");
+  return crypto.randomBytes(8).toString("base64url").slice(0, 10);
 }
 
 export function hashToken(token: string): string {
@@ -28,7 +28,7 @@ export async function getBillByShareToken(token: string) {
   if (
     !token ||
     typeof token !== "string" ||
-    !/^(?:[A-Fa-f0-9]{64}|[A-Za-z0-9_-]{22})$/.test(token)
+    !/^(?:[A-Fa-f0-9]{64}|[A-Za-z0-9_-]{10}|[A-Za-z0-9_-]{16}|[A-Za-z0-9_-]{22})$/.test(token)
   ) {
     return null;
   }

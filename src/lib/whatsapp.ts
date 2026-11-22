@@ -21,7 +21,9 @@ export function buildWhatsAppShareUrl(params: WhatsAppMessageParams): string | n
   const total = Number(params.grandTotal).toFixed(2);
 
   // Dynamically resolve link: prefer shareToken if given, or ensure billLink has full domain
-  let finalLink = params.billLink || (params.shareToken ? getBillShareUrl(params.shareToken) : null);
+  let finalLink =
+    params.billLink ||
+    (params.shareToken ? getBillShareUrl(params.shareToken, params.billNumber) : null);
   if (finalLink && !finalLink.startsWith("http")) {
     finalLink = `${getBaseUrl()}${finalLink.startsWith("/") ? "" : "/"}${finalLink}`;
   }

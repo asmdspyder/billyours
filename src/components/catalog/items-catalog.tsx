@@ -588,6 +588,7 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isSearchPending, startSearchTransition] = useTransition();
   const [categoryLoading, setCategoryLoading] = useState(false);
 
   const categories = useMemo(() => {
@@ -729,10 +730,13 @@ export function ItemsCatalog({ initialItems, serverCategories, business, paginat
               if (value.trim()) params.set("search", value.trim());
               if (selectedCategory) params.set("category", selectedCategory);
               params.set("page", "1");
-              router.push(`/app/items?${params.toString()}`);
+              startSearchTransition(() => {
+                router.push(`/app/items?${params.toString()}`);
+              });
             }}
             placeholder="Search items, categories, or codes"
             ariaLabel="Search items"
+            isSearching={isSearchPending}
           />
         </div>
         <div className="text-xs font-semibold text-slate-500">

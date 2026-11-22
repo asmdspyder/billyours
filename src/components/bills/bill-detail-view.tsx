@@ -173,7 +173,7 @@ export function BillDetailView({
   }, [initialAutoPrint]);
 
   // Construct WhatsApp & Share URLs
-  const shareUrl = getBillShareUrl(shareToken);
+  const shareUrl = getBillShareUrl(shareToken, bill.billNumber);
   const copyShareLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);

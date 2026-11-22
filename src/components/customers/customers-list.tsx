@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Users, Plus, Phone, Eye, X, AlertCircle, Search } from "lucide-react";
+import { Users, Plus, Phone, Eye, X, AlertCircle } from "lucide-react";
 import { createCustomerAction } from "@/actions/customer-actions";
 import { DataTable } from "@/components/ui/data-table";
 import { AppModal } from "@/components/ui/app-modal";
+import { AppSearch } from "@/components/ui/app-search";
 
 interface CustomerSummary {
   id: string;
@@ -36,27 +37,90 @@ export function CustomersList({
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchValue, setSearchValue] = useState(currentSearch);
+  const [displayCustomers, setDisplayCustomers] = useState(customers);
+  const [displayPage, setDisplayPage] = useState(currentPage);
+  const [displayTotalPages, setDisplayTotalPages] = useState(totalPages);
+  const [displayTotalCount, setDisplayTotalCount] = useState(totalCount);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const requestedSearchRef = useRef(currentSearch);
+  const searchValueRef = useRef(currentSearch);
+  const activeSearchTermRef = useRef<string | null>(null);
+  const searchRequestIdRef = useRef(0);
 
   useEffect(() => {
+    searchRequestIdRef.current += 1;
+    activeSearchTermRef.current = null;
+    setIsSearching(false);
+    setSearchError(null);
+    setDisplayCustomers(customers);
+    setDisplayPage(currentPage);
+    setDisplayTotalPages(totalPages);
+    setDisplayTotalCount(totalCount);
     setSearchValue(currentSearch);
-  }, [currentSearch]);
+    searchValueRef.current = currentSearch;
+    requestedSearchRef.current = currentSearch;
+  }, [customers, currentPage, currentSearch, totalPages, totalCount]);
 
   useEffect(() => {
-    if (searchValue === currentSearch) return;
+    const term = searchValue.trim();
+    if (term === requestedSearchRef.current) return;
     const timeout = window.setTimeout(() => {
-      startTransition(() => handleSearch(searchValue));
+      void searchCustomers(term);
     }, 350);
     return () => window.clearTimeout(timeout);
-  }, [searchValue, currentSearch]);
+  }, [searchValue]);
 
-  const handleSearch = (term: string) => {
-    if (term.trim()) {
-      router.replace(`/app/customers?search=${encodeURIComponent(term.trim())}`);
-    } else {
-      router.replace("/app/customers");
+  const searchCustomers = async (term: string) => {
+    const requestId = ++searchRequestIdRef.current;
+    requestedSearchRef.current = term;
+    activeSearchTermRef.current = term;
+    setIsSearching(true);
+    setSearchError(null);
+    try {
+      const response = await fetch(`/api/app/customers/search?search=${encodeURIComponent(term)}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) throw new Error("Could not search customers. Please try again.");
+      const result = (await response.json()) as {
+        customers: CustomerSummary[];
+        totalCount: number;
+        totalPages: number;
+      };
+      if (requestId !== searchRequestIdRef.current) return;
+      setDisplayCustomers(result.customers);
+      setDisplayPage(1);
+      setDisplayTotalPages(result.totalPages);
+      setDisplayTotalCount(result.totalCount);
+      const url = new URL(window.location.href);
+      if (term) url.searchParams.set("search", term);
+      else url.searchParams.delete("search");
+      url.searchParams.delete("page");
+      window.history.replaceState(null, "", url);
+    } catch (error) {
+      if (requestId !== searchRequestIdRef.current) return;
+      setSearchError(error instanceof Error ? error.message : "Could not search customers.");
+    } finally {
+      if (requestId === searchRequestIdRef.current) {
+        activeSearchTermRef.current = null;
+        setIsSearching(false);
+      }
     }
+  };
+
+  const updateSearch = (value: string) => {
+    const term = value.trim();
+    if (term !== searchValueRef.current.trim()) {
+      searchRequestIdRef.current += 1;
+      activeSearchTermRef.current = null;
+    }
+    searchValueRef.current = value;
+    setSearchValue(value);
+    setIsSearching(term !== requestedSearchRef.current || activeSearchTermRef.current === term);
+    setSearchError(null);
   };
 
   const handleCreateCustomer = (e: React.FormEvent<HTMLFormElement>) => {
@@ -99,49 +163,19 @@ export function CustomersList({
       </div>
 
       {/* Search Input */}
-      <div className="w-full rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            startTransition(() => handleSearch(searchValue));
-          }}
-          className="relative"
-        >
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={searchValue}
-            onChange={(event) => setSearchValue(event.target.value)}
-            placeholder="Search customer name or mobile number"
-            aria-label="Search customers"
-            className="h-10 w-full appearance-none rounded-lg border border-slate-300 bg-white pl-9 pr-20 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
-          />
-          {searchValue && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchValue("");
-                startTransition(() => handleSearch(""));
-              }}
-              aria-label="Clear search"
-              className="absolute right-11 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-          <button
-            type="submit"
-            aria-label="Search"
-            className="absolute right-1 top-1/2 flex h-8 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-700"
-          >
-            <Search className="h-4 w-4" />
-          </button>
-        </form>
-      </div>
+      <AppSearch
+        value={searchValue}
+        onChange={updateSearch}
+        onSearch={(term) => void searchCustomers(term.trim())}
+        placeholder="Search customer name or mobile number"
+        ariaLabel="Search customers"
+        isSearching={isSearching}
+      />
+      {searchError && <p className="text-xs text-red-600" role="alert">{searchError}</p>}
 
       {/* Customers Table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        {customers.length === 0 ? (
+        {displayCustomers.length === 0 ? (
           <div className="text-center py-12 px-4">
             <Users className="w-10 h-10 text-slate-300 mx-auto mb-2" />
             <p className="text-slate-700 font-semibold text-sm">No customers found</p>
@@ -153,7 +187,7 @@ export function CustomersList({
           <>
             {/* Mobile Card List: Fits 100% width with zero horizontal scrolling */}
             <div className="grid gap-3 bg-slate-50/70 p-3 sm:grid-cols-2 sm:p-4 lg:hidden">
-              {customers.map((c) => (
+              {displayCustomers.map((c) => (
                 <Link
                   key={c.id}
                   href={`/app/customers/${c.id}`}
@@ -200,7 +234,7 @@ export function CustomersList({
                   { label: "Last visit" },
                   { label: "History", align: "right" },
                 ]}
-                rows={customers.map((c) => ({
+                rows={displayCustomers.map((c) => ({
                   key: c.id,
                   cells: [
                     <Link key="name" href={`/app/customers/${c.id}`} className="font-semibold text-slate-900 hover:text-blue-600">
@@ -226,20 +260,20 @@ export function CustomersList({
             </div>
 
             {/* Pagination Controls */}
-            {totalPages > 1 && (
+            {displayTotalPages > 1 && (
               <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
                 <div className="text-center text-xs text-slate-500 sm:text-left">
-                  Showing <span className="font-semibold text-slate-700">{(currentPage - 1) * 25 + 1}</span> to{" "}
-                  <span className="font-semibold text-slate-700">{Math.min(currentPage * 25, totalCount)}</span> of{" "}
-                  <span className="font-semibold text-slate-700">{totalCount}</span> customers
+                  Showing <span className="font-semibold text-slate-700">{(displayPage - 1) * 25 + 1}</span> to{" "}
+                  <span className="font-semibold text-slate-700">{Math.min(displayPage * 25, displayTotalCount)}</span> of{" "}
+                  <span className="font-semibold text-slate-700">{displayTotalCount}</span> customers
                 </div>
                 <div className="flex w-full items-center justify-between gap-2 sm:w-auto">
                   <button
-                    disabled={currentPage <= 1}
+                    disabled={displayPage <= 1}
                     onClick={() => {
-                      const prevPage = currentPage - 1;
+                      const prevPage = displayPage - 1;
                       router.push(
-                        `/app/customers?page=${prevPage}${currentSearch ? `&search=${encodeURIComponent(currentSearch)}` : ""}`
+                        `/app/customers?page=${prevPage}${searchValue.trim() ? `&search=${encodeURIComponent(searchValue.trim())}` : ""}`
                       );
                     }}
                     className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -247,14 +281,14 @@ export function CustomersList({
                     Previous
                   </button>
                   <span className="text-xs text-slate-600 px-1 font-medium">
-                    Page {currentPage} of {totalPages}
+                    Page {displayPage} of {displayTotalPages}
                   </span>
                   <button
-                    disabled={currentPage >= totalPages}
+                    disabled={displayPage >= displayTotalPages}
                     onClick={() => {
-                      const nextPage = currentPage + 1;
+                      const nextPage = displayPage + 1;
                       router.push(
-                        `/app/customers?page=${nextPage}${currentSearch ? `&search=${encodeURIComponent(currentSearch)}` : ""}`
+                        `/app/customers?page=${nextPage}${searchValue.trim() ? `&search=${encodeURIComponent(searchValue.trim())}` : ""}`
                       );
                     }}
                     className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"

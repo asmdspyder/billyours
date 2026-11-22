@@ -82,7 +82,7 @@ export default async function BillsPage(props: BillsPageProps) {
         FROM bills b
         LEFT JOIN customers c ON c.id = b.customer_id AND c.account_id = b.account_id
         WHERE b.account_id = ${accountId}
-          AND (b.bill_number ILIKE ${searchPattern} OR b.customer_name_snapshot ILIKE ${searchPattern} OR b.customer_phone_snapshot ILIKE ${searchPattern})
+          AND (b.bill_number ILIKE ${searchPattern} OR b.customer_name_snapshot ILIKE ${searchPattern} OR b.customer_phone_snapshot ILIKE ${searchPattern} OR c.name ILIKE ${searchPattern} OR c.phone ILIKE ${searchPattern})
           AND (${payment.length === 0} OR b.payment_method = ANY(${payment}::varchar[]))
           AND (${status.length === 0} OR b.status = ANY(${status}::varchar[]))
           AND (${!dateRangeIsValid || !startDate} OR (b.completed_at AT TIME ZONE 'Asia/Kolkata')::date >= NULLIF(${startDate}, '')::date)
@@ -131,13 +131,15 @@ export default async function BillsPage(props: BillsPageProps) {
     // If user navigated to an empty high page, fetch total count to render pagination cleanly
     const countRes = search
       ? await sql`
-          SELECT COUNT(*)::int as count FROM bills
-          WHERE account_id = ${accountId}
-            AND (bill_number ILIKE ${searchPattern} OR customer_name_snapshot ILIKE ${searchPattern} OR customer_phone_snapshot ILIKE ${searchPattern})
-            AND (${payment.length === 0} OR payment_method = ANY(${payment}::varchar[]))
-            AND (${status.length === 0} OR status = ANY(${status}::varchar[]))
-            AND (${!dateRangeIsValid || !startDate} OR (completed_at AT TIME ZONE 'Asia/Kolkata')::date >= NULLIF(${startDate}, '')::date)
-            AND (${!dateRangeIsValid || !endDate} OR (completed_at AT TIME ZONE 'Asia/Kolkata')::date <= NULLIF(${endDate}, '')::date);
+          SELECT COUNT(*)::int as count
+          FROM bills b
+          LEFT JOIN customers c ON c.id = b.customer_id AND c.account_id = b.account_id
+          WHERE b.account_id = ${accountId}
+            AND (b.bill_number ILIKE ${searchPattern} OR b.customer_name_snapshot ILIKE ${searchPattern} OR b.customer_phone_snapshot ILIKE ${searchPattern} OR c.name ILIKE ${searchPattern} OR c.phone ILIKE ${searchPattern})
+            AND (${payment.length === 0} OR b.payment_method = ANY(${payment}::varchar[]))
+            AND (${status.length === 0} OR b.status = ANY(${status}::varchar[]))
+            AND (${!dateRangeIsValid || !startDate} OR (b.completed_at AT TIME ZONE 'Asia/Kolkata')::date >= NULLIF(${startDate}, '')::date)
+            AND (${!dateRangeIsValid || !endDate} OR (b.completed_at AT TIME ZONE 'Asia/Kolkata')::date <= NULLIF(${endDate}, '')::date);
         `
       : await sql`
           SELECT COUNT(*)::int as count FROM bills

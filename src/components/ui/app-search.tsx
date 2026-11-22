@@ -47,6 +47,7 @@ export function AppSearch({
           submit();
         }}
         className="relative min-w-0"
+        aria-busy={isSearching}
       >
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
@@ -59,7 +60,7 @@ export function AppSearch({
           placeholder={placeholder}
           data-app-search-input
           aria-label={ariaLabel}
-          className="h-10 w-full min-w-0 appearance-none rounded-xl bg-white pl-9 pr-20 text-sm text-slate-900 placeholder:text-slate-500 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
+          className="h-10 w-full min-w-0 appearance-none rounded-xl border border-slate-300 bg-white pl-9 pr-20 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
         />
         {value && (
           <button
@@ -76,10 +77,14 @@ export function AppSearch({
         )}
         <button
           type="submit"
-          aria-label="Search"
+          aria-label={isSearching ? "Searching" : "Search"}
           className="absolute right-1 top-1/2 flex h-8 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-blue-50 hover:text-blue-700"
         >
-          {isSearching ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          {isSearching ? (
+            <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Search className="h-4 w-4" />
+          )}
         </button>
       </form>
     </div>

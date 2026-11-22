@@ -29,6 +29,9 @@ export function getBaseUrl(): string {
   return "https://billyours.vercel.app";
 }
 
-export function getBillShareUrl(token: string): string {
+export function getBillShareUrl(token: string, billNumber?: string): string {
+  if (billNumber) {
+    return `${getBaseUrl()}/b/${encodeURIComponent(billNumber)}?t=${encodeURIComponent(token)}`;
+  }
   return `${getBaseUrl()}/b/${token}`;
 }

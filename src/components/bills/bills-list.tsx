@@ -11,14 +11,13 @@ import {
   ChevronRight,
   ReceiptText,
   ChevronDown,
-  Search,
-  LoaderCircle,
   X,
   SlidersHorizontal,
   CalendarDays,
 } from "lucide-react";
 import { deleteBillAction } from "@/actions/billing-actions";
 import { AppLoader } from "@/components/ui/app-loader";
+import { AppSearch } from "@/components/ui/app-search";
 import { DataTable } from "@/components/ui/data-table";
 import { WhatsAppBillShare } from "@/components/bills/whatsapp-bill-share";
 import { AppFeedbackDialog } from "@/components/ui/app-feedback-dialog";
@@ -222,6 +221,12 @@ export function BillsList({
   const [billToCancel, setBillToCancel] = useState<{ id: string; number: string } | null>(null);
   const [cancelReason, setCancelReason] = useState("Cancelled by user");
   const [searchValue, setSearchValue] = useState(currentSearch);
+  const [displayBills, setDisplayBills] = useState(bills);
+  const [displayPage, setDisplayPage] = useState(currentPage);
+  const [displayTotalPages, setDisplayTotalPages] = useState(totalPages);
+  const [displayTotalCount, setDisplayTotalCount] = useState(totalCount);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [paymentFilters, setPaymentFilters] = useState(currentPayment);
   const [statusFilters, setStatusFilters] = useState(currentStatus);
   const [startDate, setStartDate] = useState(currentStartDate);
@@ -231,15 +236,32 @@ export function BillsList({
   const currentStatusKey = currentStatus.join(",");
   const currentQueryString = searchParams.toString();
   const queryParamsRef = useRef(currentQueryString);
+  const requestedSearchRef = useRef(currentSearch);
+  const searchValueRef = useRef(currentSearch);
+  const activeSearchTermRef = useRef<string | null>(null);
+  const searchRequestIdRef = useRef(0);
 
   useEffect(() => {
-    setSearchValue(currentSearch);
     setPaymentFilters(currentPayment);
     setStatusFilters(currentStatus);
     setStartDate(currentStartDate);
     setEndDate(currentEndDate);
     queryParamsRef.current = currentQueryString;
   }, [currentSearch, currentPaymentKey, currentStatusKey, currentStartDate, currentEndDate, currentQueryString]);
+
+  useEffect(() => {
+    searchRequestIdRef.current += 1;
+    activeSearchTermRef.current = null;
+    setIsSearching(false);
+    setSearchError(null);
+    setDisplayBills(bills);
+    setDisplayPage(currentPage);
+    setDisplayTotalPages(totalPages);
+    setDisplayTotalCount(totalCount);
+    setSearchValue(currentSearch);
+    searchValueRef.current = currentSearch;
+    requestedSearchRef.current = currentSearch;
+  }, [bills, currentPage, currentSearch, totalPages, totalCount]);
 
   useEffect(() => {
     if (!mobileFiltersOpen) return;
@@ -277,20 +299,6 @@ export function BillsList({
     } finally {
       setDeletingId(null);
     }
-  };
-
-  const handleFilterChange = (key: string, value: string | string[]) => {
-    const params = new URLSearchParams(queryParamsRef.current);
-    if (Array.isArray(value) ? value.length > 0 : value.trim().length > 0) {
-      params.set(key, Array.isArray(value) ? value.join(",") : value.trim());
-    } else {
-      params.delete(key);
-    }
-    params.delete("page");
-    queryParamsRef.current = params.toString();
-    startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`);
-    });
   };
 
   const handlePageChange = (newPage: number) => {
@@ -336,7 +344,7 @@ export function BillsList({
   };
 
   const hasFilters = Boolean(
-    currentSearch || currentPayment.length || currentStatus.length || currentStartDate || currentEndDate
+    searchValue || currentPayment.length || currentStatus.length || currentStartDate || currentEndDate
   );
   const hasDraftFilters = Boolean(
     searchValue || paymentFilters.length || statusFilters.length || startDate || endDate
@@ -404,54 +412,67 @@ export function BillsList({
   );
 
   useEffect(() => {
-    if (searchValue === currentSearch) return;
+    const term = searchValue.trim();
+    if (term === requestedSearchRef.current) return;
     const timeout = window.setTimeout(() => {
-      handleFilterChange("search", searchValue);
+      void searchBills(term);
     }, 350);
     return () => window.clearTimeout(timeout);
-  }, [searchValue, currentSearch]);
+  }, [searchValue]);
 
-  const renderSearch = () => (
-    <div className="w-full rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          handleFilterChange("search", searchValue);
-        }}
-        className="relative"
-      >
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input
-          type="text"
-          value={searchValue}
-          onChange={(event) => setSearchValue(event.target.value)}
-          placeholder="Search bill number, customer, or phone"
-          aria-label="Search bills by bill number, customer, or phone"
-          className="h-10 w-full appearance-none rounded-lg border border-slate-300 bg-white pl-9 pr-20 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
-        />
-        {searchValue && (
-          <button
-            type="button"
-            onClick={() => {
-              setSearchValue("");
-              handleFilterChange("search", "");
-            }}
-            aria-label="Clear search"
-            className="absolute right-11 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-        <button
-          type="submit"
-          aria-label="Search"
-          className="absolute right-1 top-1/2 flex h-8 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-700"
-        >
-          {isFiltering ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-        </button>
-      </form>
-    </div>
-  );
+  const updateSearch = (value: string) => {
+    const term = value.trim();
+    if (term !== searchValueRef.current.trim()) {
+      searchRequestIdRef.current += 1;
+      activeSearchTermRef.current = null;
+    }
+    searchValueRef.current = value;
+    setSearchValue(value);
+    setIsSearching(term !== requestedSearchRef.current || activeSearchTermRef.current === term);
+    setSearchError(null);
+  };
+
+  const searchBills = async (term: string) => {
+    const requestId = ++searchRequestIdRef.current;
+    requestedSearchRef.current = term;
+    activeSearchTermRef.current = term;
+    setIsSearching(true);
+    setSearchError(null);
+    const params = new URLSearchParams(queryParamsRef.current);
+    if (term) params.set("search", term);
+    else params.delete("search");
+    params.delete("page");
+    try {
+      const response = await fetch(`/api/app/bills/search?${params.toString()}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) throw new Error("Could not search bills. Please try again.");
+      const result = (await response.json()) as {
+        bills: BillSummary[];
+        totalCount: number;
+        totalPages: number;
+      };
+      if (requestId !== searchRequestIdRef.current) return;
+      setDisplayBills(result.bills);
+      setDisplayPage(1);
+      setDisplayTotalPages(result.totalPages);
+      setDisplayTotalCount(result.totalCount);
+      params.set("page", "1");
+      queryParamsRef.current = params.toString();
+      const url = new URL(window.location.href);
+      url.search = params.toString();
+      window.history.replaceState(null, "", url);
+    } catch (error) {
+      if (requestId !== searchRequestIdRef.current) return;
+      setSearchError(error instanceof Error ? error.message : "Could not search bills.");
+    } finally {
+      if (requestId === searchRequestIdRef.current) {
+        activeSearchTermRef.current = null;
+        setIsSearching(false);
+      }
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -461,7 +482,7 @@ export function BillsList({
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Bill History</h1>
           <p className="text-xs md:text-sm text-slate-500">
-            View, print, reprint, or share past bills and receipts ({totalCount} total).
+          View, print, reprint, or share past bills and receipts ({displayTotalCount} total).
           </p>
         </div>
       </div>
@@ -469,7 +490,16 @@ export function BillsList({
       {/* Filter and Search Controls */}
       <div className="w-full min-w-0">
         <div className="flex min-w-0 items-center gap-2">
-          <div className="min-w-0 flex-1">{renderSearch()}</div>
+          <div className="min-w-0 flex-1">
+            <AppSearch
+              value={searchValue}
+              onChange={updateSearch}
+              onSearch={(term) => void searchBills(term.trim())}
+              placeholder="Search bill number, customer, or phone"
+              ariaLabel="Search bills by bill number, customer, or phone"
+              isSearching={isSearching}
+            />
+          </div>
           <button
             type="button"
             onClick={() => setMobileFiltersOpen(true)}
@@ -490,6 +520,7 @@ export function BillsList({
           </button>
         </div>
       </div>
+      {searchError && <p className="text-xs text-red-600" role="alert">{searchError}</p>}
       <div className={`fixed inset-0 z-[80] ${mobileFiltersOpen ? "pointer-events-auto" : "pointer-events-none"}`} aria-hidden={!mobileFiltersOpen}>
         <button
           type="button"
@@ -547,7 +578,7 @@ export function BillsList({
 
       {/* Bills Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        {bills.length === 0 ? (
+        {displayBills.length === 0 ? (
           <div className="text-center py-12 px-4">
             <ReceiptText className="w-10 h-10 text-slate-300 mx-auto mb-2" />
             <p className="text-slate-700 font-semibold text-sm">No bills found</p>
@@ -560,7 +591,7 @@ export function BillsList({
         ) : (
           <>
             <div className="grid gap-3 bg-slate-50/70 p-3 sm:grid-cols-2 sm:p-4 lg:hidden">
-              {bills.map((b) => (
+              {displayBills.map((b) => (
                 <div
                   key={b.id}
                   className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition-colors hover:border-slate-300"
@@ -657,7 +688,7 @@ export function BillsList({
                   { label: "Status", align: "center" },
                   { label: "Actions", align: "right", className: "min-w-[260px]" },
                 ]}
-                rows={bills.map((b) => ({
+                rows={displayBills.map((b) => ({
                   key: b.id,
                   cells: [
                     <Link key="number" href={`/app/bills/${b.id}?from=history`} className="font-mono font-bold text-blue-700 hover:underline">
@@ -728,24 +759,24 @@ export function BillsList({
         )}
 
         {/* Pagination Controls */}
-        {totalPages > 1 && (
+        {displayTotalPages > 1 && (
           <div className="flex flex-col gap-3 border-t border-slate-200 p-3 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:p-4">
             <div>
-              Page <span className="font-semibold text-slate-900">{currentPage}</span> of{" "}
-              <span className="font-semibold text-slate-900">{totalPages}</span>
+              Page <span className="font-semibold text-slate-900">{displayPage}</span> of{" "}
+              <span className="font-semibold text-slate-900">{displayTotalPages}</span>
             </div>
             <div className="flex w-full items-center justify-between gap-2 sm:w-auto">
               <button
-                disabled={currentPage <= 1}
-                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={displayPage <= 1}
+                onClick={() => handlePageChange(displayPage - 1)}
                 className="px-2.5 py-1.5 border border-slate-200 rounded-lg font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
                 <span>Previous</span>
               </button>
               <button
-                disabled={currentPage >= totalPages}
-                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={displayPage >= displayTotalPages}
+                onClick={() => handlePageChange(displayPage + 1)}
                 className="px-2.5 py-1.5 border border-slate-200 rounded-lg font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
                 <span>Next</span>

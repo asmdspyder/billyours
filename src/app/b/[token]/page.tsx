@@ -39,6 +39,7 @@ function FacebookLogo({ className = "w-3.5 h-3.5" }: { className?: string }) {
 
 interface PublicBillPageProps {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ t?: string }>;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -52,8 +53,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PublicBillPage(props: PublicBillPageProps) {
-  const params = await props.params;
-  const token = params?.token;
+  const [params, searchParams] = await Promise.all([props.params, props.searchParams]);
+  const token = searchParams.t || params?.token;
 
   if (!token) {
     notFound();
@@ -61,6 +62,9 @@ export default async function PublicBillPage(props: PublicBillPageProps) {
 
   const result = await getBillByShareToken(token);
   if (!result || !result.bill) {
+    notFound();
+  }
+  if (searchParams.t && result.bill.bill_number !== params.token) {
     notFound();
   }
 

@@ -20,7 +20,9 @@ test("Feature 2: WhatsApp Share Message with Google Review Link", () => {
     const greetingName = customerName?.trim() || "Customer";
     const business = businessName ? ` from ${businessName}` : "";
     const total = Number(grandTotal).toFixed(2);
-    const linkText = shareToken ? `\n\n📄 View or download your bill here: https://billyours.com/b/${shareToken}` : "";
+    const linkText = shareToken
+      ? `\n\n📄 View or download your bill here: https://billyours.com/b/${encodeURIComponent(billNumber)}?t=${encodeURIComponent(shareToken)}`
+      : "";
     const reviewText = googleReviewLink?.trim()
       ? `\n\n⭐⭐⭐⭐⭐ Loved your visit? Please take a moment to leave us a review on Google: ${googleReviewLink.trim()}`
       : "";
@@ -35,7 +37,7 @@ test("Feature 2: WhatsApp Share Message with Google Review Link", () => {
     businessName: "Chai & Bites",
     billNumber: "BY-2026-0001",
     grandTotal: "450.00",
-    shareToken: "abc123token456",
+    shareToken: "a1b2c3d4e5",
     googleReviewLink: "https://g.page/r/chaibites/review",
   });
 
@@ -43,6 +45,7 @@ test("Feature 2: WhatsApp Share Message with Google Review Link", () => {
   const decodedMessage = decodeURIComponent(urlWithReview);
   assert.ok(decodedMessage.includes("Chai & Bites"), "Message includes business name");
   assert.ok(decodedMessage.includes("₹450.00"), "Message includes grand total");
+  assert.ok(decodedMessage.includes("https://billyours.com/b/BY-2026-0001?t=a1b2c3d4e5"), "Share link uses the readable bill number and retains its secure token");
   assert.ok(decodedMessage.includes("https://g.page/r/chaibites/review"), "Message includes Google review link");
   assert.ok(decodedMessage.includes("review on Google"), "Message asks customer to review on Google");
 
@@ -53,7 +56,7 @@ test("Feature 2: WhatsApp Share Message with Google Review Link", () => {
     businessName: "Chai & Bites",
     billNumber: "BY-2026-0001",
     grandTotal: "450.00",
-    shareToken: "abc123token456",
+    shareToken: "a1b2c3d4e5",
   });
   const decodedWithout = decodeURIComponent(urlWithoutReview);
   assert.ok(!decodedWithout.includes("Google"), "Does not include Google review text when link not provided");
